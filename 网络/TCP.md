@@ -53,6 +53,8 @@ The TCP header appears immediately following the IP header or last IPv6 extensio
 ## TCP Header Format
 Source Port(16 bits), Destination Port(16), Sequece Number(32), Acknoledgement Number(32), Header Length(4), Resv(3), NS(1), CWR(1), ECE(1), URG(1), ACK(1), PSH(1), RST(1), SYN(1), FIN(1), Window Size(16), TCP Checksum(16), Urgent Pointer(16), Options, Data
 
+上述除了Options和Data，总共20bytes。
+
 Acknowledgment Number, Window Size, plus ECE and ACK bits  refer to the data flowing in the opposite direction relative to the sender of this segment.
 
 - **Header Length**: The normal size of TCP header is 20 bytes, unless options are present. The Header Length field gives the size of the header in 32-bit words (minimum value is 5).
@@ -125,7 +127,7 @@ algorithm (see Chapter 18), in combination with a secret value known to each end
 
 # 连接管理
 
-![image](https://notes.shichao.io/tcpv1/figure_13-1.png)
+![image](active-passive-opener-tcp.png)
 
 ## Path MTU Discovery with TCP
 Knowing the path MTU can help protocols such as TCP avoid fragmentation.  TCP, in providing the byte stream abstraction it implements, determines what segment size to use and as a result has a much greater degree of control over the size of IP datagrams that are ultimately generated.
@@ -270,11 +272,11 @@ Under a number of circumstances, TCP may initiate a retransmission even when no 
 
 ### The Eifel Detection Algorithm
  The experimental Eifel Detection Algorithm [RFC3522] deals with this problem using the TCP **TSOPT** to detect spurious retransmissions. After a retransmission timeout occurs, Eifel awaits the next acceptable ACK. If the next acceptable ACK indicates that the first copy of a retransmitted packet (called the original transmit) was the cause for the ACK, the retransmission is considered to be spurious.
- 
- 
+
+
  ### The Eifel Response Algorithm
  It is a standard set of operations to be executed by a TCP once a retransmission has been deemed spurious.  Based on an appropriate detection algorithm, the Eifel response algorithm provides a way for a TCP sender to respond to a detected spurious timeout. It adapts the retransmission timer to avoid further spurious timeouts and (depending on the detection algorithm) can avoid the often unnecessary go-back-N retransmits that would otherwise be sent.
- 
+
 ## 数据包重排序与重复
 Packet reordering can occur in an IP network because IP provides no guaranteethat relative ordering between packets is maintained during delivery.
 
