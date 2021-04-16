@@ -6,7 +6,7 @@
 ### 服务端线程模型
 一种比较流行的做法是服务端监听线程和IO线程分离，类似于Reactor的多线程模型，它的工作原理图如下：
 
-![image](https://res.infoq.com/articles/netty-threading-model/zh/resources/0708004.png)
+![image](Reactor.jpg)
 
 第一步，从用户线程发起创建服务端操作。
 
