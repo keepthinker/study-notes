@@ -112,7 +112,7 @@ You can create a view of an existing buffer by calling either duplicate(), slice
 
 In case a completely fresh copy of an existing buffer is required, please call copy() method instead.
 
-Also be aware that obtaining derived buffers will NOT call retain() and so the reference count will NOT be increased.
+Also be aware that **obtaining derived** buffers will NOT call retain() and so the **reference count will NOT be increased**.
 
 ## 内存回收原理
 ### 软引用（SoftReference）
