@@ -40,8 +40,6 @@ sector1  sector2         ...
 
 在读写文件时，读写操作只和page cache打交道就好了，例如进程的写只是把数据放到page cache并标记dirty。那么page cache中的数据真正写到磁盘的过程是怎样的呢？
 
-
-
 ### block和page
 
 文件系统里的管理单元是block，内存管理是以page为单位，而内核中读写磁盘是通过page cache的，所以就要了解bio是怎么将page和block对应起来的。例如，如果文件系统的一个page大小是4K，格式化文件系统时指定一个block是4K，那一个block就对应一个page，而如果一个block大小是1K，那一个page就对应4个block，那每次读磁盘就只能每次最小读4个block的大小。

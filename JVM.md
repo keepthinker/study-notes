@@ -170,11 +170,10 @@ All in all, the CMS garbage collector does a great job at **reducing the pause d
 当老年代无法容纳新生代GC晋升的对象时发生并发模式失败，并发模式失败意味着CMS退化成完全STW的Full GC，也就是Serial GC。
 
 ### G1
-One of the key design goals of G1 was to make the duration and distribution of stop-the-world pauses due to garbage collection predictable and configurable.
+One of the key design goals of G1 was to make **the duration and distribution of stop-the-world pauses** due to garbage collection **predictable and configurable.**
 
 To achieve this, G1 builds upon a number of insights. First, the heap does not have to be split into contiguous Young and Old generation. Instead, the heap is split into a number (typically about 2048) smaller heap regions that can house objects. Each region may be an Eden region, a Survivor region or an Old region. **The logical union of all Eden and Survivor regions is the Young Generation, and all the Old regions put together is the Old Generation**:
 ![image](https://plumbr.io/app/uploads/2015/06/g1-011-591x187.png)
-
 
 **This allows the GC to avoid collecting the entire heap at once, and instead approach the problem incrementally: only a subset of the regions, called the collection set will be considered at a time.** All the Young regions are collected during each pause, but some Old regions may be included as well:
 ![image](https://plumbr.io/app/uploads/2015/06/g1-02-591x187.png)
@@ -235,9 +234,9 @@ And, finally, the live objects are moved to survivor regions, creating new if ne
 
 ### G1 vs CMS
 G1收集器的设计目标是取代CMS收集器，它同CMS相比，在以下方面表现的更出色：
-1. 局部两个Region看是“标记-复制”算法，整体上看是标记-整理算法故不会产生内存碎片，分配大对象时不会无法得到连续的空间而提前触发一次FULL，而CMS基于“标记-清除”算法会产生内存碎片。
+1. **局部两个Region看是“标记-复制”算法**，**整体上看是标记-整理算法**故不会产生内存碎片，分配大对象时不会无法得到连续的空间而提前触发一次FULL，而CMS基于“标记-清除”算法会产生内存碎片。
 
-2. G1的Stop The World(STW)更可控，G1在停顿时间上添加了预测机制，用户可以指定期望停顿时间,G1可以通过设置预期停顿时间（Pause Time）来控制垃圾收集时间避免应用雪崩现象。
+2. G1的Stop The World(STW)更可控，**G1在停顿时间上添加了预测机制，用户可以指定期望停顿时间,**G1可以通过设置预期停顿时间（Pause Time）来控制垃圾收集时间避免应用雪崩现象。
 3. 并行与并发的能力，G1能更充分的利用CPU，多核环境下的硬件优势来缩短stop the world的停顿时间。
 
 ## 过期对象判断
@@ -331,7 +330,10 @@ public class ReferenceTypeMain {
         weakReference();
         phantomReference();
     }
-
+    /**
+    * strongReference start^^^^^^^^^^^^^^^^^
+    * value after gc: StrongReference
+	* strongReference end________________    **/
     public static void strongReference(){
         System.out.println("strongReference start^^^^^^^^^^^^^^^^^");
         String str =  new String("StrongReference");
@@ -340,8 +342,16 @@ public class ReferenceTypeMain {
         System.out.println("value after gc: " + str);
         System.out.println("strongReference end________________");
     }
-
-
+	/**
+	* softReference start^^^^^^^^^^^^^^^^^
+	* softReference.isEnqueued() before gc: false
+	* softReference.isEnqueued() after gc: false
+	* value after gc: StringObject{str='SoftReference'}
+    * sleep for 1s
+	* sleep for 1s
+	* sleep for 1s
+	* softReference end________________
+    */
     public static void softReference(){
         System.out.println("softReference start^^^^^^^^^^^^^^^^^");
         final ReferenceQueue<StringObject> referenceQueue = new ReferenceQueue<>();
@@ -356,7 +366,17 @@ public class ReferenceTypeMain {
         new ReferenceQueueConsumer(referenceQueue).run();
         System.out.println("softReference end________________");
     }
-
+    /**
+	* weakReference start^^^^^^^^^^^^^^^^^
+	* weakReference.isEnqueued() before gc: false
+	* weakReference.isEnqueued() after gc: true
+	* value after gc: null
+	* StringWeakReference.name: StringWeakReference  |  
+	* ReferenceQueueConsumer|Reference's referent value:null
+	* sleep for 1s
+	* sleep for 1s
+	* weakReference end________________
+	*/
     public static void weakReference(){
         System.out.println("weakReference start^^^^^^^^^^^^^^^^^");
         final ReferenceQueue<StringObject> referenceQueue = new ReferenceQueue<>();
@@ -372,7 +392,16 @@ public class ReferenceTypeMain {
         new ReferenceQueueConsumer(referenceQueue).run();
         System.out.println("weakReference end________________");
     }
-    
+    /**
+    * PhantomReference start^^^^^^^^^^^^^^^^
+    * phantomReference.isEnqueued() before gc: false
+    * phantomReference.isEnqueued() after gc: true
+    * value after gc: null
+    * ReferenceQueueConsumer|Reference's referent value:StringObject{str='phantomReference'}
+    * sleep for 1s
+    * sleep for 1s
+    * phantomReference end________________
+    */
     public static void phantomReference(){
         System.out.println("phantomReference start^^^^^^^^^^^^^^^^");
         StringObject str = new StringObject("phantomReference");
@@ -386,7 +415,6 @@ public class ReferenceTypeMain {
         new ReferenceQueueConsumer(referenceQueue).run();
         System.out.println("phantomReference end________________");
     }
-
     private static class ReferenceQueueConsumer extends Thread{
         ReferenceQueue referenceQueue = new ReferenceQueue<>();
         ReferenceQueueConsumer (ReferenceQueue referenceQueue ){
@@ -417,7 +445,7 @@ public class ReferenceTypeMain {
                     } catch (IllegalAccessException e) {
                         e.printStackTrace();
                     }
-                    reference.clear(); //.如果被从队列取出，再也没有被引用，无需调用此方法。
+                    reference.clear(); // 如果被从队列取出，再也没有被引用，无需调用此方法。
                 }
             }}
     }
@@ -427,7 +455,6 @@ public class ReferenceTypeMain {
         public StringPhantomReference(StringObject referent, ReferenceQueue<? super StringObject> q) {
             super(referent, q);
         }
-
     }
 
     private static void sleep(int seconds) {
@@ -440,19 +467,15 @@ public class ReferenceTypeMain {
 
     private static class StringObject{
         private String str;
-
         public StringObject(String str) {
             this.str = str;
         }
-
         public String getStr() {
             return str;
         }
-
         public void setStr(String str) {
             this.str = str;
         }
-
         @Override
         public String toString() {
             final StringBuilder sb = new StringBuilder("StringObject{");
@@ -463,61 +486,27 @@ public class ReferenceTypeMain {
     }
 
     private static class StringWeakReference extends WeakReference{
-
         private String name;
-
         public StringWeakReference(Object referent) {
             super(referent);
         }
-
         public StringWeakReference(Object referent, ReferenceQueue queue) {
             super(referent, queue);
         }
-
         public String getName() {
             return name;
         }
-
         public void setName(String name) {
             this.name = name;
         }
     }
-
 }
 
 ```
 
-### 输出
-<pre>
-strongReference start^^^^^^^^^^^^^^^^^
-value after gc: StrongReference
-strongReference end________________
-softReference start^^^^^^^^^^^^^^^^^
-softReference.isEnqueued() before gc: false
-softReference.isEnqueued() after gc: false
-value after gc: StringObject{str='SoftReference'}
-sleep for 1s
-sleep for 1s
-sleep for 1s
-softReference end________________
-weakReference start^^^^^^^^^^^^^^^^^
-weakReference.isEnqueued() before gc: false
-weakReference.isEnqueued() after gc: true
-value after gc: null
-StringWeakReference.name: StringWeakReference  |  
-ReferenceQueueConsumer|Reference's referent value:null
-sleep for 1s
-sleep for 1s
-weakReference end________________
-phantomReference start^^^^^^^^^^^^^^^^
-phantomReference.isEnqueued() before gc: false
-phantomReference.isEnqueued() after gc: true
-value after gc: null
-ReferenceQueueConsumer|Reference's referent value:StringObject{str='phantomReference'}
-sleep for 1s
-sleep for 1s
-phantomReference end________________
-</pre>
+
+
+
 
 # 加锁机制
 

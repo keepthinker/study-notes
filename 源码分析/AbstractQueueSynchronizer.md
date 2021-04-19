@@ -16,10 +16,22 @@ release方法中，先进行tryRelease操作，比如在ReentrantLock中，先�
 #### Condition对象的await/signal/signalAll解析
 - await过程：先进行加锁操作，然后把当前线程对应的waitStatus为CONDITION类型的node加入到condition queue，然后通过fullyRelease方法释放锁，最后通过park睡眠。
 - signal过程：先进行加锁操作，取出condition queue的第一个元素，修改node的waitStatus状态为0，然后加入到sync queue，接着设置前置节点waitStatus为-1，最后进行释放锁的操作，也就是刚刚加入到sync queue的元素将有可能被唤醒。
-- signalAll过程：与signal不同的是，边遍历condition queue里每个元素，然后执行signal同样的操作。
+- signalAll过程：与signal不同的是，遍历condition queue里每个元素，然后执行signal同样的操作。
 
 ####  Why Lock condition await must hold the lock
 So await must hold the lock because otherwise there would be no way to ensure you weren't waiting for something that already happened. You must hold the lock to prevent another thread from racing with your wait.
+
+## 与Synchronized的区别
+
+`ReentrantLock`显示获得、释放锁，`synchronized`隐式获得释放锁
+
+`ReentrantLock`可响应中断、可轮回，`synchronized`是不可以响应中断的，为处理锁的不可用性提供了更高的灵活性
+
+`ReentrantLock`是`API`级别的，`synchronized`是`JVM`级别的
+
+`ReentrantLock`可以实现公平锁
+
+`ReentrantLock`通过`Condition`可以绑定多个条件
 
 ```java
 public abstract class AbstractOwnableSynchronizer

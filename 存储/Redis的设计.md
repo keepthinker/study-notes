@@ -97,6 +97,79 @@ Specifically this is what Redis does 10 times per second:
 
 定时删除策略即基于定时器的删除策略对于内存是最友好的，因为它保证过期键尽可能快的被删除，从而释放过期键占用的内存。但是这样的策略对 CPU 是最不友好的，因为它以键为粒度调用 CPU 执行过期删除的过程。**一旦某个时间段内有大量的键过期，CPU 将有可能被抢占完成删除过期键的任务，这有可能导致 Redis 对外服务的性能明显降低**。
 
+### ZipList数据结构
+
+Ziplist 是由一系列特殊编码的内存块构成的列表， 一个 ziplist 可以包含多个节点（entry）， 每个节点可以保存一个长度受限的字符数组（不以 `\0` 结尾的 `char` 数组）或者整数， 包括：
+
+- - 字符数组
+
+    长度小于等于 `63` （26−126−1）字节的字符数组长度小于等于 `16383` （214−1214−1） 字节的字符数组长度小于等于 `4294967295` （232−1232−1）字节的字符数组
+
+- - 整数
+
+    `4` 位长，介于 `0` 至 `12` 之间的无符号整数`1` 字节长，有符号整数`3` 字节长，有符号整数`int16_t` 类型整数`int32_t` 类型整数`int64_t` 类型整数
+
+因为 ziplist 节约内存的性质， 哈希键、列表键和有序集合键初始化的底层实现皆有采用 ziplist。
+
+ ziplist 的典型分布结构：
+
+```html
+area        |<---- ziplist header ---->|<----------- entries ------------->|<-end->|
+
+size          4 bytes  4 bytes  2 bytes    ?        ?        ?        ?     1 byte
+            +---------+--------+-------+--------+--------+--------+--------+-------+
+component   | zlbytes | zltail | zllen | entry1 | entry2 |  ...   | entryN | zlend |
+            +---------+--------+-------+--------+--------+--------+--------+-------+
+                                       ^                          ^        ^
+address                                |                          |        |
+                                ZIPLIST_ENTRY_HEAD                |   ZIPLIST_ENTRY_END
+                                                                  |
+                                                         ZIPLIST_ENTRY_TAIL
+```
+
+图中各个域的作用如下：
+
+| 域        | 长度/类型  | 域的值                                                       |
+| :-------- | :--------- | :----------------------------------------------------------- |
+| `zlbytes` | `uint32_t` | 整个 ziplist 占用的内存字节数，对 ziplist 进行内存重分配，或者计算末端时使用。 |
+| `zltail`  | `uint32_t` | 到达 ziplist 表尾节点的偏移量。 通过这个偏移量，可以在不遍历整个 ziplist 的前提下，弹出表尾节点。 |
+| `zllen`   | `uint16_t` | ziplist 中节点的数量。 当这个值小于 `UINT16_MAX` （`65535`）时，这个值就是 ziplist 中节点的数量； 当这个值等于 `UINT16_MAX` 时，节点的数量需要遍历整个 ziplist 才能计算得出。 |
+| `entryX`  | `?`        | ziplist 所保存的节点，各个节点的长度根据内容而定。           |
+| `zlend`   | `uint8_t`  | `255` 的二进制值 `1111 1111` （`UINT8_MAX`） ，用于标记 ziplist 的末端。 |
+
+为了方便地取出 ziplist 的各个域以及一些指针地址， ziplist 模块定义了以下宏：
+
+| 宏                             | 作用                                                 | 算法复杂度 |
+| :----------------------------- | :--------------------------------------------------- | :--------- |
+| `ZIPLIST_BYTES(ziplist)`       | 取出 `zlbytes` 的值                                  | θ(1)θ(1)   |
+| `ZIPLIST_TAIL_OFFSET(ziplist)` | 取出 `zltail` 的值                                   | θ(1)θ(1)   |
+| `ZIPLIST_LENGTH(ziplist)`      | 取出 `zllen` 的值                                    | θ(1)θ(1)   |
+| `ZIPLIST_HEADER_SIZE`          | 返回 ziplist header 部分的长度，总是固定的 `10` 字节 | θ(1)θ(1)   |
+| `ZIPLIST_ENTRY_HEAD(ziplist)`  | 返回到达 ziplist 第一个节点（表头）的地址            | θ(1)θ(1)   |
+| `ZIPLIST_ENTRY_TAIL(ziplist)`  | 返回到达 ziplist 最后一个节点（表尾）的地址          | θ(1)θ(1)   |
+| `ZIPLIST_ENTRY_END(ziplist)`   | 返回 ziplist 的末端，也即是 `zlend` 之前的地址       | θ(1)θ(1)   |
+
+因为 ziplist header 部分的长度总是固定的（`4` 字节 + `4` 字节 + `2` 字节）， 因此将指针移动到表头节点的复杂度为常数时间； 除此之外， 因为表尾节点的地址可以通过 `zltail` 计算得出， 因此将指针移动到表尾节点的复杂度也为常数时间。
+
+以下是用于操作 ziplist 的函数：
+
+| 函数名               | 作用                                                         | 算法复杂度 |
+| :------------------- | :----------------------------------------------------------- | :--------- |
+| `ziplistNew`         | 创建一个新的 ziplist                                         | θ(1)θ(1)   |
+| `ziplistResize`      | 重新调整 ziplist 的内存大小                                  | O(N)O(N)   |
+| `ziplistPush`        | 将一个包含给定值的新节点推入 ziplist 的表头或者表尾          | O(N2)O(N2) |
+| `zipEntry`           | 取出给定地址上的节点，并将它的属性保存到 `zlentry` 结构然后返回 | θ(1)θ(1)   |
+| `ziplistInsert`      | 将一个包含给定值的新节点插入到给定地址                       | O(N2)O(N2) |
+| `ziplistDelete`      | 删除给定地址上的节点                                         | O(N2)O(N2) |
+| `ziplistDeleteRange` | 在给定索引上，连续进行多次删除                               | O(N2)O(N2) |
+| `ziplistFind`        | 在 ziplist 中查找并返回包含给定值的节点                      | O(N)O(N)   |
+| `ziplistLen`         | 返回 ziplist 保存的节点数量                                  | O(N)O(N)   |
+| `ziplistBlobLen`     | 以字节为单位，返回 ziplist 占用的内存大小                    | θ(1)θ(1)   |
+
+因为 ziplist 由连续的内存块构成， 在最坏情况下， 当 `ziplistPush` 、 `ziplistDelete` 这类对节点进行增加或删除的函数之后， 程序需要执行一种称为连锁更新的动作来维持 ziplist 结构本身的性质， 所以这些函数的最坏复杂度都为 O(N2)O(N2) 。 不过，因为这种最坏情况出现的概率并不高， 所以大可以放心使用 ziplist ， 而不必太担心出现最坏情况。
+
+参考：[压缩列表--Redis设计与实现](https://redisbook.readthedocs.io/en/latest/compress-datastruct/ziplist.html#ziplist-chapter)
+
 ## 内存淘汰策略
 
 The exact behavior Redis follows when the maxmemory limit is reached is configured using the maxmemory-policy configuration directive.

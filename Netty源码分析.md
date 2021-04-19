@@ -121,6 +121,8 @@ Also be aware that **obtaining derived** buffers will NOT call retain() and so t
 
 ### 虚引用（PhantomReference）
 
+TODO  在Netty中的作用
+
 
 ## 操作系统select, poll, epoll与Netty的对应关系
 
