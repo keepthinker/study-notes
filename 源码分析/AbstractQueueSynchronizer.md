@@ -167,7 +167,7 @@ static final class Node {
 public final void acquire(int arg) {
 //try acquire子类实现尝试获取锁操作
     if (!tryAcquire(arg) &&  
-//tryAcquire失败，则将当前线程CAS方式加入到队列，假如当前线程发现加入等待队列后，自己为第一个元素，则会再次尝试tryAcquire操作，若失败，则会设置前节点既head节点 的waitStatus为SIGNAL，然后假如自己还是队列第一个节点，再次尝试（第一个节点进行自旋一次），如果此次还是失败，则进行线程休眠。
+//tryAcquire失败，则将当前线程CAS方式加入到队列，假如当前线程发现加入等待队列后，自己为第一个元素，则会再次尝试tryAcquire操作，若失败，则会设置前节点既head节点的waitStatus为SIGNAL，然后假如自己还是队列第一个节点，再次尝试（第一个节点进行自旋一次），如果此次还是失败，则进行线程休眠。
         acquireQueued(addWaiter(Node.EXCLUSIVE), arg)) 
         selfInterrupt();
 }
@@ -381,6 +381,26 @@ public class ConditionObject implements Condition, java.io.Serializable {
      * Creates a new {@code ConditionObject} instance.
      */
     public ConditionObject() { }
+    
+    /**
+    * Adds a new waiter to wait queue.
+    * @return its new wait node
+    */
+    private Node addConditionWaiter() {
+        Node t = lastWaiter;
+        // If lastWaiter is cancelled, clean out.
+        if (t != null && t.waitStatus != Node.CONDITION) {
+            unlinkCancelledWaiters();
+            t = lastWaiter;
+        }
+        Node node = new Node(Thread.currentThread(), Node.CONDITION);
+        if (t == null)
+            firstWaiter = node;
+        else
+            t.nextWaiter = node;
+        lastWaiter = node;
+        return node;
+    }
 
     public final void await() throws InterruptedException {
         if (Thread.interrupted())
@@ -391,7 +411,7 @@ public class ConditionObject implements Condition, java.io.Serializable {
         int savedState = fullyRelease(node);
         int interruptMode = 0;
         while (!isOnSyncQueue(node)) {
-      //当前线程不在sync queue，则进行休眠。
+      //当前线程不在sync queue，说明没有被signal进入sync queue，则进行休眠。
             LockSupport.park(this);
             if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                 break;
@@ -421,10 +441,23 @@ public class ConditionObject implements Condition, java.io.Serializable {
         } while (!transferForSignal(first) &&
                  (first = firstWaiter) != null);
     }
+    /**
+     * Removes and transfers all nodes.
+     * @param first (non-null) the first node on condition queue
+     */
+    private void doSignalAll(Node first) {
+        lastWaiter = firstWaiter = null;
+        do {
+            Node next = first.nextWaiter;
+            first.nextWaiter = null;
+            transferForSignal(first);
+            first = next;
+        } while (first != null);
+    }
 
 }
 
-//把当前node从condition queue中放入到sync queue中
+//把当前node从condition queue中放入到sync queue中，等待该结点对应线程获取锁后被唤醒
 final boolean transferForSignal(Node node) {
     /*
      * If cannot change waitStatus, the node has been cancelled.
@@ -437,6 +470,7 @@ final boolean transferForSignal(Node node) {
      * indicate that thread is (probably) waiting. If cancelled or
      * attempt to set waitStatus fails, wake up to resync (in which
      * case the waitStatus can be transiently and harmlessly wrong).
+     * 加入到sync queue队列
      */
     Node p = enq(node);
     int ws = p.waitStatus;
@@ -448,3 +482,124 @@ final boolean transferForSignal(Node node) {
 
 
 ```
+
+## 例子
+
+```java
+public class ConditionMain {
+
+    private Lock lock = new ReentrantLock();
+
+    private Condition condition1 = lock.newCondition();
+
+    private Condition condition2 = lock.newCondition();
+
+    private boolean isAvailable = true;
+    public void lock(){
+        try{
+            lock.lock();
+            if(isAvailable){
+                try {
+                    System.out.println("lock await");
+                    condition1.await();
+                    System.out.println("await1 end");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("lock end");
+            Thread.sleep(1000);
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+
+    }
+    public void lock2(){
+        try{
+            lock.lock();
+            if(isAvailable){
+                try {
+                    System.out.println("lock2 await");
+                    condition2.await();
+                    System.out.println("await2 end");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("lock2 end");
+            Thread.sleep(1000);
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+
+    }
+
+    public void release1(){
+        try{
+            System.out.println("release1 enter");
+            lock.lock();
+            isAvailable = true;
+            condition1.signalAll();
+            System.out.println("signalAll 1");
+            Thread.sleep(1000);
+            System.out.println("release1 sleep");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void release2(){
+        try{
+            System.out.println("release2 enter");
+            lock.lock();
+            isAvailable = true;
+            condition2.signalAll();
+            System.out.println("signalAll 2");
+            Thread.sleep(1000);
+            System.out.println("release2 sleep");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public static void main(String[] args){
+        final  ConditionMain object = new ConditionMain();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                object.lock();
+            }
+        }).start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                object.lock2();
+            }
+        }).start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                object.release1();
+            }
+        }).start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                object.release2();
+            }
+        }).start();
+
+    }
+}
+```
+

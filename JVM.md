@@ -562,6 +562,14 @@ Since most objects are locked by at most one thread during their lifetime, we al
 - 保证被volatile修饰的共享变量对所有线程总数可见，也就是当一个线程修改了一个被volatile修饰共享变量的值，新值总是可以被其他线程立即得知。
 - 禁止指令重排序优化。
 
+### 加锁作用
+
+数据变更并发操作正确性。
+
+保证可见性。
+
+
+
 # Java线程
 ## 线程状态
 
