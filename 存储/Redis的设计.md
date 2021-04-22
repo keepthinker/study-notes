@@ -297,7 +297,7 @@ Redis可以使用主从同步，从从同步。第一次同步时，主节点做
 
  6）从服务器完成对快照的载入，开始接收命令请求，并执行来自主服务器缓冲区的写命令；
 
-![img](D:\git\study-notes\存储\7226119-8966c52711461a4d.webp)
+![img](7226119-8966c52711461a4d.webp)
 
 [Redis主从同步原理-SYNC](https://blog.csdn.net/sk199048/article/details/50725369)
 
