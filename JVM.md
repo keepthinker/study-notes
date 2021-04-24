@@ -247,6 +247,45 @@ G1收集器的设计目标是取代CMS收集器，它同CMS相比，在以下方
 
 建议跟踪对象回收事件采用软应用，弱应用和虚引用。
 
+# 双亲委派模型（Parents Delegation Model）
+
+有两种不同的类加载器：一种是启动类加载器（Bootstrap ClassLoader，C++语言实现），虚拟机自身的一部分，另外一种是其所有其他的类加载器，Java语言实现，独立于虚拟机外部，全部继承抽象类java.lang.ClassLoader。
+
+绝大部分Java程序会使用下述三种类加载器：
+
+1. 启动类加载器（Bootstrap ClassLoader），负责加载存放在<JAVA_HOME>/lib目录中的，或被-Xbootclasspath参数制定路径的，并且是虚拟机识别的文件名的文件。
+2. 扩张类加载器（Extension ClassLoader），负责加载<JAVA_HOME>/lib/ext目录中，或被java.ext.dirs系统变量制定路径。
+3. 应用程序类加载器（Application ClassLoader），由sun.misc.Launcher$AppClassLoader实现，由于这个类加载器是ClassLoader.getSystemClassLoader()的返回值，所以一般称之为系统类加载器，它负责加载用户类路径（ClassPath）上所指定的类库。
+
+双亲委派模型要求除了启动类加载器外，其他加载器都需要有自己父类加载器，一般是通过组合的方式来复用父类加载器。其工作模式有，如果一个类加载器收到类加载请求，那么它先把加载请求委派给父类加载器去完成，只有当更高层级的父类加载器无法加载，才会给子加载器自己去尝试加载。
+
+```java
+public static void main(String[] args) throws Exception {
+    System.out.println("-----------------------------------");
+    System.out.println("ClassLoaderMain class loader parents : ");
+    ClassLoader cl = ClassLoaderMain.class.getClassLoader();
+    recursiveCallParentCL(cl);
+}
+
+public static void recursiveCallParentCL(ClassLoader cl){
+    if(cl == null){
+        return;
+    }
+    recursiveCallParentCL(cl.getParent());
+    System.out.println(cl);
+}
+
+/**
+* -----------------------------------
+* ClassLoaderMain class loader parents : 
+* null indicates Bootstrap ClassLoader
+* sun.misc.Launcher$ExtClassLoader@2ff4acd0
+* sun.misc.Launcher$AppClassLoader@18b4aac2
+*/
+```
+
+[我竟然被”双亲委派”给虐了！](https://www.hollischuang.com/archives/6055)
+
 # JVM工具使用
 ## 定位线程问题
 在Linux上用**top -H -p ${processId}**，找到问题线程（比如cpu占比高），比如线程ID为11164，通过命令**echo 'ibase=10;obase=16;11164' | bc**来把线程ID 11164转化成16进制数字2B9C。 然后通过jstack命令找到该问题线程的线程栈日志，如**jstack ${processId} | grep -A 100 -i 2B9C**
