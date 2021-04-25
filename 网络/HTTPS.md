@@ -12,14 +12,12 @@ HTTPS encrypts all message contents, including the HTTP headers and the request/
 
 
 
-
-
 ## HandShake procedure
 
-1. Client sends a "ClientHello" message that lists information such as the SSL/TLS version, crytographic algorithms, data compression algorithm methods supported by the client.
+1. Client **sends a "ClientHello" message** that lists information such as the **SSL/TLS version**, **crytographic algorithms**, **data compression algorithm methods** supported by the client.
 2. Server responds with a "ServerHello" message that contains the **cryptographic algorithms** chosen by server from the list provided by the client, **the session ID**, **Server's digital certificate** and **public key**.
 3. Client will contack server's CA and verify the server's digital certificate, thus comfirming the authenticity of the web server.
-4. Client **send a shared secret key** that is encryted with the server's public key.
+4. Client **send a shared secret key** which is encryted with the server's public key.
 5. Client **sends a "finished" message** which is encrypted with the secret key indicating that the client part of handshake is complete.
 6. Server **response to client with a "finished" message** which is encrypted with the secret key indicating that the server part of handshake is complete.
 
@@ -27,11 +25,9 @@ Once the handshake is done,  the server and client can now exchange messages tha
 
 
 
+[How SSL works?](https://www.tutorialsteacher.com/https/how-ssl-works)
 
-
-
-
-
+[SSL Handshake explained](https://medium.com/@kasunpdh/ssl-handshake-explained-4dabb87cdce)
 
 
 
