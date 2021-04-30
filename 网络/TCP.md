@@ -34,7 +34,7 @@ called round-trip-time estimation and is a statistical process.
 
 面向连接：需要通过三次握手建立两端连接，四次挥手断开连接。通过两端的IP与端口确定一个连接。
 
-可靠性：通过流量控制中序列号，滑动窗口，ACK与SACK，发送方重传等。
+可靠性：通过流量控制中**序列号**，**滑动窗口**，**ACK**与**SACK**，**发送方重传**，**校验和**等。
 - Because it provides a byte stream interface, TCP must convert a sending application's stream of bytes into a set of packets that IP can carry. This is called packetization. These packets contain sequence numbers, which in TCP actually represent the byte offsets of the first byte in each packet in the overall data stream rather than packet numbers. The application data is broken into what TCP considers the best-size chunks to send, typically fitting each segment into a single IP-layer datagram that will not be fragmented. 
 - TCP maintains a mandatory checksum on its header, any associated application data, and fields from the IP header. This is an end-to-end pseudo-header checksum whose purpose is to detect any bit errors introduced in transit.
 - When TCP sends a group of segments, it normally sets a single retransmission timer, waiting for the other end to acknowledge reception.
