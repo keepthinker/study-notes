@@ -310,6 +310,14 @@ Redis Sentinal着眼于高可用，在master宕机时会自动将slave提升为m
 
 Redis Cluster着眼于扩展性，在单个redis内存不足时，使用Cluster进行分片存储。
 
+### 主从高可用
+
+部分节点不可用时，集群仍可用。通过增加 Slave 做 standby 数据副本，能够实现故障自动 failover，节点之间通过 gossip 协议交换状态信息，用投票机制完成 Slave 到 Master 的角色提升
+
+
+
+
+
 ## Redis Server事件模型
 redis服务器是一个事件驱动的程序，内部需要处理两类事件，一类是文件事件（file event），一类是时间事件（time event），前者对应着处理各种io事件，后者对应着处理各种定时任务。
 
@@ -317,9 +325,9 @@ file event 和 time event都是由单个线程驱动的，file event 底层其�
 
 redis server的事件模型其实就是经典的NIO模型，底层通过select/epoll等机制实现异步NIO，通过检测到event到来后for循环实现串行处理。
 
-## 集群
-
-
 [redis数据淘汰原理](https://www.jianshu.com/p/60cc093d6c36)
 
 [Redis两种持久化机制RDB和AOF详解（面试常问，工作常用）](https://database.51cto.com/art/202002/610603.htm)
+
+
+
