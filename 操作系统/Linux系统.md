@@ -1,3 +1,90 @@
+# Linux Kernel
+
+## Overview
+
+Typical components of a kernel are interrupt handlers to service interrupt requests, a scheduler to share processor time among multiple processes, a memory management system to manage process address spaces, and system services such as networking and interprocess communication.  
+
+Applications running on the system communicate with the kernel via system calls (see Figure 1.1). An application typically calls functions in a library—for example, the C library—that in turn rely on the system call interface to instruct the kernel to carry out tasks on the application’s behalf.   
+
+![relationshipAppKernelHardware](D:\git\study-notes\操作系统\relationshipAppKernelHardware.png)
+
+The kernel also manages the system’s hardware. Nearly all architectures, including all systems that Linux supports, provide the concept of interrupts.When hardware wants to communicate with the system, it issues an interrupt that literally interrupts the processor, which in turn interrupts the kernel.  
+
+## Process
+
+Processes are, however, more than just the executing program code (often called the text section in Unix).They also include a set of resources such as **open files** and **pending signals**, **internal kernel data**, **processor state**, **a memory address space with one or more memory mappings**, one or more **threads of execution**, and **a data section containing global variables**.  
+
+### Thread
+
+Each thread includes a unique **program counter**, **process stack**, and **set of processor registers**.  The kernel schedules individual threads, not processes.
+
+Linux has a unique implementation of threads: It does not differentiate between threads and processes. To Linux, **a thread is just a special kind of process.**  
+
+On modern operating systems, processes provide two virtualizations: **a virtualized processor** and **virtual memory**. The virtual processor gives the process the illusion that it alone monopolizes the system, despite possibly sharing the processor among hundreds of other processes. Virtual memory lets the process allocate and manage memory as if it alone owned all the memory in the system.  
+
+threads share the virtual memory abstraction, whereas each receives its own virtualized processor.  
+
+A process begins its life when, not surprisingly, it is created. In Linux, this occurs by means of the fork() system call, which creates a new process by duplicating an existing one.The process that calls fork() is the parent, whereas the new process is the child.  The fork() system call returns from the kernel twice: once in the parent process and again in the newborn child.  
+
+The kernel stores the list of processes in a circular doubly linked list called the task list.
+
+![process-task-list](D:\git\study-notes\操作系统\process-decriptor-task-list.png)
+
+### Process State 
+
+- **TASK_RUNNING**—The process is runnable; it is either currently running or on a runqueue waiting to run.This is the only possible state for a process executing in user-space; it can also apply to a process in kernel-space that is actively running.
+- **TASK_INTERRUPTIBLE**—The process is sleeping (that is, it is blocked), waiting for some condition to exist.When this condition exists, the kernel sets the process’s state to TASK_RUNNING.The process also awakes prematurely and becomes runnable if it receives a signal.  
+- **TASK_UNINTERRUPTIBLE**—This state is identical to TASK_INTERRUPTIBLE except that it does not wake up and become runnable if it receives a signal.This is used in situations where the process must wait without interruption or when the event is expected to occur quite quickly. Because the task does not respond to signals in this state, TASK_UNINTERRUPTIBLE is less often used than TASK_INTERRUPTIBLE.  
+
+- **TASK_TRACED**—The process is being traced by another process, such as a debugger, via ptrace.
+
+- **TASK_STOPPED**—Process execution has stopped; the task is not running nor is it eligible to run.This occurs if the task receives the SIGSTOP, SIGTSTP, SIGTTIN, or SIGTTOU signal or if it receives any signal while it is being debugged.  ![process-state](D:\git\study-notes\操作系统\process-state.png)
+
+  Normal program execution occurs in user-space.  When a program executes a system call or triggers an exception, it enters kernel-space.  
+
+### The Process Family Tree 
+
+A distinct hierarchy exists between processes in Unix systems, and Linux is no exception. All processes are descendants of the init process, whose PID is one. The kernel starts init in the last step of the boot process. The init process, in turn, reads the system
+initscripts and executs more programs, eventually completing the boot process. 
+
+Every process on the system has exactly one parent. Likewise, every process has zero or more children.   
+
+### Process Creation
+
+The first, fork(), creates a child process that is a copy of the current task. It differs from the parent only in its PID (which is unique), its PPID
+(parent’s PID, which is set to the original process), and certain resources and statistics, such as pending signals, which are not inherited. The second function, exec(), loads a new executable into the address space and begins executing it. The combination of fork() followed by exec() is similar to the single function most operating systems provide.  
+
+#### Copy on Write
+
+In Linux, fork() is implemented through the use of copy-on-write pages. Copy-on-write (or COW) is a technique to delay or altogether prevent copying of the data. Rather than duplicate the process address space, **the parent and the child can share a single copy.**
+
+**The duplication of resources occurs only when they are written; until then, they are shared read-only.**  
+
+The only overhead incurred by fork() is the duplication of the parent’s page tables and the creation of a unique process descriptor for the child.  
+
+### The Linux Implementation of Threads  
+
+To the Linux kernel, there is no concept of a thread. Linux implements all threads as standard processes. The Linux kernel does not provide any special scheduling semantics or data structures to represent threads.  Instead, **a thread is merely a process that shares certain resources with other processes.**  
+
+This approach to threads contrasts greatly with operating systems such as Microsoft Windows or Sun Solaris, which have explicit kernel support for threads (and sometimes call threads lightweight processes).  To Linux, threads are simply a manner of sharing resources between processes (which are
+already quite lightweight).  
+
+#### Creating Threads  
+
+Threads are created the same as normal tasks, with the exception that the clone() system call is passed flags corresponding to the specific resources to be shared:  
+
+``` clone(CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND, 0);   ```
+
+The previous code results in behavior identical to a normal fork(), except that the **address space**, **filesystem resources**, **file descriptors**, and **signal handlers** are shared. In other words, the new task and its parent are what are popularly called threads.  The flags provided to clone() help specify the behavior of the new process and detail what resources the parent and child will share. 
+
+
+
+## Process scheduling
+
+The **Completely Fair Scheduler** (CFS) is the registered scheduler class for normal processes, called SCHED_NORMAL in Linux (and SCHED_OTHER in POSIX). CFS is defined in kernel/sched_fair.c. The CFS algorithm and is germane to any Linux kernel since 2.6.23.  
+
+
+
 # 用户登录文件执行顺序
 
 ## 全局文件名称
@@ -121,7 +208,7 @@ An inode number unambiguously identifies a file or directory on a given device, 
 [硬中断与软中断的区别！！！](https://blog.51cto.com/noican/1361087)
 
 # 页缓存
- 
+
 # mmap
 
 # 文件锁
