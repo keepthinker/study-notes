@@ -302,6 +302,9 @@ Redis可以使用主从同步，从从同步。第一次同步时，主节点做
 [Redis主从同步原理-SYNC](https://blog.csdn.net/sk199048/article/details/50725369)
 
 ## Redis 集群
+
+社区版redis cluster是无中心节点P2P的集群架构，内部采用gossip协议传递维护集群的拓扑结构和集群元数据。
+
 是否使用过Redis集群，集群的原理是什么？
 
 Redis 集群有16384个哈希槽，每个key通过CRC16校验后对16384取模来决定放置哪个槽，集群的每个节点负责一部分hash槽。
@@ -312,9 +315,9 @@ Redis Cluster着眼于扩展性，在单个redis内存不足时，使用Cluster�
 
 ### 主从高可用
 
-部分节点不可用时，集群仍可用。通过增加 Slave 做 standby 数据副本，能够实现故障自动 failover，节点之间通过 gossip 协议交换状态信息，用投票机制完成 Slave 到 Master 的角色提升
+部分节点不可用时，集群仍可用。通过增加 Slave 做 standby 数据副本，能够实现故障自动 failover，节点之间通过 gossip 协议交换状态信息，用投票机制完成 Slave 到 Master 的角色提升。也就是说，gossip的定时 PING/PONG 消息的超时机制检测某个节点A是否下线，如果某个节点B发现发送给节点A的PING等待PONG超时，并且也发现本地fail_reports链表中超过半数正常的master标记节点A为PFAIL，那么该节点B立刻向集群其他节点广播主节点二已经下线的 FAIL 消息，所有收到 FAIL 消息的节点都会立即将节点二状态标记为已下线。
 
-
+[深入理解redis cluster的failover机制](https://juejin.cn/post/6844903679120637960)
 
 
 
