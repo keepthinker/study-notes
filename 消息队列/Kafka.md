@@ -6,9 +6,9 @@
 
 # Kafka 架构
 
-- BrokerKafka 集群包含一个或多个服务器，这种服务器被称为 broker
+- Kafka 集群包含一个或多个服务器，这种服务器被称为 broker
 - Topic每条发布到 Kafka 集群的消息都有一个类别，这个类别被称为 Topic。（物理上不同 Topic 的消息分开存储，逻辑上一个 Topic 的消息虽然保存于一个或多个 broker 上但用户需指定消息的 Topic 即可生产或消费数据而不必关心数据存于何处）
-- PartitionParition 是物理上的概念，每个 Topic 包含一个或多个 Partition.
+- Partition是物理上的概念，每个 Topic 包含一个或多个 Partition.
 - Producer负责发布消息到 Kafka broker
 - Consumer消息消费者，向 Kafka broker 读取消息的客户端。
 - Consumer Group每个 Consumer 属于一个特定的 Consumer Group（可为每个 Consumer 指定 group name，若不指定 group name 则属于默认的 group）。
@@ -19,7 +19,7 @@ Topic 在逻辑上可以被认为是一个 queue，每条消费都必须指定�
 
 # Producer 
 
-KafkaProducer类是线程安全的，可以在多个线程中共享单个KafkaProducer实力。
+KafkaProducer类是线程安全的，可以在多个线程中共享单个KafkaProducer实例。
 
 设定client.id来制定对应的客户端ID。
 

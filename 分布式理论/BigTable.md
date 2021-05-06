@@ -47,7 +47,7 @@ A **Bigtable cluster** stores **a number of tables**. **Each table** consists of
 ## Tablet Location
 We use a three-level hierarchy analogous to that of a B+- tree to store tablet location information.
 
-![image](D:\git\study-notes\分布式理论\big-table-tablet.jpg)
+![image](big-table-tablet.jpg)
 
 The first level is a file stored in Chubby that contains the location of the root tablet. The root tablet contains the location of all tablets in a special METADATA table. Each METADATA tablet contains the location of a set of user tablets. The root tablet is just the first tablet in the METADATA table.
 
@@ -116,5 +116,4 @@ Rowkey的概念和mysql中的主键是完全一样的，Hbase使用Rowkey来唯�
 [Hbase技术详细学习笔记](https://www.jianshu.com/p/569106a3008f)
 
 [Hbase基础与原理详解](https://blog.csdn.net/ForgetThatNight/article/details/79605829)
-
 

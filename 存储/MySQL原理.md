@@ -16,7 +16,7 @@
 
 查询需要索引提高效率，但是又不想频繁进行磁盘IO操作，故减少树个深度，也就是采用多叉树。B树的各种操作能使B树保持较低的高度，从而达到有效避免磁盘过于频繁的查找存取操作，从而有效提高查找效率。
 
-![image-20210418203330233](D:\git\study-notes\存储\image-20210418203330233.png)
+![image-20210418203330233](image-20210418203330233.png)
 
 ​																															B树
 
@@ -29,7 +29,7 @@
 
 优点二： B+树所有的Data域在叶子节点，并且所有叶子节点之间都有一个链指针。 这样遍历叶子节点就能获得全部数据，这样就能进行区间访问啦。在数据库中基于范围的查询是非常频繁的，而B树不支持这样的遍历操作。																																
 
-![image-20210418203436375](D:\git\study-notes\存储\image-20210418203436375.png)
+![image-20210418203436375](image-20210418203436375.png)
 
 ​																															      B+树
 
@@ -98,7 +98,7 @@ MySQL 主从复制是指数据可以从一个MySQL数据库服务器主节点复
 
 MySQL主从复制涉及到三个线程，一个运行在主节点（log dump thread），其余两个(I/O thread, SQL thread)运行在从节点，如下图所示：
 
-![preview](D:\git\study-notes\存储\v2-1b0c3f31bd398c39b9e0930059b0ca24_r.jpg)
+![preview](v2-1b0c3f31bd398c39b9e0930059b0ca24_r.jpg)
 
 **l 主节点 binary log dump 线程**
 当从节点连接主节点时，主节点会创建一个log dump 线程，用于发送bin-log的内容。在读取bin-log中的操作时，此线程会对主节点上的bin-log加锁，当读取完成，甚至在发动给从节点之前，锁会被释放。
@@ -114,7 +114,7 @@ SQL线程负责读取relay log中的内容，解析成具体的操作并执行�
 要实施复制，首先必须打开Master 端的binary log（bin-log）功能，否则无法实现。
 因为整个复制过程实际上就是Slave 从Master 端获取该日志然后再在自己身上完全顺序的执行日志中所记录的各种操作。如下图所示：
 
-![preview](D:\git\study-notes\存储\mysql-master-slave-sync.jpg)
+![preview](mysql-master-slave-sync.jpg)
 
 复制的基本过程如下：
 

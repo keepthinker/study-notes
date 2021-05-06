@@ -6,7 +6,7 @@ Typical components of a kernel are interrupt handlers to service interrupt reque
 
 Applications running on the system communicate with the kernel via system calls (see Figure 1.1). An application typically calls functions in a library—for example, the C library—that in turn rely on the system call interface to instruct the kernel to carry out tasks on the application’s behalf.   
 
-![relationshipAppKernelHardware](D:\git\study-notes\操作系统\relationshipAppKernelHardware.png)
+![relationshipAppKernelHardware](relationshipAppKernelHardware.png)
 
 The kernel also manages the system’s hardware. Nearly all architectures, including all systems that Linux supports, provide the concept of interrupts.When hardware wants to communicate with the system, it issues an interrupt that literally interrupts the processor, which in turn interrupts the kernel.  
 
@@ -28,17 +28,21 @@ A process begins its life when, not surprisingly, it is created. In Linux, this 
 
 The kernel stores the list of processes in a circular doubly linked list called the task list.
 
-![process-task-list](D:\git\study-notes\操作系统\process-decriptor-task-list.png)
+![process-task-list](process-decriptor-task-list.png)
 
 ### Process State 
 
 - **TASK_RUNNING**—The process is runnable; it is either currently running or on a runqueue waiting to run.This is the only possible state for a process executing in user-space; it can also apply to a process in kernel-space that is actively running.
+
 - **TASK_INTERRUPTIBLE**—The process is sleeping (that is, it is blocked), waiting for some condition to exist.When this condition exists, the kernel sets the process’s state to TASK_RUNNING.The process also awakes prematurely and becomes runnable if it receives a signal.  
+
 - **TASK_UNINTERRUPTIBLE**—This state is identical to TASK_INTERRUPTIBLE except that it does not wake up and become runnable if it receives a signal.This is used in situations where the process must wait without interruption or when the event is expected to occur quite quickly. Because the task does not respond to signals in this state, TASK_UNINTERRUPTIBLE is less often used than TASK_INTERRUPTIBLE.  
 
 - **TASK_TRACED**—The process is being traced by another process, such as a debugger, via ptrace.
 
-- **TASK_STOPPED**—Process execution has stopped; the task is not running nor is it eligible to run.This occurs if the task receives the SIGSTOP, SIGTSTP, SIGTTIN, or SIGTTOU signal or if it receives any signal while it is being debugged.  ![process-state](D:\git\study-notes\操作系统\process-state.png)
+- **TASK_STOPPED**—Process execution has stopped; the task is not running nor is it eligible to run.This occurs if the task receives the SIGSTOP, SIGTSTP, SIGTTIN, or SIGTTOU signal or if it receives any signal while it is being debugged.  
+
+- ![process-state](D:process-state.png)
 
   Normal program execution occurs in user-space.  When a program executes a system call or triggers an exception, it enters kernel-space.  
 
