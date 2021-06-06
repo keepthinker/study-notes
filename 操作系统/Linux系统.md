@@ -42,7 +42,7 @@ The kernel stores the list of processes in a circular doubly linked list called 
 
 - **TASK_STOPPED**—Process execution has stopped; the task is not running nor is it eligible to run.This occurs if the task receives the SIGSTOP, SIGTSTP, SIGTTIN, or SIGTTOU signal or if it receives any signal while it is being debugged.  
 
-- ![process-state](D:process-state.png)
+- ![process-state](process-state.png)
 
   Normal program execution occurs in user-space.  When a program executes a system call or triggers an exception, it enters kernel-space.  
 
@@ -81,11 +81,144 @@ Threads are created the same as normal tasks, with the exception that the clone(
 
 The previous code results in behavior identical to a normal fork(), except that the **address space**, **filesystem resources**, **file descriptors**, and **signal handlers** are shared. In other words, the new task and its parent are what are popularly called threads.  The flags provided to clone() help specify the behavior of the new process and detail what resources the parent and child will share. 
 
-
-
 ## Process scheduling
 
 The **Completely Fair Scheduler** (CFS) is the registered scheduler class for normal processes, called SCHED_NORMAL in Linux (and SCHED_OTHER in POSIX). CFS is defined in kernel/sched_fair.c. The CFS algorithm and is germane to any Linux kernel since 2.6.23.  
+
+CFS根据各个进程的权重分配进程运行时间。
+**分配给进程的运行时间 = 调度周期 * 当前进程权重 / 所有进程权重总和** (公式3.1)
+调度周期：将所有处于TASK_RUNNING态进程都调度一遍的时间，在O(1)调度算法中就是运行队列中进程运行一遍的时间。所以进程权重与分配给进程的运行时间成正比。
+
+vruntime的计算公式为：
+**vruntime = 实际运行时间 * NICE_0_LOAD / 当前进程权重** (公式3.2)
+
+如果分配给进程的运行时间等于实际运行的时间时，将推到出另一vruntime计算公式。把公式3.2中的分配给进程的运行时间 与公式3.1中实际运行时间替换，将得出以下结果：
+vruntime = (调度周期 * 当前进程权重 / 所有进程权重总和) * NICE_0_LOAD/ 当前进程权重 = 调度周期 * NICE_0_LOAD/ 所有进程权重总和
+初步结论：当分配给进程的运行时间等于实际运行的时间时，虽然每个进程的权重不同，但是它们的 vruntime增长速度均相同，与权重无关。上文已述用vruntime来选择将要运行的进程，vruntime值较小表明它以前占用cpu的时间较短，受到了“不公平”对待，因此下一个运行进程就是它。如此一来既能公平选择进程，又能保证高优先级进程获得较多的运行时间。
+
+如果分配给进程的运行时间不等于实际运行的时间时：CFS的思想就是让每个调度实体的vruntime增加速度不同，权重越大的增加的越慢，这样高优先级进程就能获得更多的cpu执行时间，而vruntime值较小者也得到执行。
+
+每一个进程或者调度组都对应一个调度的实体，每一个进程都通过调度实体与CFS运行对列建立联系，每次进行CFS调度的时候都会在CFS运行对列红黑树中选择一个进程（vruntime值较小者）。
+
+CFS uses a **red-black tree** to manage the list of runnable processes and efficiently **find the process with the smallest vruntime**.  
+
+[浅析Linux中完全公平调度——CFS](https://zhuanlan.zhihu.com/p/269511249)
+
+### Process priority
+
+#### nice value
+
+**Larger nice values correspond to a lower priority**—you are being “nice” to the other processes on the system. Processes with a lower nice value (higher priority) receive a larger proportion of the system’s processor compared to processes with a higher nice value (lower priority).  
+
+```shell
+# command to see nice value
+ps -el
+```
+
+#### real-time priority 
+
+The values are configurable, but by default range from 0 to 99, inclusive. Opposite from nice values, higher real-time priority values correspond to a greater priority. All real-time processes are at a higher priority than normal processes; that is, the real-time priority and nice value are in disjoint value spaces.  
+
+```  shell
+# rtprio is real-time priority
+ps -eo state,uid,pid,ppid,rtprio,time,comm.  
+```
+
+### Process Selection
+
+When CFS is deciding what process to run next, it picks the process with the smallest vruntime.  
+
+CFS uses a red-black tree to manage the list of runnable processes and efficiently find the process with the smallest vruntime.  
+
+### Sleeping and Waking Up 
+
+A task sleeps for a number of reasons, but always while it is waiting for some event. The event can be a specified amount of time, more data from a file I/O, or another hardware event. 
+
+The task marks itself as **sleeping**, puts itself on a **wait queue**, removes itself from the red-black tree of runnable, and calls schedule() to select a new process to execute. Waking back up is the inverse: The task is set as runnable, removed from the wait queue, and added back to the red-black tree.  
+
+## System calls
+
+System calls provide a layer between the hardware and user-space processes.
+
+This layer serves three primary purposes: 
+
+1. it provides an abstracted hardware interface for userspace.  
+2. system calls ensure system security and stability.
+3. a single common layer between user-space and the rest of the system allows for the virtualized system provided to processes.
+
+System calls (often called syscalls in Linux) are typically accessed via function calls defined in the C library. 
+
+#### execution
+
+trapping into the kernel, transmitting the syscall number and any arguments, executing the correct system call function, and returning to user-space with the syscall’s return value. 
+
+## Interrupts
+
+Interrupts enable hardware to signal to the processor.  The processor receives the interrupt and signals the operating system to enable the operating system to respond to the new data.  **Hardware devices generate interrupts asynchronously** with respect to the processor clock—they can occur
+at any time.  Consequently, the kernel can be interrupted at any time to process interrupts.
+
+An interrupt is physically produced by electronic signals originating from hardware devices and directed into input pins on an interrupt controller, a simple chip that multiplexes multiple interrupt lines into a single line to the processor. Upon receiving an interrupt, the interrupt controller sends a signal to the processor. **The processor detects this signal and interrupts its current execution to handle the interrupt.** The processor can then notify the operating system that an interrupt has occurred, and the operating system can handle the interrupt appropriately.
+
+**Different devices can be associated with different interrupts by means of a unique value associated with each interrupt**. This way, interrupts from the keyboard are distinct from interrupts from the hard drive.  
+
+These interrupt values are often called **interrupt request (IRQ)** lines.  Each IRQ line is assigned a numeric value—for example, on the classic PC, IRQ zero is the timer interrupt and IRQ one is the keyboard interrupt.  
+
+### Interrupt handler 
+
+The function the kernel runs in response to a specific interrupt is called an **interrupt handler** or **interrupt service routine (ISR)**. Each device that generates interrupts has an associated interrupt handler.   
+
+The interrupt handler for a device is part of the device’s driver—the kernel code that manages the device.  What differentiates interrupt handlers from other kernel functions is that the kernel invokes them in response to interrupts and that they run in a special context (discussed later in this chapter) called **interrupt context**.  
+
+### Top Halves Versus Bottom Halves  
+
+Because of these competing goals, the processing of interrupts is split into two parts, or halves. **The interrupt handler is the top half**.
+**The top half is run immediately upon receipt of the interrupt and performs only the work that is time-critical**, such as acknowledging receipt of the interrupt or resetting the hardware. **Work that can be performed later is deferred until the bottom half.** The bottom half runs in the future, at a more convenient time, with all interrupts enabled.
+
+Top Halves例子：中断快速回复硬件，快速复制网卡的网络包到主内存，防止网卡过早满了不能接受更多数据包，处理完数据复制后，将控制权交给操作系统。
+
+Bottom Halves例子：上述TopHavles例子处理完毕后，接下来就是Bottom Halves要做的事情。
+
+为了在中断执行时间尽可能短和中断处理需完成大量工作之间找到一个平衡点，Linux 将中断处理程序分解为两个半部：顶半部（top half）和底半部（bottom half）。 
+
+顶半部完成尽可能少的比较紧急的功能，它往往只是简单地读取寄存器中的中断状态并清除，中断标志后就进行“登记中断”的工作。“登记中断”意味着将底半部处理程序挂到该设备的底半部执行队列中去。这样，顶半部执行的速度就会很快，可以服务更多的中断请求。现在，中断处理工作的重心就落在了底半部的头上，它来完成中断事件的绝大多数任务。
+
+底半部几乎做了中断处理程序所有的事情，而且可以被新的中断打断，这也是底半部和顶半部的最大不同，因为顶半部往往被设计成不可中断。底半部则相对来说并不是非常紧急的，而且相对比较耗时，不在硬件中断服务程序中执行。 
+
+[linux中断处理-顶半部（top half）和底半部（bottom half）](https://blog.csdn.net/weixin_30716725/article/details/95298142)
+
+
+
+### Interrupt Context  
+
+When executing an interrupt handler, the kernel is in interrupt context.   
+
+Interrupt context, on the other hand, is not associated with a process.  
+
+Interrupt context is time-critical because the interrupt handler interrupts other code.  Code should be quick and simple.  
+
+![image-20210603130642756](interrupt.png)
+
+A device issues an interrupt by sending an electric signal over its bus to the interrupt controller. If the interrupt line is enabled (they can be masked out), the interrupt controller sends the interrupt to the processor.  
+
+### /proc/interrupts  
+
+A relevant example is the /proc/interrupts file, which is populated with statistics related to interrupts on the system.  
+
+![image-20210604234332871](proc-interrupts.png)
+
+The first column is the interrupt line. On this system, interrupts numbered 0–2, 4, 5, 12, and 15 are present. Handlers are not installed on lines not displayed.The second column is a counter of the number of interrupts received. The third column is the interrupt controller handling this interrupt.  The last column is the device associated with this interrupt.  
+
+## Interrupt Control  
+
+The Linux kernel implements a family of interfaces for manipulating the state of interrupts on a machine.These interfaces enable you to disable the interrupt system for the current processor or mask out an interrupt line for the entire machine.  
+
+### 用户态内核态切换
+
+当程序中有系统调用语句，程序执行到系统调用时，首先使用类似int 80H的软中断指令，保存现场，去系统调用，在内核态执行，然后恢复现场，每个进程都会有两个栈，一个内核态栈和一个用户态栈。当int中断执行时就会由用户态栈转向内核态栈。系统调用时需要进行栈的切换。而且内核代码对用户不信任，需要进行额外的检查。系统调用的返回过程有很多额外工作，比如检查是否需要调度等。 
+
+系统调用一般都需要保存用户程序得上下文(context), 在进入内核的时候需要保存用户态的寄存器，在内核态返回用户态的时候会恢复这些寄存器的内容。这是一个开销的地方。 如果需要在不同用户程序间切换的话，那么还要更新cr3寄存器，这样会更换每个程序的虚拟内存到物理内存映射表的地址，也是一个比较高负担的操作
+
+[Linux | 用户态和内核态的切换耗费时间的原因](https://www.cnblogs.com/gtblog/p/12155109.html)
 
 
 

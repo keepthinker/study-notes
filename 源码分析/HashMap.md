@@ -62,3 +62,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     
 }
 ```
+
+
+
+
+
+## 参考文献
+
+[Java 8系列之重新认识HashMap](https://tech.meituan.com/2016/06/24/java-hashmap.html)

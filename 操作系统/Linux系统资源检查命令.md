@@ -111,6 +111,8 @@ top -H -p $pid
 # free
 Display amount of free and used memory in the system
 
+
+
 # uptime
 Gives a one line display of the following information.  The current time, how long the system has been running, how many users are currently logged on, and the system **load averages** for the past **1, 5, and 15** minutes.
 

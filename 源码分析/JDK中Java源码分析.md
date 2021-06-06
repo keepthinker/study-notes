@@ -1,6 +1,6 @@
 # 基础支持
 ## LockSupport
-```
+```java
 /**Disables the current thread for thread scheduling purposes unless the permit is available.
    @param blocker the synchronization object responsible for this thread parking
  */
@@ -24,7 +24,7 @@ public static void unpark(Thread thread)
 
 ```
 ## Unsafe cas方法
-```
+```java
 //得到指定对对象成员变量对应的long值，为CAS操作做指引。
 public native long objectFieldOffset(Field var1);
 //例子
@@ -65,7 +65,7 @@ volatile修饰的变量不会被指令重排序优化，保证代码的执行顺
 
 # 并发控制类
 ## Lock
-```
+```java
 //获取不到锁则进行阻塞。
 void lock();
 //如果实现类支持的话，允许其他线程interrupt当前等待锁而睡眠的线程。
@@ -89,7 +89,7 @@ Condition newCondition();
 
 使用共享模式，因为await方法可以被多个线程使用，当countdown使state的值归0时，将唤醒head下一个node关联的线程争抢锁，然后通过setHeadAndPropagate设置完当前线程的head节点后，唤醒下一个节点的线程，当然下一个节点又是head的下一个node，故将进行上诉操作进行释放锁。。
 
-```
+```java
 //初始化中count值实际上设置到AQS中的state属性
 public CountDownLatch(int count) {
     if (count < 0) throw new IllegalArgumentException("count < 0");
@@ -103,7 +103,7 @@ public CountDownLatch(int count) {
 
 在该类中，有ReentrantLock，Condition对象字段，一个是进行加锁操作，一个为了实现休眠与唤醒逻辑。
 
-```
+```java
 /**Main barrier code, covering the various policies. */
     private int dowait(boolean timed, long nanos)
         throws InterruptedException, BrokenBarrierException,
@@ -144,7 +144,7 @@ public CountDownLatch(int count) {
     }
 ```
 ## Sephemore
-```
+```java
 static final class FairSync extends Sync {
     private static final long serialVersionUID = 2014338818796000944L;
 

@@ -55,7 +55,7 @@ Java NIO的IO读写如果不是DirectBuffer就把数据复制到临时的DirectB
 ### 堆与虚拟机栈
 所有**原始类型的本地变量都存放在线程栈上**，因此对其它线程不可见。一个线程可能向另一个线程传递一个原始类型变量的拷贝，但是它不能共享这个原始类型变量自身。
 
-**堆上包含在Java程序中创建的所有对象**，无论是哪一个对象创建的。这包括原始类型的对象版本。如果一个对象被创建然后赋值给一个局部变量，或者用来作为另一个对象的成员变量，这个对象任然是存放在堆上。
+**堆上包含在Java程序中创建的所有对象**，无论是哪一个对象创建的。这包括原始类型的对象版本。如果一个对象被创建然后赋值给一个局部变量，或者用来作为另一个对象的成员变量，这个对象任然是存放在堆上。 
 
 堆可以对应于硬件中的内存，虚拟机栈则相当于寄存器和高速缓存。
 
@@ -80,6 +80,7 @@ Java NIO的IO读写如果不是DirectBuffer就把数据复制到临时的DirectB
 和“标记－清除”相似，不同的是，回收期间同时会将保留的存储对象搬运汇集到连续的内存空间。从而集成空闲空间。
 优点：可有效利用堆，压缩算法中会执行压缩。
 缺点：压缩花费计算成本。
+
 ### 增量回收器
 需要程序将所拥有的内存空间分成若干分区。程序运行所需的存储对象会分布在这些分区中，每次只对其中一个分区进行回收操作，从而避免程序全部运行线程暂停来进行回收，允许部分线程在不影响回收行为而保持运行，并且降低回收时间，增加程序响应速度。
 ### 分代回收
@@ -620,7 +621,7 @@ Since most objects are locked by at most one thread during their lifetime, we al
 
 - **WAITING**: Thread state for a waiting thread. A thread is in the waiting state due to calling one of the following methods:  **Object.wait() with no timeout**,  **Thread.join no timeout**, **LockSupport.park** A thread in the waiting state is waiting for another thread to perform a particular action. For example, a thread that has called Object.wait() on an object is waiting for another thread to call Object.notify() or Object.notifyAll() on that object. A thread that has called Thread.join() is waiting for a specified thread to terminate.
 - **TIMED_WAITING**: Thread state for a waiting thread with a specified waiting time. A thread is in the timed waiting state due to calling one of the following methods **with a specified positive waiting time: Thread.sleep  Object.wait, Thread.join with timeout LockSupport.parkNanos, LockSupport.parkUntil.**
-- **TERMINATED**:Thread state for a terminated thread.The thread has completed execution.
+- **TERMINATED**:Thread state for a terminated thread. The thread has completed execution.
 
 ## 线程状态变化
 ![image](https://www.uml-diagrams.org/examples/state-machine-example-java-6-thread-states.png)
