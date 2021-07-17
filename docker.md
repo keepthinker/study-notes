@@ -1,4 +1,5 @@
 # docker command
+```shell
 ## to kill a docker container process
 docker kill 9f215ed0b0d3
 docker pause 9f215ed0b0d3
@@ -25,4 +26,7 @@ docker start 82e2e71d7d79
 docker attach 82e2e71d7d79
 docker rename bb1a263ad46b ubuntu-bash
 docker exec -i -t 0ce1dc54c68c sh
+```
+
+
 
