@@ -169,10 +169,14 @@ The function the kernel runs in response to a specific interrupt is called an **
 
 The interrupt handler for a device is part of the device’s driver—the kernel code that manages the device.  What differentiates interrupt handlers from other kernel functions is that the kernel invokes them in response to interrupts and that they run in a special context (discussed later in this chapter) called **interrupt context**.  
 
+Interrupt handlers run with the current interrupt line disabled on all processors.
+
 ### Top Halves Versus Bottom Halves  
 
 Because of these competing goals, the processing of interrupts is split into two parts, or halves. **The interrupt handler is the top half**.
 **The top half is run immediately upon receipt of the interrupt and performs only the work that is time-critical**, such as acknowledging receipt of the interrupt or resetting the hardware. **Work that can be performed later is deferred until the bottom half.** The bottom half runs in the future, at a more convenient time, with all interrupts enabled.
+
+The top half is quick and simple and runs with some or all interrupts disabled.The bottom half (however it is implemented) runs later with all interrupts enabled.This design keeps system latency low by running with interrupts disabled for as little time as necessary.
 
 Top Halves例子：中断快速回复硬件，快速复制网卡的网络包到主内存，防止网卡过早满了不能接受更多数据包，处理完数据复制后，将控制权交给操作系统。
 
@@ -219,6 +223,201 @@ The Linux kernel implements a family of interfaces for manipulating the state of
 系统调用一般都需要保存用户程序得上下文(context), 在进入内核的时候需要保存用户态的寄存器，在内核态返回用户态的时候会恢复这些寄存器的内容。这是一个开销的地方。 如果需要在不同用户程序间切换的话，那么还要更新cr3寄存器，这样会更换每个程序的虚拟内存到物理内存映射表的地址，也是一个比较高负担的操作
 
 [Linux | 用户态和内核态的切换耗费时间的原因](https://www.cnblogs.com/gtblog/p/12155109.html)
+
+
+
+## Kernel Synchronization
+
+### Spin Lock
+
+The most common lock in the Linux kernel is the spin lock. A spin lock is a lock that can be held by at most one thread of execution. If a thread of execution attempts to acquire a spin lock while it is already held, which is called contended, the thread busy loops spins—waiting for the lock to become available.
+
+No context switch is involved.
+
+The actual usable interfaces are defined in <linux/spinlock.h>.The basic use of a spin lock is
+
+```c
+DEFINE_SPINLOCK(mr_lock);
+spin_lock(&mr_lock);
+/* critical region ... */
+spin_unlock(&mr_lock);
+```
+
+ 
+
+### Semaphore
+
+Semaphores in Linux are sleeping locks.When a task attempts to acquire a semaphore that is unavailable, the semaphore places the task onto a wait queue and puts the task to sleep.The processor is then free to execute other code.When the semaphore becomes available, one of the tasks on the wait queue is awakened so that it can then acquire the semaphore.
+
+```c
+/* define and declare a semaphore, named mr_sem, with a count of one */
+static DECLARE_MUTEX(mr_sem);
+/* attempt to acquire the semaphore ... */ 
+if (down_interruptible(&mr_sem)) {
+/* signal received, semaphore not acquired ... */
+}
+/* critical region ... */
+/* release the given semaphore */ 
+up(&mr_sem);
+```
+
+###  Mutex
+
+The mutex is represented by struct mutex. It behaves similar to a semaphore with a count of one, but it has a simpler interface, more efficient performance, and additional constraints on its use.
+
+```c
+//To statically define a mutex, you do:
+DEFINE_MUTEX(name);
+//To dynamically initialize a mutex, you call
+mutex_init(&mutex);
+//Locking and unlocking the mutex is easy:
+mutex_lock(&mutex);
+/* critical region ... */ 
+mutex_unlock(&mutex);
+
+```
+
+### Preemption Disabling
+
+we can use Preemption Disabling to protect a per-processor variable. kernel preemption can be disabled via preempt_disable(). The call is nestable; you can call it any number of times. For each call, a corresponding call to preempt_enable() is required.The final corresponding call to preempt_enable() reenables preemption. For example:
+
+```c
+preempt_disable();
+/* preemption is disabled ... */ 
+preempt_enable();
+```
+
+### Ordering and Barrier
+
+When talking with hardware, you often need to ensure that a given read occurs before another read or write. Complicating these issues is the fact that both the compiler and the processor can reorder reads and writes for performance reasons. It is also possible to instruct the compiler not to reorder instructions around a given point.These instructions are called *barriers*.
+
+The rmb() method provides a read memory barrier. It ensures that no loads are re- ordered across the rmb() call.That is, no loads prior to the call will be reordered to after the call, and no loads after the call will be reordered to before the call.
+
+The wmb() method provides a write barrier.
+
+The mb() call provides both a read barrier and a write barrier. 
+
+## Memory Management
+
+### Pages
+
+The kernel treats physical pages as the basic unit of memory management. Although the processor’s smallest addressable unit is a byte or a word, the memory management unit (MMU, the hardware that manages memory and performs virtual to physical address translations) typically deals in pages. In terms of virtual memory, pages are the smallest unit that matters.
+
+Most 32-bit architectures have 4KB pages, whereas most 64-bit architectures have 8KB pages.
+
+The important point to understand is that the page structure is associated with physical pages, not virtual pages. The data structure’s goal is to describe physical memory, not the data contained therein.
+
+### Zones
+
+Because of hardware limitations, the kernel cannot treat all pages as identical. Some pages, because of their physical address in memory, cannot be used for certain tasks. Because of this limitation, the kernel divides pages into different *zones*.The kernel uses the zones to group pages of similar properties.
+
+### Getting Pages
+
+The kernel provides one low-level mechanism for requesting memory, along with sev- eral interfaces to access it. The core function is 
+
+```c
+struct page * alloc_pages(gfp_t gfp_mask, unsigned int order)
+```
+
+#### Getting Zeroed pages
+
+This function works the same as __get_free_page(), except that the allocated page is then zero-filled—every bit of every byte is unset.
+
+```c
+unsigned long get_zeroed_page(unsigned int gfp_mask)
+```
+
+#### Free Pages
+
+A family of functions enables you to free allocated pages when you no longer need them:
+
+```c
+void __free_pages(struct page *page, unsigned int order) 
+void free_pages(unsigned long addr, unsigned int order) 
+void free_page(unsigned long addr)
+```
+
+### kmalloc
+
+The kmalloc() function’s operation is similar to that of user-space’s familiar malloc() routine, with the exception of the additional flags parameter.
+
+The function is declared in <linux/slab.h>:
+
+```c
+void * kmalloc(size_t size, gfp_t flags)
+```
+
+The region of memory allocated is physically contiguous.
+
+#### kfree
+
+The counterpart to kmalloc() is kfree(), which is declared in <linux/slab.h>: 
+
+``` c
+void kfree(const void *ptr) 
+```
+
+### vmalloc
+
+The vmalloc() function works in a similar fashion to kmalloc(), except it allocates memory that is only virtually contiguous and not necessarily physically contiguous.
+
+The vmalloc() function is declared in <linux/vmalloc.h> and defined in mm/vmalloc.c. Usage is identical to user-space’s malloc():
+
+```c
+void * vmalloc(unsigned long size)
+```
+
+To free an allocation obtained via vmalloc(), use
+
+```c
+void vfree(const void *addr)
+```
+
+### Slab Layer
+
+The slab layer divides different objects into groups called *caches*, each of which stores a different type of object.
+
+The caches are then divided into *slabs* (hence the name of this subsystem). The slabs are composed of one or more physically contiguous pages. Typically, slabs are composed of only a single page. Each cache may consist of multiple slabs.
+
+Each slab contains some number of *objects*, which are the data structures being cached. Each slab is in one of three states: full, partial, or empty. A full slab has no free objects. (All objects in the slab are allocated.) An empty slab has no allocated objects. (All objects in the slab are free.) A partial slab has some allocated objects and some free objects.
+
+ 
+
+## Virtual File System(VFS)
+
+The VFS is the glue that enables system calls such as open(), read(), and write() to work regardless of the filesystem or underlying physical medium.
+
+Such a generic interface for any type of filesystem is feasible only because the kernel implements an abstraction layer around its low-level filesystem interface.
+
+![vfs-abstract](/Users/keshengkai/Documents/git/study-notes/操作系统/vfs-abstract.png)
+
+### Unix File System
+
+#### Directory
+
+In Unix, directories are actually normal files that simply list the files contained therein. Because a directory is a file to the VFS, the same operations performed on files can be performed on directories.
+
+#### Inode
+
+Unix systems separate the concept of a file from any associated information about it, such as access permissions, size, owner, creation time, and so on. This information is sometimes called file metadata (that is, data about the file’s data) and is stored in a separate data structure from the file, called the inode.This name is short for index node, although these days the term inode is much more ubiquitous.
+
+#### VFS Objects and Their Data Structures
+
+The four primary object types of the VFS are
+
+- The superblock object, which represents a specific mounted filesystem. some operations: alloc_inode, destroy_inode, write_inode, put_super.
+- The inode object, which represents a specific file. The inode object represents all the information needed by the kernel to manipulate a file or directory. some operations: create, link, unlink, mkdir, mknod, rename, getattr.
+- The dentry object, which represents a directory entry, which is a single component of a path. some operations: d_hash, d_delete, d_compare, d_release.
+- The file object, which represents an open file as associated with a process.  Some operations: llseek, read, write, readdir, ioctl.
+
+An operations object is contained within each of these primary objects. These objects describe the methods that the kernel invokes against the primary objects:
+
+- The super_operations object, which contains the methods that the kernel can invoke on a specific filesystem, such as write_inode() and sync_fs()
+- The inode_operations object, which contains the methods that the kernel can invoke on a specific file, such as create() and link()
+- The dentry_operations object, which contains the methods that the kernel can invoke on a specific directory entry, such as d_compare() and d_delete()
+- The file_operations object, which contains the methods that a process can invoke on an open file, such as read() and write()
+
+Because multiple processes can open and manipulate a file at the same time, there can be multiple file objects in existence for the same file. The file object merely represents a process’s view of an open file. The object points back to the dentry (which in turn points back to the inode) that actually represents the open file. The inode and dentry objects, of course, are unique.
 
 
 
