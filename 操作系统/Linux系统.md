@@ -389,7 +389,7 @@ The VFS is the glue that enables system calls such as open(), read(), and write(
 
 Such a generic interface for any type of filesystem is feasible only because the kernel implements an abstraction layer around its low-level filesystem interface.
 
-![vfs-abstract](/Users/keshengkai/Documents/git/study-notes/操作系统/vfs-abstract.png)
+![vfs-abstract](vfs-abstract.png)
 
 ### Unix File System
 
@@ -418,6 +418,126 @@ An operations object is contained within each of these primary objects. These ob
 - The file_operations object, which contains the methods that a process can invoke on an open file, such as read() and write()
 
 Because multiple processes can open and manipulate a file at the same time, there can be multiple file objects in existence for the same file. The file object merely represents a process’s view of an open file. The object points back to the dentry (which in turn points back to the inode) that actually represents the open file. The inode and dentry objects, of course, are unique.
+
+
+
+## The Block I/O Layer
+
+Block devices are hardware devices distinguished by the random (that is, not necessarily sequential) access of fixed-size chunks of data.The fixed-size chunks of data are called blocks. 
+
+The other basic type of device is a character device. Character devices, or char devices, are accessed as a stream of sequential data, one byte after another.
+
+The difference comes down to whether the device accesses data randomly—in other words, whether the device can seek to one position from another.
+
+### Anatomy of a Block Device
+
+**The smallest addressable unit on a block device is a sector.** Sectors come in various powers of two, but 512 bytes is the most common size. The **sector size** is **a physical property of the device**, and the sector is the fundamental unit of all block devices—the device cannot address or operate on a unit smaller than the sector.
+
+The block is an abstraction of the filesystem—filesystems can be accessed only in multiples of a block. Although the physical device is addressable at the sector level, the kernel performs all disk operations in terms of blocks. Because the device’s smallest addressable unit is the sector, the block size can be no smaller than the sector and must be a multiple of a sector. The kernel also requires that a block be
+no larger than the page size. Therefore, **block sizes are a power-of-two multiple of the sector size and are not greater than the page size.** 
+
+![sector-block](sector-block-relationship.png)
+
+### Buffers and Buffer Heads
+
+When a block is stored in memory—say, after a read or pending a write—it is stored in a buffer. Each buffer is associated with exactly one block.The buffer serves as the object that represents a disk block in memory. 
+
+### Request Queues
+
+Block devices maintain request queues to store their pending block I/O requests. The request queue contains a doubly linked list of requests and associated control information. Requests are added to the queue by higher-level code in the kernel, such as filesystems.As long as the request queue is nonempty, the block device driver associated with the queue grabs the request from the head of the queue and submits it to its associated block device. Each item in the queue’s request list is a single request, of type struct request.
+
+### I/O Schedulers
+
+ the kernel does not issue block I/O requests to the disk in the order they are received or as soon as they are received. Instead, it performs operations called **merging and sorting** to greatly improve the performance of the system as a whole. The subsystem of the kernel that performs these operations is called the I/O scheduler.
+
+The I/O scheduler divides the resource of disk I/O among the pending block I/O requests in the system. It does this through the merging and sorting of pending requests in the request queue. the I/O scheduler virtualizes block devices among multiple outstanding block requests.This is done to minimize disk seeks and ensure optimum disk performance.
+
+#### The Job of an I/O Scheduler
+
+An I/O scheduler works by managing a block device’s request queue. It decides the order of requests in the queue and at what time each request is dispatched to the block device. It manages the request queue with the goal of reducing seeks, which results in greater global throughput.
+
+I/O schedulers perform two primary actions to minimize seeks: **merging** and **sorting**. Merging is the coalescing of two or more requests into one. If a request is already in the queue to read from an adjacent sector on the disk (for example, an earlier chunk of the same file), the two requests can be merged into a single request operating on one or more adjacent on-disk sectors. The entire request queue is kept sorted, sectorwise, so that all seeking activity along the queue moves (as much as possible) sequentially over the sectors of the hard disk.
+
+
+
+## The Process Address Space
+
+### Address Spaces
+
+The process address space consists of the virtual memory addressable by a process and the addresses within the virtual memory that the process is allowed to use. Each process is given a flat 32- or 64-bit address space, with the size depending on the architecture. **Normally, this flat address space is unique to each process.** Alternatively, processes can elect to share their address space with other processes.We know these processes as threads.
+
+The interesting part of the address space is the intervals of memory addresses, such as 08048000-0804c000, that the process has permission to access. These intervals of legal addresses are called memory areas.The process, through the kernel, can dynamically add and remove memory areas to its address space.
+
+The process can access a memory address only in a valid memory area. Memory areas have associated permissions, such as readable, writable, and executable, that the associated process must respect. If a process accesses a memory address not in a valid memory area, or if it accesses a valid area in an invalid manner, the kernel kills the process with the dreaded “Segmentation Fault” message
+
+
+
+## Page Tables
+
+Although applications operate on virtual memory mapped to physical addresses, processors operate directly on those physical addresses. Consequently, when an application accesses a virtual memory address, it must first be converted to a physical address before the processor can resolve the request. Performing this lookup is done via page tables. Page tables work by splitting the virtual address into chunks. Each chunk is used as an index into a table.The table points to either another table or the associated physical page.
+
+In Linux, the page tables consist of three levels.The multiple levels enable a sparsely populated address space, even on 64-bit machines. If the page tables were implemented asPage Tables 321 a single static array, their size on even 32-bit architectures would be enormous. Linux uses three levels of page tables even on architectures that do not support three levels in hardware. 
+
+In most architectures, page table lookups are handled (at least to some degree) by hardware. 
+
+![virtual-to-physical-address-lookup.png](virtual-to-physical-address-lookup.png)
+
+## The Page Cache And Page Writeback
+
+The Linux kernel implements a disk cache called the page cache. The goal of this cache is to minimize disk I/O by storing data in physical memory that would otherwise require disk access.
+
+The page cache consists of physical pages in RAM, the contents of which correspond to physical blocks on a disk. Whenever the kernel begins a read operation for example, when a process issues the read() system call—it first checks if the requisite data is in the page cache. If it is, the kernel can forgo accessing the disk and read the data directly out of RAM. This is called a cache hit. If the data is not in the cache, called a cache
+miss, the kernel must schedule block I/O operations to read the data off the disk. After the data is read off the disk, the kernel populates the page cache with the data so that any subsequent reads can occur out of the cache. Entire files need not be cached; the page cache can hold some files in their entirety while storing only a page or two of other files. What is cached depends on what has been accessed.
+
+### Write Caching of Linux
+
+Cacheing strategy, employed by Linux, is called write-back. In a write-back cache, processes perform write operations directly into the page cache. The backing store is not immediately or directly updated. Instead, the written-to pages in the page cache are marked as dirty and are added to a dirty list. Periodically, pages in the dirty list are written back to disk in a process called writeback, bringing the on-disk copy in line with the inmemory cache. The pages are then marked as no longer dirty. The term “dirty” can be confusing because what is actually dirty is not the data in the page cache (which is up to date) but the data on disk (which is out of date). A better term would be unsynchronized. A writeback is generally considered superior to a write-through strategy because by deferring the writes to disk, they can be coalesced and performed in bulk at a later time. The downside is complexity.
+
+### Cache Eviction
+
+The final piece to caching is the process by which data is removed from the cache, either to make room for more relevant cache entries or to shrink the cache to make available more RAM for other uses. This process, and the strategy that decides what to remove, is called cache eviction. Linux’s cache eviction works by **selecting clean (not dirty) pages** and **simply replacing them with something else.** If insufficient clean pages are in the cache, the kernel forces a writeback to make more clean pages available.
+
+#### The Two-List Strategy
+
+Linux, therefore, implements a modified version of LRU, called the two-list strategy. Instead of maintaining one list, the LRU list, Linux keeps two lists: the active list and the inactive list. Pages on the active list are considered “hot” and are not available for eviction. Pages on the inactive list are available for cache eviction.            Pages are placed on the active list only when they are accessed while already residing on the inactive list.  
+
+
+
+
+
+Write operations are deferred in the page cache.When data in the page cache is newer than the data on the backing store, we call that data dirty. Dirty pages that accumulate in memory eventually need to be written back to disk. Dirty page writeback occurs in three situations:
+
+- When free memory shrinks below a specified threshold, the kernel writes dirty data back to disk to free memory because only clean (nondirty) memory is available for eviction.When clean, the kernel can evict the data from the cache and then shrink the cache, freeing up more memory.
+- When dirty data grows older than a specific threshold, sufficiently old data is written back to disk to ensure that dirty data does not remain dirty indefinitely.
+- When a user process invokes the sync() and fsync() system calls, the kernel performs writeback on demand.
+
+A gang of kernel threads, the flusher threads, performs all three jobs.
+
+
+
+## Devices and Modules
+
+In Linux, as with all Unix systems, devices are classified into one of three types:
+
+- Block devices
+- Character devices
+- Network devices
+
+Often abbreviated blkdevs, **block device**s are addressable in device-specified chunks called
+blocks and generally support seeking, the random access of data. 
+
+Often abbreviated cdevs, **character devices** are generally not addressable, providing
+access to data only as a stream, generally of characters (bytes). 
+
+Sometimes called Ethernet devices after the most common type of **network devices**, network devices provide access to a network (such as the Internet) via a physical adapter and and a specific protocol. Breaking Unix’s “everything is a file” design principle, network devices are not accessed via a device node
+but with a special interface called the socket API.
+
+Not all device drivers represent physical devices. Some device drivers are virtual, providing access to kernel functionality.We call these pseudo devices; some of the most common are the kernel random number generator (accessible at /dev/random and /dev/urandom), the null device (accessible at /dev/null), the zero device (accessible at /dev/zero), the full device (accessible at /dev/full), and the memory device (accessible at /dev/mem). Most device drivers, however, represent physical hardware.
+
+## Module
+
+Despite being “monolithic,” in the sense that the whole kernel runs in a single address space, the Linux kernel is modular, supporting the dynamic insertion and removal of code from itself at runtime. Related subroutines, data, and entry and exit points are grouped together in a single binary image, a loadable kernel object, called a module. Support for modules allows systems to have only a minimal base kernel image, with optional features and drivers supplied via loadable, separate objects. Modules also enable the removal and reloading of kernel code, facilitate debugging, and allow for the loading of new drivers on
+demand in response to the hot plugging of new devices.
 
 
 
