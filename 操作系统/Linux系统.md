@@ -24,7 +24,7 @@ On modern operating systems, processes provide two virtualizations: **a virtuali
 
 threads share the virtual memory abstraction, whereas each receives its own virtualized processor.  
 
-A process begins its life when, not surprisingly, it is created. In Linux, this occurs by means of the fork() system call, which creates a new process by duplicating an existing one.The process that calls fork() is the parent, whereas the new process is the child.  The fork() system call returns from the kernel twice: once in the parent process and again in the newborn child.  
+A process begins its life when, not surprisingly, it is created. In Linux, this occurs by means of the fork() system call, which creates a new process by duplicating an existing one. The process that calls fork() is the parent, whereas the new process is the child.  The fork() system call returns from the kernel twice: once in the parent process and again in the newborn child.  
 
 The kernel stores the list of processes in a circular doubly linked list called the task list.
 
