@@ -173,5 +173,18 @@ firewall-cmd --reload
 
 firewall-cmd --list-all
 
+
+
+## 网络进程和端口
+
+```shell
+lsof -i:8000
+
+```
+
+
+
+
+
 ## 参考文献
 [Linux firewall-cmd 命令详解](https://blog.csdn.net/GMingZhou/article/details/78090963)

@@ -30,3 +30,12 @@ docker exec -i -t 0ce1dc54c68c sh
 
 
 
+## Minikube
+
+docker pull anjone/kicbase 
+
+minikube start --vm-driver=docker --base-image="anjone/kicbase" --image-mirror-country='cn' --image-repository='registry.cn-hangzhou.aliyuncs.com/google_containers'
+
+docker   load  -i kicbase.tar 
+
+[minikube start启动集群失败Unable to find image gcr.io/k8s-minikube/kicbase:v0.0.10](https://blog.csdn.net/kelsel/article/details/107728562)
