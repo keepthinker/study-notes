@@ -50,9 +50,27 @@ echo Name of the Pod: $POD_NAME
 curl http://localhost:8001/api/v1/namespaces/default/pods/$POD_NAME
 ```
 
+## Kubernetes Components
+
+When you deploy Kubernetes, you get a cluster.
+
+A Kubernetes cluster consists of a set of **worker machines, called nodes**, that **run containerized applications**. Every cluster has at least one worker node.
+
+The **worker node(s) host the Pods** that are the components of the application workload. The control plane manages the worker nodes and the Pods in the cluster. In production environments, the control plane usually runs across multiple computers and a cluster usually runs multiple nodes, providing fault-tolerance and high availability.
+
+This document outlines the various components you need to have for a complete and working Kubernetes cluster.
+
+![img](kubernetes-all-components.png)
+
+### kubelet
+
+An agent that runs on each node in the cluster. It makes sure that containers are running in a Pod.
+
+The kubelet takes a set of PodSpecs that are provided through various mechanisms and ensures that the containers described in those PodSpecs are running and healthy. The kubelet doesn't manage containers which were not created by Kubernetes.
+
 ## Kubernetes Pods
 
-When you created a Deployment in Module 2, Kubernetes created a **Pod** to host your application instance. A Pod is a Kubernetes abstraction that represents a group of one or more application containers (such as Docker), and some shared resources for those containers. Those resources include:
+When you created a Deployment in Module 2, Kubernetes created a **Pod** to host your application instance. **A Pod is a Kubernetes abstraction that represents a group of one or more application containers (such as Docker), and some shared resources for those containers.** Those resources include:
 
 - Shared storage, as Volumes
 - Networking, as a unique cluster IP address
@@ -60,7 +78,23 @@ When you created a Deployment in Module 2, Kubernetes created a **Pod** to host 
 
 A Pod models an application-specific "logical host" and can contain different application containers which are relatively tightly coupled. 
 
-Pods are the **atomic unit** on the Kubernetes platform. When we create a Deployment on Kubernetes, that Deployment creates Pods with containers inside them (as opposed to creating containers directly). Each Pod is tied to the Node where it is scheduled, and remains there until termination (according to restart policy) or deletion. In case of a Node failure, identical Pods are scheduled on other available Nodes in the cluster.
+Pods are the **atomic unit** on the Kubernetes platform. When **we create a Deployment on Kubernetes, that Deployment creates Pods with containers inside them (as opposed to creating containers directly).** Each Pod is tied to the Node where it is scheduled, and remains there until termination (according to restart policy) or deletion. In case of a Node failure, identical Pods are scheduled on other available Nodes in the cluster.
+
+Kubernetes 使用 Pod 来管理容器，**每个 Pod 可以包含一个或多个紧密关联的容器。**
+
+Pod 是一组紧密关联的容器集合，它们共享 PID、IPC、Network 和 UTS namespace，是 Kubernetes 调度的基本单位。Pod 内的多个容器共享网络和文件系统，可以通过进程间通信和文件共享这种简单高效的方式组合完成服务。
+
+Pod就像是我们的一个”专有主机”，上面除了运行我们的主应用程序之外，还可以运行一个与该应用紧密相关的进程。如日志收集工具、Git文件拉取器、配置文件更新重启器等。因为在Kubernetes中，一个Pod里的所有container都只会被分配到同一台主机上运行。
+
+#### 参考
+
+[Kubernetes 基本概念 ](https://feisky.gitbooks.io/kubernetes/content/introduction/concepts.html)
+
+http://dockone.io/article/9065
+
+
+
+
 
 ![img](pods-overview.png)
 
@@ -72,6 +106,8 @@ Every Kubernetes Node runs at least:
 
 - **Kubelet**, a process responsible for communication between the Kubernetes control plane and the Node; it manages the Pods and the containers running on a machine.
 - A **container runtime (like Docker)** responsible for pulling the container image from a registry, unpacking the container, and running the application.
+
+Node 是 Pod 真正运行的主机，可以是物理机，也可以是虚拟机。为了管理 Pod，每个 Node 节点上至少要运行 container runtime（比如 docker 或者 rkt）、`kubelet` 和 `kube-proxy` 服务。
 
 ![img](node-overview.png)
 
@@ -110,15 +146,31 @@ ervices allow your applications to receive traffic. Services can be exposed in d
 
 
 
-### Services and Labels
+### Services
 
 A Service routes traffic across a set of Pods. Services are the abstraction that allow pods to die and replicate in Kubernetes without impacting your application. Discovery and routing among dependent Pods (such as the frontend and backend components in an application) is handled by Kubernetes Services.
+
+Service 是应用服务的抽象，通过 labels 为应用提供负载均衡和服务发现。匹配 labels 的 **Pod IP 和端口**列表组成 endpoints，由 kube-proxy 负责将服务 IP 负载均衡到这些 endpoints 上。
+
+每个 Service 都会自动分配一个 **cluster IP（仅在集群内部可访问的虚拟地址）和 DNS 名**，其他容器可以通过该地址或 DNS 来访问服务，而不需要了解后端容器的运行。
+
+### Labels
 
 Services match a set of Pods using labels and selectors, a grouping primitive that allows logical operation on objects in Kubernetes. Labels are key/value pairs attached to objects and can be used in any number of ways:
 
 - Designate objects for development, test, and production
 - Embed version tags
 - Classify an object using tags
+
+Label 是识别 Kubernetes 对象的标签，以 key/value 的方式附加到对象上（key 最长不能超过 63 字节，value 可以为空，也可以是不超过 253 字节的字符串）。
+
+Label 不提供唯一性，并且实际上经常是很多对象（如 Pods）都使用相同的 label 来标志具体的应用。
+
+Label 定义好后其他对象可以使用 Label Selector 来选择一组相同 label 的对象（比如 ReplicaSet 和 Service 用 label 来选择一组 Pod）。Label Selector 支持以下几种方式：
+
+- 等式，如 `app=nginx` 和 `env!=production`
+- 集合，如 `env in (production, qa)`
+- 多个 label（它们之间是 AND 关系），如 `app=nginx,env=test`
 
  ![img](kubernetes_label.png)
 
