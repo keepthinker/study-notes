@@ -68,6 +68,52 @@ An agent that runs on each node in the cluster. It makes sure that containers ar
 
 The kubelet takes a set of PodSpecs that are provided through various mechanisms and ensures that the containers described in those PodSpecs are running and healthy. The kubelet doesn't manage containers which were not created by Kubernetes.
 
+kubelet has interface to interact with both the container and node. Kubelet is responsible for taking that configuration and actually running a pod or starting a pod with a container inside and then assigning resources from the node to container like cpu, ram and storage resouces. 
+
+## Master Processes
+
+Kubernetes cluster is usually  made up of mulitiple masters
+
+### API server
+
+The API server is a component of the Kubernetes control plane that exposes the Kubernetes API. The API server is the front end for the Kubernetes control plane.
+
+The main implementation of a Kubernetes API server is kube-apiserver. kube-apiserver is designed to scale horizontally—that is, it scales by deploying more instances. You can run several instances of kube-apiserver and balance traffic between those instances.
+
+- Cluster Gateway
+- Act as a gatekeeper for authentication
+
+### Scheduler
+
+Control plane component that watches for newly created Pods with no assigned node and selects a node for them to run on.
+
+Factors taken into account for scheduling decisions include: individual and collective resource requirements, hardware/software/policy constraints, affinity and anti-affinity specifications, data locality, inter-workload interference, and deadlines.
+
+It will look at your request and see how much resources the application that you want to schedule, will need how much cpu, how much ram and then it is going to look at and go though the worker node to see the availible resources on each one of them and if it says that one node is the least busy or has the most resources availible, it will schedule the new pod on that pod. It decides on which node a new pod will be scheduled, the process that actually does the scheduling that actually starts that pod with a container is the kubelet. so it gets the request from the scheduler and executes that request on that node.
+
+### kube-controller-manager
+
+Control plane component that runs controller processes.
+
+Logically, each controller is a separate process, but to reduce complexity, they are all compiled into a single binary and run in a single process.
+
+Some types of these controllers are:
+
+- Node controller: Responsible for noticing and responding when nodes go down.
+- Job controller: Watches for Job objects that represent one-off tasks, then creates Pods to run those tasks to completion.
+- Endpoints controller: Populates the Endpoints   (that is, joins Services & Pods).
+- Service Account & Token controllers: Create default accounts and API access tokens for new namespaces.
+
+### etcd
+
+Consistent and highly-available key value store used as Kubernetes' backing store for all cluster data.
+
+If your Kubernetes cluster uses etcd as its backing store, make sure you have a back up plan for those data.
+
+Every change in the cluster, for example new pod gets scheduled when the pod dies, all of these changes get saved in or updated in this key-value store of etcd. Cluster informaction stored in etcd is used to for master processes to communicate with the worker processes and vice versa.
+
+
+
 ## Kubernetes Pods
 
 When you created a Deployment in Module 2, Kubernetes created a **Pod** to host your application instance. **A Pod is a Kubernetes abstraction that represents a group of one or more application containers (such as Docker), and some shared resources for those containers.** Those resources include:
@@ -105,7 +151,14 @@ http://dockone.io/article/9065
 Every Kubernetes Node runs at least:
 
 - **Kubelet**, a process responsible for communication between the Kubernetes control plane and the Node; it manages the Pods and the containers running on a machine.
+
 - A **container runtime (like Docker)** responsible for pulling the container image from a registry, unpacking the container, and running the application.
+
+- **kube-proxy** is a network proxy that runs on each node in your cluster, implementing part of the Kubernetes Servce concept.
+
+  kube-proxy maintains network rules on nodes. These network rules allow network communication to your Pods from network sessions inside or outside of your cluster.
+
+  kube-proxy uses the operating system packet filtering layer if there is one and it's available. Otherwise, kube-proxy forwards the traffic itself.
 
 Node 是 Pod 真正运行的主机，可以是物理机，也可以是虚拟机。为了管理 Pod，每个 Node 节点上至少要运行 container runtime（比如 docker 或者 rkt）、`kubelet` 和 `kube-proxy` 服务。
 
@@ -148,11 +201,41 @@ ervices allow your applications to receive traffic. Services can be exposed in d
 
 ### Services
 
-A Service routes traffic across a set of Pods. Services are the abstraction that allow pods to die and replicate in Kubernetes without impacting your application. Discovery and routing among dependent Pods (such as the frontend and backend components in an application) is handled by Kubernetes Services.
+A Service routes traffic across a set of Pods. Services are the abstraction that allow pods to die and replicate in Kubernetes without impacting your application. Discovery and  among dependent Pods (such as the frontend and backend components in an application) is handled by Kubernetes Services.
 
-Service 是应用服务的抽象，通过 labels 为应用提供负载均衡和服务发现。匹配 labels 的 **Pod IP 和端口**列表组成 endpoints，由 kube-proxy 负责将服务 IP 负载均衡到这些 endpoints 上。
+Service 是应用服务的抽象，通过 labels 为应用提供**负载均衡**和**服务发现**。匹配 labels 的 **Pod IP 和端口**列表组成 endpoints，由 kube-proxy 负责将服务 IP 负载均衡到这些 endpoints 上。
 
 每个 Service 都会自动分配一个 **cluster IP（仅在集群内部可访问的虚拟地址）和 DNS 名**，其他容器可以通过该地址或 DNS 来访问服务，而不需要了解后端容器的运行。
+
+- Permenent IP address
+- Lifecycle of Pod and Service not Connected
+
+There are internal service and external service. External Service opens the communication from external sources, the internal service do the opposite.
+
+Services has two functionalities: permenent IP, load balancer.
+
+### Ingress
+
+It route traffic into the clutser. For example, It forwards http request whose url contains domain name to the service.
+
+### ConfigMap
+
+External Configuration to your application. It would usually contain configuration data like urls of database or some other services that you use. The pod get the data that ConfigMap contains. If you change the name of a service or the endpoint of the service, you just adjust the config map and you don't have to build a new image and have to go through this whole cycle.
+
+### Sercret
+
+Like Config map, but the difference is that it's used to store secret data, credentials for example and it's stored not in a plain text format of course but in base64 encoded format.
+
+### Deployment
+
+- Blueprint for my-app pods
+- you create deployments
+
+You can use depoyments to specify how many replicas, scale up or down the number of replicas of pods that you need. Pod is a layer of abstraction on top of containers and deployment is another abstraction on top of pods which make it more convenient to interacted with pods and replicate them and do some other configuration.
+
+### StatefulSet
+
+meant for stateful applications like databases. DB are often hosted outside of k8s cluster.
 
 ### Labels
 
@@ -282,7 +365,7 @@ Users expect applications to be available all the time and developers are expect
 
 Similar to application Scaling, if a Deployment is exposed publicly, the Service will load-balance the traffic only to available Pods during the update. An available Pod is an instance that is available to the users of the application.
 
-Rolling updates allow the following actions:
+Rolling updates allow the following actions: 
 
 - Promote an application from one environment to another (via container image updates)
 - Rollback to previous versions
