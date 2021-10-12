@@ -79,4 +79,21 @@ select substring_index(host, ":", 1) ip, count(*) num from information_schema.pr
 
 
 
+# Query 诊断分析工具
+
+
+
+```shell
+// 查看是否开启profiling
+select @@profiling;
+// 开启 profiling
+set profiling=1;
+// execute sql
+show profiles
+// 查询第二条语句的执行情况
+show profile for query 2;
+// 指定资源类型查看
+show profile cpu,swaps for query 2;
+
+```
 
