@@ -144,8 +144,51 @@ curl -X GET "localhost:9200/logs-my_app-default/_search?pretty" -H 'Content-Type
 '
 ```
 
+## Query DSL (Domain Specific Language)
+
+official doc: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html
+
+### term, match, match_phrase的区别
+
+term是将传入的文本原封不动地（不分词）拿去查询。
+
+match会对输入进行分词处理后再去查询，部分命中的结果也会按照评分由高到低显示出来。
+
+match_phrase是按短语查询，只有存在这个短语的文档才会被显示出来。
+
+也就是说，term和match_phrase都可以用于精确匹配，而match用于模糊匹配。
+
+之前我以为match_phrase不会被分词，看来理解错了，其官方解释如下：
+
+Like the match query, the match_phrase query first analyzes the query string to produce a list of terms. It then searches for all the terms, but keeps only documents that contain all of the search terms, in the same positions relative to each other.
+
+总结下，这段话的3个要点：
+
+1. match_phrase还是分词后去搜的
+2. 目标文档需要包含分词后的所有词
+3. 目标文档还要保持这些词的相对顺序和文档中的一致
+
+只有当这三个条件满足，才会命中文档！
 
 
+
+##  测试分析器
+
+有些时候很难理解分词的过程和实际被存储到索引中的词条，特别是你刚接触Elasticsearch。为了理解发生了什么，你可以使用 `analyze` API 来看文本是如何被分析的。在消息体里，指定分析器和要分析的文本：
+
+```sense
+GET /_analyze
+{
+  "analyzer": "standard",
+  "text": "Text to analyze"
+}
+
+GET ds-logs-my_app-default/_analyze
+{
+    "field": "team_name",
+    "text":"Rocket"
+}
+```
 
 
 
@@ -154,3 +197,9 @@ curl -X GET "localhost:9200/logs-my_app-default/_search?pretty" -H 'Content-Type
 https://www.elastic.co/
 
 [Elasticsearch是如何做到快速索引的](https://www.jianshu.com/p/ed7e1ebb2fb7)
+
+https://github.com/xr2117/ElasticSearch7
+
+[es中match_phrase和term区别_timothytt的博客-程序员宅基地](https://www.cxyzjd.com/article/timothytt/86775114)
+
+https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html
