@@ -192,7 +192,72 @@ GET ds-logs-my_app-default/_analyze
 
 
 
+##  Boolean query
+
+A query that matches documents matching boolean combinations of other queries. The bool query maps to Lucene `BooleanQuery`. It is built using one or more boolean clauses, each clause with a typed occurrence. The occurrence types are:
+
+| Occur      | Description                                                  |
+| ---------- | ------------------------------------------------------------ |
+| `must`     | The clause (query) must appear in matching documents and will contribute to the score. 所有的语句都*必须（must）*匹配，与`AND`等价。返回的文档必须满足must子句的条件，并且参与计算分值。 |
+| `filter`   | The clause (query) must appear in matching documents. However unlike `must` the score of the query will be ignored. Filter clauses are executed in [filter context](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-filter-context.html), meaning that scoring is ignored and clauses are considered for caching. 返回的文档必须满足filter子句的条件。但是跟Must不一样的是，不会计算分值， 并且可以使用缓存。如果你的业务场景不需要算分，使用filter比must查询速度快很多。 |
+| `should`   | The clause (query) should appear in the matching document. 至少有一个语句要匹配，与 `OR` 等价。 |
+| `must_not` | The clause (query) must not appear in the matching documents. Clauses are executed in [filter context](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-filter-context.html) meaning that scoring is ignored and clauses are considered for caching. Because scoring is ignored, a score of `0` for all documents is returned. 所有的语句都 *不能（must not）* 匹配，与 `NOT` 等价。 |
+
+### 例子
+
+```shell
+curl http://localhost:9200/ds-logs-my_app-default/_search
+{
+    "query": {
+        "bool": {
+            "must": [{
+                    "bool": {
+                        "should": [
+                            {"term": {
+                                    "name": "lee"
+                                }},
+                            {"match": {
+                                    "name": "john"
+                                }}]}}
+            ],
+            "must_not": [{
+                    "term": {
+                        "name": "1"
+                    }},{
+                    "term": {
+                        "play_year": "11"
+                    }}]}}
+}
+// 类似SQL
+select * from ds-logs-my_app-default where (term = 'lee' and name like '%john%') 
+and (name != 1 and play_year != "11")
+```
+
+
+
+##  Elasticsearch关联关系如何存储
+
+关联关系仍然非常重要。某些时候，我们需要缩小扁平化和现实世界关系模型的差异。 以下`四种`常用的方法，用来在 Elasticsearch 中进行关联数据的管理：
+
+#### 应用端关联
+
+即在应用接口层面来处理关联关系。
+
+#### 宽表冗余存储
+
+冗余存储，对每个文档保持一定数量的冗余数据可以在需要访问时避免进行关联。
+
+#### 嵌套文档（Nested）存储
+
+Nested类型是ES Mapping定义的集合类型之一。
+
+#### 父子文档存储
+
+Join类型是ES Mapping定义的类型之一，用于在同一索引的文档中创建父/子关系。
+
 ## 参考文献
+
+
 
 https://www.elastic.co/
 
@@ -203,3 +268,7 @@ https://github.com/xr2117/ElasticSearch7
 [es中match_phrase和term区别_timothytt的博客-程序员宅基地](https://www.cxyzjd.com/article/timothytt/86775114)
 
 https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html
+
+[干货 | Elasticsearch多表关联设计指南](https://juejin.cn/post/6844903807042715655)
+
+[relations](https://www.elastic.co/guide/en/elasticsearch/guide/current/relations.html)
