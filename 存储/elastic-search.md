@@ -4,7 +4,7 @@ Elasticsearch is the distributed search and analytics engine at the heart of the
 
 Elasticsearch provides near real-time search and analytics for all types of data.
 
-
+Kibana local address: http://localhost:5601/
 
 ##  Data in: documents and indices
 
@@ -104,7 +104,9 @@ curl -X GET "localhost:9200/logs-my_app-default/_search?pretty" -H 'Content-Type
     "match_all": { }
   },
   "fields": [
-    "@timestamp"
+    "@timestamp",
+    "name",
+    "play_year"
   ],
   "_source": false,
   "sort": [
@@ -114,6 +116,16 @@ curl -X GET "localhost:9200/logs-my_app-default/_search?pretty" -H 'Content-Type
   ]
 }
 '
+
+curl -X GET "localhost:9200/logs-my_app-default/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "match_all": { }
+  },
+  "_source": ["name", "play_year"]
+}
+'
+
 ```
 
 ####  Search a date range
@@ -143,6 +155,38 @@ curl -X GET "localhost:9200/logs-my_app-default/_search?pretty" -H 'Content-Type
 }
 '
 ```
+
+#### Filter
+
+In a filter context, a query clause answers the question “*Does this document match this query clause?*” The answer is a simple Yes or No — no scores are calculated. Filter context is mostly used for filtering structured data, e.g.
+
+- *Does this `timestamp` fall into the range 2015 to 2016?*
+- *Is the `status` field set to `"published"`*?
+
+Frequently used filters will be cached automatically by Elasticsearch, to speed up performance.
+
+```json
+curl -X GET "http://localhost:9200/ds-logs-my_app-default/_search" -H 'Content-Type: application/json' -d '
+{
+    "query": {
+        "bool": {
+            "must": {
+                "term": {
+                "team_name": "rocket"
+                }
+            },
+            "filter": {
+                "term": {
+                    "play_year": "10"
+                }
+            }
+        }
+    }
+}
+'
+```
+
+
 
 ## Query DSL (Domain Specific Language)
 
@@ -232,6 +276,169 @@ curl http://localhost:9200/ds-logs-my_app-default/_search
 select * from ds-logs-my_app-default where (term = 'lee' and name like '%john%') 
 and (name != 1 and play_year != "11")
 ```
+
+## Aggregation
+
+```json
+// 统计每个name的数量
+curl http://localhost:9200/ds-logs-my_app-default/_search
+{
+  "size":0,
+  "aggs":{
+    "models":{
+      "terms":{
+        "field":"name.keyword"
+      }
+    }
+  }
+}
+
+// 统计birthday平均值
+http://localhost:9200/ds-logs-my_app-default/_search
+{
+  "size":0,
+  "aggs":{
+    "avg_age":{
+      "avg":{
+        "field":"birthday"
+      }
+    }
+  }
+}
+
+// 统计在query条件下，查name的不重复的数量
+{
+  "size":0,
+  "query":{
+      "match":{
+          "name": "John"
+      }
+  },
+  "aggs":{
+    "name_count":{
+      "cardinality":{
+        "field":"name.keyword"
+      }
+    }
+  }
+}
+
+// 获取最大值
+{
+    "aggs": {
+        "max_play_year": {
+            "max": {
+                "field": "play_year"
+            }
+        }
+    }
+}
+
+// 计算总量
+{
+    "aggs": {
+        "total_play_year": {
+            "sum": {
+                "field": "play_year"
+            }
+        }
+    }
+}
+```
+
+
+
+### Mapping
+
+#### Create Mapping and add fields
+
+```json
+// create an index
+PUT /publications
+
+// create mapping
+PUT /publications/_mapping
+{
+  "properties": {
+    "title":  { "type": "text"}
+  }
+}
+
+// create mapping 2 
+PUT /publications
+{
+    "mappings": {
+        "properties": {
+            "name": {
+                "type": "text"
+            }
+        }
+    }
+}
+
+// add new field content for mapping
+PUT /publications/_mapping
+{
+  "properties": {
+    "content":  { "type": "text"}
+  }
+}
+
+
+```
+
+
+
+##### Change the mapping of an existing field
+
+```json
+PUT /my-index-000001
+{
+  "mappings" : {
+    "properties": {
+      "user_id": {
+        "type": "long"
+      }
+    }
+  }
+}
+
+// create long data
+POST /my-index-000001/_doc?refresh=wait_for
+{
+  "user_id" : 12345
+}
+
+POST /my-index-000001/_doc?refresh=wait_for
+{
+  "user_id" : 12346
+}
+
+// create new index
+PUT /my-new-index-000001
+{
+  "mappings" : {
+    "properties": {
+      "user_id": {
+        "type": "keyword"
+      }
+    }
+  }
+}
+
+// reindex my-index-000001 to my-new-index-000001
+POST /_reindex
+{
+  "source": {
+    "index": "my-index-000001"
+  },
+  "dest": {
+    "index": "my-new-index-000001"
+  }
+}
+```
+
+
 
 
 
