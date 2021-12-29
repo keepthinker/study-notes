@@ -499,13 +499,9 @@ The final piece to caching is the process by which data is removed from the cach
 
 #### The Two-List Strategy
 
-Linux, therefore, implements a modified version of LRU, called the two-list strategy. Instead of maintaining one list, the LRU list, Linux keeps two lists: the active list and the inactive list. Pages on the active list are considered “hot” and are not available for eviction. Pages on the inactive list are available for cache eviction.            Pages are placed on the active list only when they are accessed while already residing on the inactive list.  
+Linux, therefore, implements a modified version of LRU, called the two-list strategy. Instead of maintaining one list, the LRU list, Linux keeps two lists: the active list and the inactive list. Pages on the active list are considered “hot” and are not available for eviction. Pages on the inactive list are available for cache eviction.  Pages are placed on the active list only when they are accessed while already residing on the inactive list.  
 
-
-
-
-
-Write operations are deferred in the page cache.When data in the page cache is newer than the data on the backing store, we call that data dirty. Dirty pages that accumulate in memory eventually need to be written back to disk. Dirty page writeback occurs in three situations:
+Write operations are deferred in the page cache. When data in the page cache is newer than the data on the backing store, we call that data dirty. Dirty pages that accumulate in memory eventually need to be written back to disk. Dirty page writeback occurs in three situations:
 
 - When free memory shrinks below a specified threshold, the kernel writes dirty data back to disk to free memory because only clean (nondirty) memory is available for eviction.When clean, the kernel can evict the data from the cache and then shrink the cache, freeing up more memory.
 - When dirty data grows older than a specific threshold, sufficiently old data is written back to disk to ensure that dirty data does not remain dirty indefinitely.
