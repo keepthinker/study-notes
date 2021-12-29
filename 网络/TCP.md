@@ -137,6 +137,9 @@ When a connection is established, TCP uses the minimum of the MTU of the outgoin
 Once the initial SMSS is chosen, all IPv4 datagrams sent by TCP on that connection have the IPv4 DF bit field set.
 
 ## 连接建立
+
+![img](tcp-status.png)
+
 ### 三次握手
 假如两次握手，一个已失效的连接请求报文段突然又传送到了服务端，服务器误认为连接请求有效，一直等待客户端数据造成资源浪费。
 ### options情况
