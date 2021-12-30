@@ -140,7 +140,10 @@ Once the initial SMSS is chosen, all IPv4 datagrams sent by TCP on that connecti
 
 ![img](tcp-status.png)
 
+​                                                                                                          一般正常TCP流程
+
 ### 三次握手
+
 假如两次握手，一个已失效的连接请求报文段突然又传送到了服务端，服务器误认为连接请求有效，一直等待客户端数据造成资源浪费。
 ### options情况
 
@@ -175,6 +178,12 @@ delayed for a long period of time and closed, but then opened again with the sam
 knowing the connection 4-tuple as well as the currently active window of sequence numbers is all that is required to form a TCP segment that is considered valid to a communicating TCP endpoint. This represents a form of vulnerability for TCP: anyone can forge a TCP segment and, if the sequence numbers,
 IP addresses, and port numbers are chosen appropriately, can interrupt a TCP
 connection.
+
+
+
+### 双方同时发起FIN情况
+
+![img](tcp-closing-status.png)
 
 ## 连接建立超时
 Use the method of exponential backoff to handle timeout.
