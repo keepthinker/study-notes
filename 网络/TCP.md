@@ -165,6 +165,26 @@ Once the initial SMSS is chosen, all IPv4 datagrams sent by TCP on that connecti
 
 多一次挥手因为是一方接收到FIN时意味将没有数据再发来，但是还是可以继续发送数据。
 
+因为TCP是全双工通信的
+
+   （1）第一次挥手
+
+​     因此当主动方发送断开连接的请求（即FIN报文）给被动方时，仅仅代表主动方不会再发送数据报文了，但主动方仍可以接收数据报文。
+
+​    （2）第二次挥手
+
+​     被动方此时有可能还有相应的数据报文需要发送，因此需要先发送ACK报文，告知主动方“我知道你想断开连接的请求了”。这样主动方便不会因为没有收到应答而继续发送断开连接的请求（即FIN报文）。
+
+   （3）第三次挥手
+
+​    被动方在处理完数据报文后，便发送给主动方FIN报文；这样可以保证数据通信正常可靠地完成。发送完FIN报文后，被动方进入LAST_ACK阶段（超时等待）。
+
+   （4）第四挥手
+
+​    如果主动方及时发送ACK报文进行连接中断的确认，这时被动方就直接释放连接，进入可用状态。
+
+参考：[TCP为什么是四次挥手，而不是三次？](https://www.zhihu.com/question/63264012/answer/298264454)
+
 Either end can send a FIN when it is done sending data. When a TCP receives a FIN, it must notify the application that the other end has terminated that direction of data flow.
 
 ## Initial Sequence Number
@@ -210,7 +230,7 @@ It is the maximum amount of time any segment can exist in the network before bei
 - **FIN-WAIT-2**
 (both server and client) represents waiting for a connection termination request from the remote TCP.
 - **CLOSE-WAIT**
-(both server and client) represents waiting for a connection termination request from the local user.
+(both server and client) represents waiting for a connection termination request from the local user. Indicates that the server has received the first FIN signal from the client and the connection is in the process of being closed. This means the socket is waiting for the application to execute `close()`. A socket can be in CLOSE_WAIT state indefinitely until the application closes it. Faulty scenarios would be like a file descriptor leak: server not executing `close()` on sockets leading to pile up of CLOSE_WAIT sockets.
 - **CLOSING**
 (both server and client) represents waiting for a connection termination request acknowledgment from the remote TCP.
 - **LAST-ACK**
@@ -220,7 +240,7 @@ It is the maximum amount of time any segment can exist in the network before bei
 - **CLOSED**
 (both server and client) represents no connection state at all.
 
-![image](https://note.youdao.com/yws/api/personal/file/WEB5148d8b0e012acb64b5d10535d3baa00?method=getImage&version=5011&cstk=dipEa6If)
+
 ![image](https://upload.wikimedia.org/wikipedia/commons/f/f6/Tcp_state_diagram_fixed_new.svg)
 
 ## 正在进来的连接队列
@@ -242,17 +262,19 @@ Knowing the RTT is made more complicated because it can change over time, as rou
 According to [RFC6298], the initial setting for the RTO(Retransmission Timeout) should be 1s, although 3s is used in the event of a timeout on the initial SYN segment.
 
 ## Linux参数
-- **tcp_retries1** (integer; default: 3; since Linux 2.2) The number of times TCP will attempt to retransmit a packet on an established connection normally, without the extra effort of getting the network layers involved.  Once we exceed this number of retransmits, we first have the network layer update the route if possible before each new retransmit.  The default is the RFC specified minimum of 3.
-
-- **tcp_retries2** (integer; default: 15; since Linux 2.2) The maximum number of times a TCP packet is retransmitted in established state before giving up.  The default value is 15, which corresponds to a duration of approximately between 13 to 30 minutes, depending on the retransmission timeout.  The RFC 1122 specified minimum limit of 100 seconds is typically deemed too short.
-
+- **tcp_retries1** (integer; default: 3; since Linux 2.2) The number of times TCP will attempt to retransmit a packet on an established connection normally, without the extra effort of getting the network layers involved.  Once we exceed this number of retransmits, we first have the network layer update the route if possible before each new retransmit.  The default is the RFC specified minimum of 3. This value influences the time, after which TCP decides, that something is wrong due to unacknowledged RTO retransmissions, and reports this suspicion to the network layer. 一旦重传超过阈值tcp_retries1，主要的动作就是更新路由缓存，用以避免由于路由选路变化带来的问题。
+- **tcp_retries2** (integer; default: 15; since Linux 2.2) The maximum number of times a TCP packet is retransmitted in established state before giving up.  The default value is 15, which corresponds to a duration of approximately between 13 to 30 minutes, depending on the retransmission timeout.  The RFC 1122 specified minimum limit of 100 seconds is typically deemed too short. 
 - SYN segments, **net.ipv4.tcp_syn_retries**
-and **net.ipv4.tcp_synack_retries** bounds the number of retransmissions of SYN segments; their default value is 5 (roughly 180s)
+  and **net.ipv4.tcp_synack_retries** bounds the number of retransmissions of SYN segments; their default value is 5 (roughly 180s)
+
+#### 关于Linux的tcp_retries1和tcp_retries2重传次数规则
+
+Linux并不是直接拿tcp_retries1和tcp_retries2来限制重传次数的，而是用计算得到的一个timeout值来判断是否要放弃重传的。真正的重传次数同时与RTT相关。详细解释见博客：[聊一聊重传次数](https://perthcharles.github.io/2015/09/07/wiki-tcp-retries/)
 
 ## 基于时间的重传
-Once a sending TCP has established its RTO based upon measurements of the time-varying values of effective RTT, whenever it sends a segment it ensures that a retransmission timer is set appropriately.
+Once a sending TCP has established its RTO(retransmission timeout) based upon measurements of the time-varying values of effective RTT, whenever it sends a segment it ensures that a retransmission timer is set appropriately.
 
-When TCP fails to receive an ACK for a segment it has timed on a connection within the RTO, it performs a timer-based retransmission.
+When TCP fails to receive an ACK for a segment it has sent on a connection within the RTO, it performs a timer-based retransmission.
 
 TCP considers a timer-based retransmission as a fairly major event; it reacts very cautiously when it happens by **quickly reducing the rate at which it sends data into the network**. It does this in two ways. 
 - The first way is to reduce its sending window size based on congestion control procedures (see Chapter 16). 
