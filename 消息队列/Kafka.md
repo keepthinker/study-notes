@@ -15,7 +15,7 @@
 
 # Topic & Partition
 
-Topic 在逻辑上可以被认为是一个 queue，每条消费都必须指定它的 Topic，可以简单理解为必须指明把这条消息放进哪个 queue 里。为了使得 Kafka 的吞吐率可以线性提高，物理上把 Topic 分成一个或多个 Partition，每个 Partition 在物理上对应一个文件夹，该文件夹下存储这个 Partition 的所有消息和索引文件。
+Topic 在逻辑上可以被认为是一个 queue，每条消费都必须指定它的 Topic，可以简单理解为必须指明把这条消息放进哪个 queue 里。为了使得 Kafka 的吞吐率可以线性提高，**物理上把 Topic 分成一个或多个 Partition，每个 Partition 在物理上对应一个文件夹，该文件夹下存储这个 Partition 的所有消息和索引文件。**
 
 # Producer 
 
@@ -86,7 +86,7 @@ RecordAccumulator为每个分区都维护一个双端队列，队列元素是Pro
 ## Consumer Group
 
 使用 Consumer high level API 时，同一 Topic 的一条消息只能被同一个 Consumer Group(消费组)内的一个 Consumer 消费，但多个 Consumer Group 可同时消费这一消息。
-![Consumer Group](https://static001.infoq.cn/resource/image/68/22/68f2ca117290d8f438610923c108ce22.png)
+![Consumer Group](kafka-partition-consumer.png)
 
 实际上，Kafkak的设计理念之一就是同时提供离线处理和实时处理。根据这一特性，可以使用 Storm 这种实时流处理系统对消息进行实时在线处理，同时使用 Hadoop 这种批处理系统进行离线处理，还可以同时将数据实时备份到另一个数据中心，只需要保证这三个操作所使用的 Consumer 属于不同的 Consumer Group 即可。
 
@@ -110,13 +110,19 @@ Kafka支持使用pause和resume()方法来分别实现暂停从某些分区拉�
 
 ## 指定位移消费
 
-在Kafka中每当消费者查找不到所记录的消费位移时，就会根据消费者客户端参数auto.offset.reset的配置来决定从何处开始消费，默认值为latest，表明从分区末尾开始消费。如果将auto.offset.reset配置为earliest，那么消费者将从起始处，也就是0开始消费。比如当一个新的消费组来消费时，客户端会爆出重置位移的提示信息。
+在Kafka中每当消费者查找不到所记录的消费位移时，就会根据消费者客户端参数auto.offset.reset的配置来决定从何处开始消费。
 
-KafkaConsumer中的seek()方法正好提供了这个功能，让我们得以追前消费或回溯消费。通过seek()方法可以让客户端KafkaConsumer指定从beginningOffsets()处（既位置为0处）或从endOffsets处（既指定分区的末尾处）开始消费。
+#### auto.offset.reset
+
+- auto.offset.reset默认值为latest，表明从分区末尾开始消费。
+
+- auto.offset.reset配置为earliest，那么消费者将从起始处，也就是0开始消费。比如当一个新的消费组来消费时，客户端会爆出重置位移的提示信息。
+
+KafkaConsumer中的seek()方法让我们得以追前消费或回溯消费。通过seek()方法可以让客户端KafkaConsumer指定从beginningOffsets()处（既位置为0处）或从endOffsets处（既指定分区的末尾处）开始消费。
 
 ## 再均衡
 
-再均衡是指分区的所属权从一个消费者转移到另一个消费者的行为，它为消费者具备高可用和伸缩性提供保障，使我们可以既方便又安全地删除消费组内的消费者或往消费组里添加消费者。不过在再均衡发生期间，消费组内的消息者是无法消费消息的。如果消费者当前分区被转移，那么消费者将会丢失该分区状态，如果此时消费者消费完一部分消息而没有提交，将会导致另外一个被分配分区的消费者重复消费原来那一部分被消费的消息。
+再均衡是指分区的所属权从一个消费者转移到另一个消费者的行为，它为消费者具备高可用和伸缩性提供保障，使我们可以既方便又安全地删除消费组内的消费者或往消费组里添加消费者。不过在再均衡发生期间，消费组内的消费者是无法消费消息的。如果消费者当前分区被转移，那么消费者将会丢失该分区状态，如果此时消费者消费完一部分消息而没有提交，将会导致另外一个被分配分区的消费者重复消费原来那一部分被消费的消息。
 
 再均衡监听器ComsumerRebalanceListener可以在再均衡操作前后的做一些准备和收尾工作。
 
@@ -222,7 +228,7 @@ At least one 消息绝不会丢，但可能会重复传输
 
 Exactly once 每条消息肯定会被传输一次且仅传输一次，很多时候这是用户所想要的。
 
-总之，Kafka 默认保证 At least once，并且允许通过设置 Producer 异步提交来实现 At most once。而 Exactly once 要求与外部存储系统协作，幸运的是 Kafka 提供的 offset 可以非常直接非常容易得使用这种方式。
+总之，Kafka  **默认保证At least once**，并且允许通过设置 Producer 异步提交来实现 At most once。而 Exactly once 要求与外部存储系统协作，幸运的是 Kafka 提供的 offset 可以非常直接非常容易得使用这种方式。
 
 # kafka core API
 
@@ -256,6 +262,8 @@ In Kafka a stream processor is anything that takes continual streams of data fro
 # Replication
 
 The unit of replication is the topic partition. Under non-failure conditions, each partition in Kafka has a single leader and zero or more followers. The total number of replicas including the leader constitute the replication factor. **All reads and writes go to the leader of the partition**. Typically, there are many more partitions than brokers and **the leaders are evenly distributed** among brokers. The logs on the followers are identical to the leader's log—all have the same offsets and messages in the same order (though, of course, at any given time the leader may have a few as-yet unreplicated messages at the end of its log).
+
+![kafka-broker-partition-replica](kafka-broker-partition-replica.png)
 
 分区中所有的副本统称为AR(Assigned Replicas)。所有与Leader副本保持一定程度同步的副本(包括Leader副本)叫做ISR(In-Sync Replicas)。与Leader副本滞后过多的副本叫做OSR(Out-of-Sync 副本)。正常情况下，AR=ISR，OSR=∅。
 

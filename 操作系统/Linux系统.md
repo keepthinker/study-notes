@@ -48,7 +48,7 @@ The kernel stores the list of processes in a circular doubly linked list called 
 
 ### The Process Family Tree 
 
-A distinct hierarchy exists between processes in Unix systems, and Linux is no exception. **All processes are descendants of the init process**, whose PID is one. The kernel starts init in the last step of the boot process. The init process, in turn, reads the system initscripts and executs more programs, eventually completing the boot process. 
+A distinct hierarchy exists between processes in Unix systems, and Linux is no exception. **All processes are descendants of the init process**, whose PID is one. The kernel starts init in the last step of the boot process. The init process, in turn, reads the system initscripts and executes more programs, eventually completing the boot process. 
 
 Every process on the system has exactly one parent. Likewise, every process has zero or more children.   
 

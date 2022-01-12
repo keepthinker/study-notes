@@ -58,7 +58,7 @@ Fanout Exchange 会忽略 RoutingKey 的设置，直接将 Message 广播到所�
 Direct Exchange 是 RabbitMQ 默认的 Exchange，完全根据 RoutingKey 来路由消息。设置 Exchange 和 Queue 的 Binding 时需指定 RoutingKey（一般为 Queue Name），发消息时也指定一样的 RoutingKey，消息就会被路由到对应的Queue。
 
 ### Topic Exchange
-Topic Exchange 和 Direct Exchange 类似，也需要通过 RoutingKey 来路由消息，区别在于Direct Exchange 对 RoutingKey 是精确匹配，而 Topic Exchange 支持模糊匹配。分别支持*和#通配符，*表示匹配一个单词，#则表示匹配没有或者多个单词。
+Topic Exchange 和 Direct Exchange 类似，也需要通过 RoutingKey 来路由消息，区别在于**Direct Exchange 对 RoutingKey 是精确匹配**，而 **Topic Exchange 支持模糊匹配**。分别支持*和#通配符，*表示匹配一个单词，#则表示匹配没有或者多个单词。
 
 # 消息堆积模式
 RabbitMQ是典型的内存式堆积，但这并非绝对，在某些条件触发后会有换页动作来将内存中的消息换页到磁盘（换页动作会影响吞吐），或者直接使用惰性队列来将消息直接持久化至磁盘中。
