@@ -93,7 +93,7 @@ Young | Tenured | JVM options
 ---|---|---
 Incremental | Incremental | -Xincgc
 Serial | Serial | -XX:+UseSerialGC
-Parallel Scavenge | Serial | -XX:+UseParallelGC -XX:-UseParallelOldGC
+Parallel Scavenge | Serial | -XX:+UseParallelGC 
 Parallel New | Serial | N/A
 Parallel Scavenge | Parallel Old | -XX:+UseParallelGC -XX:+UseParallelOldGC
 Serial | CMS | -XX:-UseParNewGC -XX:+UseConcMarkSweepGC
@@ -260,6 +260,14 @@ G1收集器的设计目标是取代CMS收集器，它同CMS相比，在以下方
 
 双亲委派模型要求除了启动类加载器外，其他加载器都需要有自己父类加载器，一般是通过组合的方式来复用父类加载器。其工作模式有，如果一个类加载器收到类加载请求，那么它先把加载请求委派给父类加载器去完成，只有当更高层级的父类加载器无法加载，才会给子加载器自己去尝试加载。
 
+### 为什么需要双亲委派模型
+
+自下而上的委派，又自上而下的加载，保证每一个类在各个加载器中都是同一个类。
+
+一个非常明显的目的是保证Java官方的类库<JAVA_HOME>\lib和扩展类库<JAVA_HOME>\lib\ext的加载安全性，不会被开发者覆盖。
+
+如果开发者自己开发开元框架，也可以利用双亲委派模型，保护自己框架需要加载的类不被应用程序覆盖。
+
 ```java
 public static void main(String[] args) throws Exception {
     System.out.println("-----------------------------------");
@@ -287,6 +295,14 @@ public static void recursiveCallParentCL(ClassLoader cl){
 
 [我竟然被”双亲委派”给虐了！](https://www.hollischuang.com/archives/6055)
 
+
+
+### 破坏双亲委派模型
+
+// todo
+
+
+
 # JVM工具使用
 ## 定位线程问题
 在Linux上用**top -H -p ${processId}**，找到问题线程（比如cpu占比高），比如线程ID为11164，通过命令**echo 'ibase=10;obase=16;11164' | bc**来把线程ID 11164转化成16进制数字2B9C。 然后通过jstack命令找到该问题线程的线程栈日志，如**jstack ${processId} | grep -A 100 -i 2B9C**
@@ -304,7 +320,7 @@ public static void recursiveCallParentCL(ClassLoader cl){
 ## 解析class文件
 javap -p -c AbstractClient.class
 
-## 内存分析工具
+## s分析工具
 命令行查看对象内存分布情况：jmap -histo ${jvmPid}
 
 导出内存dmp文件：jmap -dump:live,format=b,file=heap.dump ${jvmPid}
@@ -584,7 +600,7 @@ Mark Word(32 bit), Class Metadata Address(32), Array Length(32)
 在运行期间Mark Word里存储的数据会随着锁标志位的变化而变化。Mark Word可能变化为存储以下4种数据：
 
 ### 偏向锁
-Hotspot的作者经过以往的研究发现大多数情况下锁不仅不存在多线程竞争，而且总是由同一线程多次获得，为了让线程获得锁的代价更低而引入了偏向锁。当一个线程访问同步块并获取锁时，会在对象头和栈帧中的锁记录里存储锁偏向的线程ID，以后该线程在进入和退出同步块时不需要花费CAS操作来加锁和解锁，而只需简单的测试一下对象头的Mark Word里是否存储着指向当前线程的偏向锁，如果测试成功，表示线程已经获得了锁，如果测试失败，则需要再测试下MarkWord中偏向锁的标识是否设置成1（表示当前是偏向锁），如果没有设置，则使用CAS竞争锁，如果设置了，则尝试使用CAS将对象头的偏向锁指向当前线程。
+Hotspot的作者经过以往的研究发现**大多数情况下锁不仅不存在多线程竞争，而且总是由同一线程多次获得**，为了让线程获得锁的代价更低而引入了偏向锁。当一个线程访问同步块并获取锁时，会在对象头和栈帧中的锁记录里存储**锁偏向的线程ID**，以后该线程在进入和退出同步块时不需要花费CAS操作来加锁和解锁，而只需简单的**测试一下对象头的Mark Word里是否存储着指向当前线程的偏向锁**，如果测试成功，表示线程已经获得了锁，如果测试失败，则需要再测试下MarkWord中偏向锁的标识是否设置成1（表示当前是偏向锁），如果没有设置，则使用CAS竞争锁，如果设置了，则尝试使用CAS将对象头的偏向锁指向当前线程。
 
 Since most objects are locked by at most one thread during their lifetime, we allow that thread to bias an object toward itself. Once biased, that thread can subsequently lock and unlock the object without resorting to expensive atomic instructions. Obviously, an object can be biased toward at most one thread at any given time. 
 
@@ -592,15 +608,18 @@ Since most objects are locked by at most one thread during their lifetime, we al
 引入轻量级锁的目的：在多线程交替执行同步块的情况下，尽量避免重量级锁引起的性能消耗，但是如果多个线程在同一时刻进入临界区，会导致轻量级锁膨胀升级重量级锁，所以轻量级锁的出现并非是要替代重量级锁。核心逻辑是把Mark Word保存到BasicLock对象的_displaced_header字段；通过CAS尝试将Mark Word更新为指向线程栈帧上的BasicLock对象的指针，如果更新成功，表示竞争到锁，则执行同步代码.
 
 ### 重量级锁
-重量级锁通过对象内部的监视器（monitor）实现，其中monitor的本质是依赖于底层操作系统的Mutex Lock实现，操作系统实现线程之间的切换需要从用户态到内核态的切换，切换成本非常高。底层实现由ObjectMonitor完成。Objectwaiter是个双向链表结构的对象，其中结构有_EntryList队列，_WaitSet集合。ObjectMonitor进入enter方法里，还会进行一次CAS将当前线程设置到_owner来争抢锁，如果失败则还会进行自旋，如果都失败则将当前线程封装成ObjectWaiter进入队列，然后使用操作系统的mutex机制进行锁操作。
+重量级锁通过对象内部的监视器（monitor）实现，其中monitor的本质是依赖于**底层操作系统的Mutex Lock实现，操作系统实现线程之间的切换需要从用户态到内核态的切换，切换成本非常高**。底层实现由ObjectMonitor完成。Objectwaiter是个双向链表结构的对象，其中结构有_EntryList队列，_WaitSet集合。ObjectMonitor进入enter方法里，还会进行一次CAS将当前线程设置到_owner来争抢锁，如果失败则还会进行自旋，如果都失败则将当前线程封装成ObjectWaiter进入队列，然后使用操作系统的mutex机制进行锁操作。
 
 ## AQS
 线程并发框架抽象基类。
+
+AQS中的stat是volatile。volatile为了保证可见性，会在机器指令中加入lock指令，lock强制把缓存（工作内存）写回到内存（主内存），并失效其他线程的缓存行（MESI）。
 
 ## volatile
 
 - 保证被volatile修饰的共享变量对所有线程总数可见，也就是当一个线程修改了一个被volatile修饰共享变量的值，新值总是可以被其他线程立即得知。
 - 禁止指令重排序优化。
+
 
 ##### Java单例双重检查使用volatile
 
@@ -647,7 +666,9 @@ Java 语言规规定了线程执行程序时需要遵守 intra-thread semantics�
 
 由于 volatile禁止对象创建时指令之间重排序，所以其他线程不会访问到一个未初始化的对象，从而保证安全性。
 
-[双重检查锁单例模式为什么要用volatile关键字？](https://developer.aliyun.com/article/714497)
+参考：[双重检查锁单例模式为什么要用volatile关键字？](https://developer.aliyun.com/article/714497)
+
+Volatile通过内存屏障来实现，不同硬件内存屏障实现的手段不一样，Java统一用JVM来生成内存屏障指令。
 
 ### 加锁作用
 

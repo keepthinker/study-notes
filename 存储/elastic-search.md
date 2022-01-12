@@ -438,6 +438,45 @@ POST /_reindex
 }
 ```
 
+### Search After
+
+search_after取值最后一个文档的sort排序值
+
+```json
+http://localhost:9200/ds-logs-my_app-default/_search
+{
+    "size": 2,
+    "query": {
+        "match_all": {}
+    },
+    "sort": [
+        {
+            "play_year": "asc"
+        }
+    ],
+    "search_after":[11]
+}
+
+response: 
+{
+    ...
+        "hits": [
+            {
+                "_index": "ds-logs-my_app-default",
+                ...
+                "_source": {
+                    "name": "John Lee 2",
+                    "team_name": "Rocket Team",
+                    "position": "front",
+                    "play_year": 20
+                },
+                "sort": [
+                    20
+                ]}]}
+}
+
+```
+
 
 
 
