@@ -20,7 +20,7 @@ Each thread includes a unique **program counter**, **process stack**, and **set 
 
 Linux has a unique implementation of threads: It does not differentiate between threads and processes. To Linux, **a thread is just a special kind of process.**  
 
-On modern operating systems, processes provide two virtualizations: **a virtualized processor** and **virtual memory**. The virtual processor gives the process the illusion that it alone monopolizes the system, despite possibly sharing the processor among hundreds of other processes. Virtual memory lets the process allocate and manage memory as if it alone owned all the memory in the system.  
+On modern operating systems, processes provide two virtualizations: **a virtualized processor** and **virtual memory**. The virtual processor **gives the process the illusion that it alone monopolizes the system**, despite possibly sharing the processor among hundreds of other processes. Virtual memory lets the process allocate and manage memory **as if it alone owned all the memory** in the system.  
 
 threads share the virtual memory abstraction, whereas each receives its own virtualized processor.  
 
@@ -32,15 +32,15 @@ The kernel stores the list of processes in a circular doubly linked list called 
 
 ### Process State 
 
-- **TASK_RUNNING**—The process is runnable; it is either currently running or on a runqueue waiting to run.This is the only possible state for a process executing in user-space; it can also apply to a process in kernel-space that is actively running.
+- **TASK_RUNNING**—The process is runnable; it is either currently running or on a runqueue waiting to run. This is the only possible state for a process executing in user-space; it can also apply to a process in kernel-space that is actively running.
 
-- **TASK_INTERRUPTIBLE**—The process is sleeping (that is, it is blocked), waiting for some condition to exist.When this condition exists, the kernel sets the process’s state to TASK_RUNNING.The process also awakes prematurely and becomes runnable if it receives a signal.  
+- **TASK_INTERRUPTIBLE**—The process is sleeping (that is, it is blocked), waiting for some condition to exist. When this condition exists, the kernel sets the process’s state to TASK_RUNNING. The process also awakes prematurely and becomes runnable if it receives a signal.  
 
-- **TASK_UNINTERRUPTIBLE**—This state is identical to TASK_INTERRUPTIBLE except that it does not wake up and become runnable if it receives a signal.This is used in situations where the process must wait without interruption or when the event is expected to occur quite quickly. Because the task does not respond to signals in this state, TASK_UNINTERRUPTIBLE is less often used than TASK_INTERRUPTIBLE.  
+- **TASK_UNINTERRUPTIBLE**—This state is identical to TASK_INTERRUPTIBLE except that it does not wake up and become runnable if it receives a signal. This is used in situations where the process must wait without interruption or when the event is expected to occur quite quickly. Because the task does not respond to signals in this state, TASK_UNINTERRUPTIBLE is less often used than TASK_INTERRUPTIBLE.  
 
 - **TASK_TRACED**—The process is being traced by another process, such as a debugger, via ptrace.
 
-- **TASK_STOPPED**—Process execution has stopped; the task is not running nor is it eligible to run.This occurs if the task receives the SIGSTOP, SIGTSTP, SIGTTIN, or SIGTTOU signal or if it receives any signal while it is being debugged.  
+- **TASK_STOPPED**—Process execution has stopped; the task is not running nor is it eligible to run. This occurs if the task receives the SIGSTOP, SIGTSTP, SIGTTIN, or SIGTTOU signal or if it receives any signal while it is being debugged.  
 
 - ![process-state](process-state.png)
 
@@ -48,8 +48,7 @@ The kernel stores the list of processes in a circular doubly linked list called 
 
 ### The Process Family Tree 
 
-A distinct hierarchy exists between processes in Unix systems, and Linux is no exception. All processes are descendants of the init process, whose PID is one. The kernel starts init in the last step of the boot process. The init process, in turn, reads the system
-initscripts and executs more programs, eventually completing the boot process. 
+A distinct hierarchy exists between processes in Unix systems, and Linux is no exception. **All processes are descendants of the init process**, whose PID is one. The kernel starts init in the last step of the boot process. The init process, in turn, reads the system initscripts and executs more programs, eventually completing the boot process. 
 
 Every process on the system has exactly one parent. Likewise, every process has zero or more children.   
 
@@ -108,7 +107,7 @@ CFS uses a **red-black tree** to manage the list of runnable processes and effic
 
 #### nice value
 
-**Larger nice values correspond to a lower priority**—you are being “nice” to the other processes on the system. Processes with a lower nice value (higher priority) receive a larger proportion of the system’s processor compared to processes with a higher nice value (lower priority).  
+**Larger nice values correspond to a lower priority**—you are being "nice" to the other processes on the system. Processes with a lower nice value (higher priority) receive a larger proportion of the system's processor compared to processes with a higher nice value (lower priority).  
 
 ```shell
 # command to see nice value
@@ -220,7 +219,7 @@ The Linux kernel implements a family of interfaces for manipulating the state of
 
 当程序中有系统调用语句，程序执行到系统调用时，首先使用类似int 80H的软中断指令，保存现场，去系统调用，在内核态执行，然后恢复现场，每个进程都会有两个栈，一个内核态栈和一个用户态栈。当int中断执行时就会由用户态栈转向内核态栈。系统调用时需要进行栈的切换。而且内核代码对用户不信任，需要进行额外的检查。系统调用的返回过程有很多额外工作，比如检查是否需要调度等。 
 
-系统调用一般都需要保存用户程序得上下文(context), 在进入内核的时候需要保存用户态的寄存器，在内核态返回用户态的时候会恢复这些寄存器的内容。这是一个开销的地方。 如果需要在不同用户程序间切换的话，那么还要更新cr3寄存器，这样会更换每个程序的虚拟内存到物理内存映射表的地址，也是一个比较高负担的操作
+系统调用一般都需要保存用户程序的上下文(context), 在进入内核的时候需要保存用户态的寄存器，在内核态返回用户态的时候会恢复这些寄存器的内容。这是一个开销的地方。 如果需要在不同用户程序间切换的话，那么还要更新cr3寄存器，这样会更换每个程序的虚拟内存到物理内存映射表的地址，也是一个比较高负担的操作
 
 [Linux | 用户态和内核态的切换耗费时间的原因](https://www.cnblogs.com/gtblog/p/12155109.html)
 
@@ -289,9 +288,9 @@ preempt_enable();
 
 ### Ordering and Barrier
 
-When talking with hardware, you often need to ensure that a given read occurs before another read or write. Complicating these issues is the fact that both the compiler and the processor can reorder reads and writes for performance reasons. It is also possible to instruct the compiler not to reorder instructions around a given point.These instructions are called *barriers*.
+When talking with hardware, you often need to ensure that a given read occurs before another read or write. Complicating these issues is the fact that both the compiler and the processor can reorder reads and writes for performance reasons. It is also possible to instruct the compiler not to reorder instructions around a given point. These instructions are called *barriers*.
 
-The rmb() method provides a read memory barrier. It ensures that no loads are re- ordered across the rmb() call.That is, no loads prior to the call will be reordered to after the call, and no loads after the call will be reordered to before the call.
+The rmb() method provides a read memory barrier. It ensures that no loads are re-ordered across the rmb() call. That is, no loads prior to the call will be reordered to after the call, and no loads after the call will be reordered to before the call.
 
 The wmb() method provides a write barrier.
 

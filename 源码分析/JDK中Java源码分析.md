@@ -37,9 +37,15 @@ public final native boolean compareAndSwapObject(Object var1, long var2, Object 
 ## 条件队列
 线程间互相唤醒对方。
 ### Object.wait() & Object.notify()
+
+```java
+public final native void notify();
+public final native void wait(long timeout) throws InterruptedException;
+```
+
 - 与synchronized配套使用。
-- 线程执行wait前需要加锁，执行wait后，将会释放锁。
-- 线程执行notify前需要加锁，执行notify后，需要跳出synchronized作用域解锁，才能唤醒被wait的对象。
+- 线程执行wait前需要synchronized加锁，执行wait后，将会释放锁。
+- 线程执行notify前需要synchronized加锁，执行notify后，需要跳出synchronized作用域解锁，才能唤醒被wait的对象。
 
 ### Condition.await() & Condition.signal()
 - 域继承Lock接口的对象使用，比如ReentrantLock。
@@ -56,7 +62,7 @@ Java内存模型是通过在变量修改后将新值从工作内存同步回主�
 ### 有序性
 一个线程中的所有操作必须按照程序的顺序来执行。
 
-volatile修饰的变量不会被指令重排序优化，保证代码的执行顺序与程序的顺序相同。为了实现volatile的内存语义，编译器在生成字节码时，会在指令序列中插入内存屏障来禁止重排序。
+volatile修饰的变量不会被指令重排序优化，保证代码的执行顺序与程序的顺序相同。为了实现volatile的内存语义，编译器在生成字节码时，会在指令序列中插入**内存屏障**来禁止重排序。
 
 
 
@@ -82,7 +88,7 @@ Condition newCondition();
 可重入锁。支持公平锁与非公平锁。
 
 ## ReadWriteLock
-允许多个读操作同时进行，但每次只允许一个写操作，也就是说写锁是独占的。
+允许多个读操作同时进行，但每次只允许一个写操作，也就是说写锁是独占的。当然假如现在代码块被读锁占用，那么写锁需要等待读锁释放后来竞争。
 
 ## CoundownLatch
 初始化设置count值，表明release count次，才会唤醒被await的所有线程。

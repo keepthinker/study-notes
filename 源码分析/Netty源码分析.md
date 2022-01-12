@@ -6,7 +6,7 @@
 ### 服务端线程模型
 一种比较流行的做法是服务端监听线程和IO线程分离，类似于Reactor的多线程模型，它的工作原理图如下：
 
-![image](Reactor.jpg)
+![image](Reactor.png)
 
 第一步，从用户线程发起创建服务端操作。
 
@@ -14,13 +14,15 @@
 
 EventLoopGroup管理的线程数可以通过构造函数设置，如果没有设置，默认取-Dio.netty.eventLoopThreads，如果该系统参数也没有指定，则为可用的CPU内核数 × 2。
 
-**bossGroup**线程组实际就是**Acceptor**线程池，负责处理客户端的TCP连接请求，如果系统只有一个服务端端口需要监听，则建议bossGroup线程组线程数设置为1。
+**bossGroup**线程组实际就是**Acceptor**线程池，负责处理客户端的**TCP连接请求**，如果系统只有一个服务端端口需要监听，则建议bossGroup线程组线程数设置为1。
 
-**workerGroup**是真正负责I/O读写操作的线程组，通过ServerBootstrap的group方法进行设置，用于后续的Channel绑定。
+**workerGroup**是真正负责**I/O读写操作**的线程组，通过ServerBootstrap的group方法进行设置，用于后续的Channel绑定。
 
 第二步，Acceptor线程绑定监听端口，启动NIO服务端。服务端Channel创建完成之后，将其注册到多路复用器Selector上，用于接收客户端的TCP连接。
 
 第三步，如果监听到客户端连接，则创建客户端SocketChannel连接，重新注册到workerGroup的IO线程上。
+
+TCP连接请求是相比IO读写事件，一般来说是低频操作，并且将TCP连接请求和I/O读写操作的线程池分开可以让两者不互相影响。
 
 ## Channel实现
 每一个Channel在其生命周期里绑定一个线程。
@@ -30,6 +32,7 @@ Each channel has its own pipeline and it is created automatically when a new cha
 ### How an event flows in a pipeline
 The following diagram describes how I/O events are processed by ChannelHandlers in a ChannelPipeline typically. An I/O event is handled by either a ChannelInboundHandler or a ChannelOutboundHandler and be forwarded to its closest handler by calling the event propagation methods defined in ChannelHandlerContext, such as ChannelHandlerContext.fireChannelRead(Object) and ChannelHandlerContext.write(Object).
 <html>
+
   <pre>
   I/O Request
                                                via Channel or
@@ -91,12 +94,17 @@ In the given example configuration, the handler evaluation order is 1, 2, 3, 4, 
 1 and 2 don't implement ChannelOutboundHandler, and therefore the actual evaluation order of a outbound event will be: 5, 4, and 3.
 If 5 implements both ChannelInboundHandler and ChannelOutboundHandler, the evaluation order of an inbound and a outbound event could be 125 and 543 respectively.
 
+### Handler读写顺序
+
+ChannelPipeline.addLast意思是不断往尾部追加Handler元素，如果是读，那么数据是从head到tail，如果是写，那么数据处理是从tail到head。
+
 ## ByteBuf
 A random and sequential accessible sequence of zero or more bytes (octets). This interface provides an abstract view for one or more **primitive byte arrays** (byte[]) and **NIO buffers**.
 
 ### Sequential Access Indexing
 ByteBuf provides two pointer variables to support sequential read and write operations - readerIndex for a read operation and writerIndex for a write operation respectively. The following diagram shows how a buffer is segmented into three areas by the two pointers:
 <html>
+
 <pre>
       +-------------------+------------------+------------------+
       | discardable bytes |  readable bytes  |  writable bytes  |

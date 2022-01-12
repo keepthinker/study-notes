@@ -179,10 +179,13 @@ firewall-cmd --list-all
 
 ```shell
 lsof -i:8000
-
 ```
 
+# vim命令
 
+vim -b temp.txt 那么此时将可以看到carriage return字符(\r)，显示为^M。进入vim界面后，数据:set list那么可以看到line feed字符(\n)，显示为$，tab键显示为^I
+
+输入carriage return用clt+v, ctl+Enter键。
 
 
 

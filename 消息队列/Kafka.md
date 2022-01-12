@@ -41,7 +41,7 @@ Producer 发送消息到 broker 时，会根据 Paritition 机制选择将其存
 
 ## 消息流动
 
-消息在通过send()方法发往broker的过程中，有可能需要**依次经过拦截器(Interceptor)，序列化器(Serializer)、分区器(Partitioner)、消息累加器(RecordAccumulator)等**的一系列作用滞后才能被真正地发往broker。
+消息在通过send()方法发往broker的过程中，有可能需要**依次经过拦截器(Interceptor)，序列化器(Serializer)、分区器(Partitioner)、消息累加器(RecordAccumulator)等**的一系列作用才能被真正地发往broker。
 
 ### 拦截器
 
@@ -329,5 +329,7 @@ Controller 作为 Kafka Server 端一个重要的组件，它的角色类似于�
 
 [Kafka 2.1 Documentation](https://kafka.apache.org/documentation/)
 
-[Kafka 源码解析之 Controller 选举及服务启动流程（十六）
-](https://matt33.com/2018/06/15/kafka-controller-start/)
+[Kafka 源码解析之 Controller 选举及服务启动流程（十六）](https://matt33.com/2018/06/15/kafka-controller-start/)
+
+[Kafka高吞吐量必问](https://zhuanlan.zhihu.com/p/282993811)
+

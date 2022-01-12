@@ -187,7 +187,7 @@ The exact behavior Redis follows when the maxmemory limit is reached is configur
 
 1. volatile-lru：从设置过期时间的数据集(server.db[i].expires)中挑选出最近最少使用的数据淘汰。没有设置过期时间的key不会被淘汰，这样就可以在增加内存空间的同时保证需要持久化的数据不会丢失。evict keys by trying to remove the less recently used (LRU) keys first, but only among keys that have an expire set, in order to make space for the new data added.
 
-2. volatile-ttl：除了淘汰机制采用LRU，策略基本上与volatile-lru相似，从设置过期时间的数据集(server.db[i].expires)中挑选将要过期的数据淘汰，ttl值越大越优先被淘汰。volatile-ttl: evict keys with an expire set, and try to evict keys with a shorter time to live (TTL) first, in order to make space for the new data added.
+2. volatile-ttl：除了淘汰机制采用LRU，策略基本上与volatile-lru相似，从设置过期时间的数据集(server.db[i].expires)中挑选将要过期的数据淘汰，淘汰生存时间TTL(Time To Live)更小的键。volatile-ttl: evict keys with an expire set, and try to evict keys with a shorter time to live (TTL) first, in order to make space for the new data added. 
 
 3. volatile-random：从已设置过期时间的数据集(server.db[i].expires)中任意选择数据淘汰。当内存达到限制无法写入非过期时间的数据集时，可以通过该淘汰策略在主键空间中随机移除某个key。evict keys randomly in order to make space for the new data added, but only evict keys with an expire set.
 
@@ -315,11 +315,17 @@ Redis Cluster着眼于扩展性，在单个redis内存不足时，使用Cluster�
 
 ### 主从高可用
 
-部分节点不可用时，集群仍可用。通过增加 Slave 做 standby 数据副本，能够实现故障自动 failover，节点之间通过 gossip 协议交换状态信息，用投票机制完成 Slave 到 Master 的角色提升。也就是说，gossip的定时 PING/PONG 消息的超时机制检测某个节点A是否下线，如果某个节点B发现发送给节点A的PING等待PONG超时，并且也发现本地fail_reports链表中超过半数正常的master标记节点A为PFAIL，那么该节点B立刻向集群其他节点广播主节点二已经下线的 FAIL 消息，所有收到 FAIL 消息的节点都会立即将节点二状态标记为已下线。
+部分节点不可用时，集群仍可用。通过增加 Slave 做 standby 数据副本，能够实现故障自动 failover，节点之间通过 gossip 协议交换状态信息，用投票机制完成 Slave 到 Master 的角色提升。
+
+每个节点从发出ping包后超时没有收到pong包的时间，超时将对应的分片设置为pfail状态，在跟其他节点的gossip包过程中，每个节点会带上被标记为pfail状态的包。gossip的定时 PING/PONG 消息的超时机制检测某个节点A是否下线，如果某个节点B发现发送给节点A的PING等待PONG超时，并且也发现本地fail_reports链表中超过半数正常的master标记节点A为PFAIL，那么该节点B立刻向集群其他节点广播主节点B已经下线的 FAIL 消息，所有收到 FAIL 消息的节点都会立即将节点B状态标记为已下线。
+
+PFAIL就是主观下线，比如节点1判定节点3下线，那么他会标记节点3的状态为PFAIL。但是如果绝大部分节点都判定节点3为PFAIL，那么我们就可以断定节点3故障下线，其状态判定为FAIL状态。
 
 [深入理解redis cluster的failover机制](https://juejin.cn/post/6844903679120637960)
 
+### 主从切换
 
+// todo
 
 ## Redis Server事件模型
 redis服务器是一个事件驱动的程序，内部需要处理两类事件，一类是文件事件（file event），一类是时间事件（time event），前者对应着处理各种io事件，后者对应着处理各种定时任务。

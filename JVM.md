@@ -602,6 +602,53 @@ Since most objects are locked by at most one thread during their lifetime, we al
 - 保证被volatile修饰的共享变量对所有线程总数可见，也就是当一个线程修改了一个被volatile修饰共享变量的值，新值总是可以被其他线程立即得知。
 - 禁止指令重排序优化。
 
+##### Java单例双重检查使用volatile
+
+```java
+class Singleton{
+    private volatile static Singleton singleton;   
+    public static Singleton getInstance(){       
+
+        if(singleton == null){
+            synchronized(Singleton.class){
+                if(singleton == null){
+                    singleton = new Singleton();
+                }
+            }
+        } 
+        
+        return singleton;           
+    }
+}
+```
+
+
+
+ Object obj=new Object()这行代码并不是一个原子指令。使用 javap -c指令，可以快速查看字节码。
+
+0: new           #2                  // class java/lang/Object
+3: dup
+4: invokespecial #1                  // Method java/lang/Object."<init>":()V
+7: astore_1
+
+ 从字节码可以看到创建一个对象实例，可以分为三步：
+
+1. 分配对象内存
+
+2. 调用构造器方法，执行初始化
+
+3. 将对象引用赋值给变量。
+
+虚拟机实际运行时，以上指令可能发生重排序。以上步骤2,3 可能发生重排序，但是并不会重排序 1 的顺序。也就是说 1 这个步骤都需要先执行，因为 2,3 步骤需要依托 1 步骤执行结果。
+
+Java 语言规规定了线程执行程序时需要遵守 intra-thread semantics。**intra-thread semantics ** 保证重排序不会改变单线程内的程序执行结果。这个重排序在没有改变单线程程序的执行结果的前提下，可以提高程序的执行性能。
+
+如果不对singleton加上volatile语句，那么步骤2,3顺序被重排使得对象未初始化就被复制给变量，那么会导致getInstance函数返回的是个未初始化的单例。
+
+由于 volatile禁止对象创建时指令之间重排序，所以其他线程不会访问到一个未初始化的对象，从而保证安全性。
+
+[双重检查锁单例模式为什么要用volatile关键字？](https://developer.aliyun.com/article/714497)
+
 ### 加锁作用
 
 数据变更并发操作正确性。

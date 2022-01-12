@@ -13,6 +13,8 @@ release方法中，先进行tryRelease操作，比如在ReentrantLock中，先�
 ### Condition Queue
 实现条件队列await与signal的数据结构。
 
+![img](D:\git\study-notes\源码分析\aqs.png)
+
 #### Condition对象的await/signal/signalAll解析
 - await过程：先进行加锁操作，然后把当前线程对应的waitStatus为CONDITION类型的node加入到condition queue，然后通过fullyRelease方法释放锁，最后通过park睡眠。
 - signal过程：先进行加锁操作，取出condition queue的第一个元素，修改node的waitStatus状态为0，然后加入到sync queue，接着设置前置节点waitStatus为-1，最后进行释放锁的操作，也就是刚刚加入到sync queue的元素将有可能被唤醒。
@@ -50,6 +52,25 @@ public abstract class AbstractOwnableSynchronizer
         return exclusiveOwnerThread;
     }
 }
+
+public class AbstractQueuedSynchronizer extends AbstractOwnableSynchronizer
+    implements java.io.Serializable {
+    
+    private transient volatile Node head;
+
+    /**
+     * Tail of the wait queue, lazily initialized.  Modified only via
+     * method enq to add new wait node.
+     */
+    private transient volatile Node tail;
+
+    /**
+     * The synchronization state. 使用volatile因为多线程访问该值时，需要立马知道该值状态，便于后续加锁操作。
+     */
+    private volatile int state;
+    
+}
+
 
 static final class Node {
         /** Marker to indicate a node is waiting in shared mode */
