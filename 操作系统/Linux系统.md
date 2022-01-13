@@ -422,7 +422,7 @@ Because multiple processes can open and manipulate a file at the same time, ther
 
 ## The Block I/O Layer
 
-Block devices are hardware devices distinguished by the random (that is, not necessarily sequential) access of fixed-size chunks of data.The fixed-size chunks of data are called blocks. 
+Block devices are hardware devices distinguished by the random (that is, not necessarily sequential) access of fixed-size chunks of data. The fixed-size chunks of data are called blocks. 
 
 The other basic type of device is a character device. Character devices, or char devices, are accessed as a stream of sequential data, one byte after another.
 
@@ -430,32 +430,31 @@ The difference comes down to whether the device accesses data randomly—in othe
 
 ### Anatomy of a Block Device
 
-**The smallest addressable unit on a block device is a sector.** Sectors come in various powers of two, but 512 bytes is the most common size. The **sector size** is **a physical property of the device**, and the sector is the fundamental unit of all block devices—the device cannot address or operate on a unit smaller than the sector.
+**The smallest addressable unit on a block device is a sector.** Sectors come in various powers of two, but **512 bytes is the most common size**. The sector size is a physical property of the device, and **the sector is the fundamental unit of all block devices—the device cannot address or operate on a unit smaller than the sector**.
 
-The block is an abstraction of the filesystem—filesystems can be accessed only in multiples of a block. Although the physical device is addressable at the sector level, the kernel performs all disk operations in terms of blocks. Because the device’s smallest addressable unit is the sector, the block size can be no smaller than the sector and must be a multiple of a sector. The kernel also requires that a block be
-no larger than the page size. Therefore, **block sizes are a power-of-two multiple of the sector size and are not greater than the page size.** 
+The block is an abstraction of the filesystem—filesystems can be accessed only in multiples of a block. Although the physical device is addressable at the sector level, the kernel performs all disk operations in terms of blocks. Because the device’s smallest addressable unit is the sector, the block size can be no smaller than the sector and must be a multiple of a sector. The kernel also requires that a block be no larger than the page size. Therefore, **block sizes are a power-of-two multiple of the sector size and are not greater than the page size.** 
 
 ![sector-block](sector-block-relationship.png)
 
 ### Buffers and Buffer Heads
 
-When a block is stored in memory—say, after a read or pending a write—it is stored in a buffer. Each buffer is associated with exactly one block.The buffer serves as the object that represents a disk block in memory. 
+When a block is stored in memory—say, after a read or pending a write—it is stored in a buffer. **Each buffer is associated with exactly one block. The buffer serves as the object that represents a disk block in memory. **
 
 ### Request Queues
 
-Block devices maintain request queues to store their pending block I/O requests. The request queue contains a doubly linked list of requests and associated control information. Requests are added to the queue by higher-level code in the kernel, such as filesystems.As long as the request queue is nonempty, the block device driver associated with the queue grabs the request from the head of the queue and submits it to its associated block device. Each item in the queue’s request list is a single request, of type struct request.
+Block devices maintain request queues to store their pending block I/O requests. The request queue contains a doubly linked list of requests and associated control information. Requests are added to the queue by higher-level code in the kernel, such as filesystems. As long as the request queue is nonempty, the block device driver associated with the queue grabs the request from the head of the queue and submits it to its associated block device. Each item in the queue’s request list is a single request, of type struct request.
 
 ### I/O Schedulers
 
- the kernel does not issue block I/O requests to the disk in the order they are received or as soon as they are received. Instead, it performs operations called **merging and sorting** to greatly improve the performance of the system as a whole. The subsystem of the kernel that performs these operations is called the I/O scheduler.
+The kernel does not issue block I/O requests to the disk in the order they are received or as soon as they are received. Instead, it performs operations called **merging and sorting** to greatly improve the performance of the system as a whole. The subsystem of the kernel that performs these operations is called the I/O scheduler.
 
-The I/O scheduler divides the resource of disk I/O among the pending block I/O requests in the system. It does this through the merging and sorting of pending requests in the request queue. the I/O scheduler virtualizes block devices among multiple outstanding block requests.This is done to minimize disk seeks and ensure optimum disk performance.
+The I/O scheduler divides the resource of disk I/O among the pending block I/O requests in the system. It does this through the merging and sorting of pending requests in the request queue. the I/O scheduler virtualizes block devices among multiple outstanding block requests. This is done to minimize disk seeks and ensure optimum disk performance.
 
 #### The Job of an I/O Scheduler
 
-An I/O scheduler works by managing a block device’s request queue. It decides the order of requests in the queue and at what time each request is dispatched to the block device. It manages the request queue with the goal of reducing seeks, which results in greater global throughput.
+**An I/O scheduler works by managing a block device’s request queue**. It decides the order of requests in the queue and at what time each request is dispatched to the block device. **It manages the request queue with the goal of reducing seeks, which results in greater global throughput.**
 
-I/O schedulers perform two primary actions to minimize seeks: **merging** and **sorting**. Merging is the coalescing of two or more requests into one. If a request is already in the queue to read from an adjacent sector on the disk (for example, an earlier chunk of the same file), the two requests can be merged into a single request operating on one or more adjacent on-disk sectors. The entire request queue is kept sorted, sectorwise, so that all seeking activity along the queue moves (as much as possible) sequentially over the sectors of the hard disk.
+I/O schedulers perform two primary actions to minimize seeks: **merging** and **sorting**. **Merging is the coalescing of two or more requests into one.** If a request is already in the queue to read from an adjacent sector on the disk (for example, an earlier chunk of the same file), the two requests can be merged into a single request operating on one or more adjacent on-disk sectors. **The entire request queue is kept sorted**, sectorwise, so that **all seeking activity along the queue moves (as much as possible) sequentially** over the sectors of the hard disk.
 
 
 

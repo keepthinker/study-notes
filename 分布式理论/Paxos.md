@@ -1,4 +1,7 @@
+
+
 # 目的
+
 解决在不可靠的异步通信网络中的所有参与者对某个结果达成一致性问题，比如写入三个值到三个节点，保证最终是三个节点的最终值是同一个。不可靠网络环境是指消息在网络传输过程中，可能发生丢失，延迟，乱序现象。这里暂不考虑拜占庭问题。
 
 # 算法概要
@@ -54,6 +57,21 @@ P1a：当且仅当acceptor没有回应过编号大于n的prepare请求时，acce
 - 请求与响应是普通的消息。
 - 一个Aceptor必须要在发送回复之前记录响应到持久化存储。
 - 保证每次生成Proposal序号的唯一性与递增性。
+
+# Paxos流程
+
+## 1. Previous value already chosen
+
+![img](paxos-previous-value-already-chosen.png)
+
+
+## 2. Previous value not chosen, but new proposer sees it![img](paxos-previous-value-not-chosen-new-one-sees-it.png)
+
+## 3. Previous value not chosen, but new proposer doesn't see it
+
+![img](paxos-previous-value-not-chosen-new-one-does-not-see-it.png)
+
+
 
 # 参考博客
 

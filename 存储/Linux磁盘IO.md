@@ -34,7 +34,7 @@ sector1  sector2         ...
 
 ## free命令中的cached/buffers
 
-我们看free命令中有cached何buffers，现在这两个已经合并了，也就是上面文章中刚刚说到的“合并”。如果非要细分的话，我们访问磁盘时，如果通过文件系统层打开文件（open(“/home/test.txt”, …)），读写文件时inode产生的page cache在free命令中算在“cached”中，而直接操作裸分区（open(“/dev/sda”, …)或直接操作分区）的读写操作产生的page cache在free命令中算在“buffers”中。
+我们看free命令中有cached和buffers，现在这两个已经合并了，也就是上面文章中刚刚说到的“合并”。如果非要细分的话，我们访问磁盘时，如果通过文件系统层打开文件（open(“/home/test.txt”, …)），读写文件时inode产生的page cache在free命令中算在“cached”中，而直接操作裸分区（open(“/dev/sda”, …)或直接操作分区）的读写操作产生的page cache在free命令中算在“buffers”中。
 
 ## 用户发起IO行为时，数据的走向
 
@@ -42,7 +42,7 @@ sector1  sector2         ...
 
 ### block和page
 
-文件系统里的管理单元是block，内存管理是以page为单位，而内核中读写磁盘是通过page cache的，所以就要了解bio是怎么将page和block对应起来的。例如，如果文件系统的一个page大小是4K，格式化文件系统时指定一个block是4K，那一个block就对应一个page，而如果一个block大小是1K，那一个page就对应4个block，那每次读磁盘就只能每次最小读4个block的大小。
+**文件系统里的管理单元是block**，**内存管理是以page为单位**，而内核中读写磁盘是通过page cache的，所以就要了解bio是怎么将page和block对应起来的。例如，如果文件系统的一个page大小是4K，格式化文件系统时指定一个block是4K，那一个block就对应一个page，而如果一个block大小是1K，那一个page就对应4个block，那每次读磁盘就只能每次最小读4个block的大小。
 sector（扇区）是硬件读写的最小操作单元，例如如果一个sector是512字节，而格式化文件系统时指定一个block是1K，那文件系统层面只能每次两个sector一起操作。block是文件系统格式化时确定的，sector是由你的硬盘决定的。但是如果你的block越大，那么你的空间浪费可能就会越大（内部碎片，一个文件的末尾占的block的空闲部分）。
 
 ### BIO
