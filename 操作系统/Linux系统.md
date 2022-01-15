@@ -462,19 +462,30 @@ I/O schedulers perform two primary actions to minimize seeks: **merging** and **
 
 ### Address Spaces
 
-The process address space consists of the virtual memory addressable by a process and the addresses within the virtual memory that the process is allowed to use. Each process is given a flat 32- or 64-bit address space, with the size depending on the architecture. **Normally, this flat address space is unique to each process.** Alternatively, processes can elect to share their address space with other processes.We know these processes as threads.
+The process address space consists of the virtual memory addressable by a process and the addresses within the virtual memory that the process is allowed to use. Each process is given a flat 32- or 64-bit address space, with the size depending on the architecture. **Normally, this flat address space is unique to each process.** A memory address in one process’s address space is completely unrelated to that same memory address in another process’s address space. Both processes can have different data at the same address in their respective address spaces.  Alternatively, **processes can elect to share their address space with other processes. We know these processes as threads.**
 
-The interesting part of the address space is the intervals of memory addresses, such as 08048000-0804c000, that the process has permission to access. These intervals of legal addresses are called memory areas.The process, through the kernel, can dynamically add and remove memory areas to its address space.
+A memory address is a given value within the address space, such as 4021f000. This particular value identifies a specific byte in a process’s 32-bit address space. The interesting part of the address space is the intervals of memory addresses, such as 08048000-0804c000, that the process has permission to access. **These intervals of legal addresses are called memory areas**. The process, through the kernel, can dynamically add and remove memory areas to its address space.
 
-The process can access a memory address only in a valid memory area. Memory areas have associated permissions, such as readable, writable, and executable, that the associated process must respect. If a process accesses a memory address not in a valid memory area, or if it accesses a valid area in an invalid manner, the kernel kills the process with the dreaded “Segmentation Fault” message
+**The process can access a memory address only in a valid memory area.** Memory areas have associated permissions, such as readable, writable, and executable, that the associated process must respect. If a process accesses a memory address not in a valid memory area, or if it accesses a valid area in an invalid manner, the kernel kills the process with the dreaded “Segmentation Fault” message.
+
+Memory areas can contain all sorts of goodies, such as
+
+- A memory map of the executable file’s code, called the text section.
+- A memory map of the executable file’s initialized global variables, called the data section.
+- A memory map of the zero page (a page consisting of all zeros, used for purposes such as this) containing uninitialized global variables, called the bss  section.
+- A memory map of the zero page used for the process’s user-space stack. (Do not confuse this with the process’s kernel stack, which is separate and maintained and used by the kernel.)
+- An additional text, data, and bss section for each shared library, such as the C library and dynamic linker, loaded into the process’s address space.
+- Any memory mapped files.
+- Any shared memory segments.
+- Any anonymous memory mappings, such as those associated with malloc(). 
 
 
 
 ## Page Tables
 
-Although applications operate on virtual memory mapped to physical addresses, processors operate directly on those physical addresses. Consequently, when an application accesses a virtual memory address, it must first be converted to a physical address before the processor can resolve the request. Performing this lookup is done via page tables. Page tables work by splitting the virtual address into chunks. Each chunk is used as an index into a table.The table points to either another table or the associated physical page.
+Although **applications operate on virtual memory** mapped to physical addresses, **processors operate directly on those physical addresses**. Consequently, when an application accesses a virtual memory address, it must first be converted to a physical address before the processor can resolve the request. Performing this lookup is done via page tables. Page tables work by splitting the virtual address into chunks. Each chunk is used as an index into a table. The table points to either another table or the associated physical page.
 
-In Linux, the page tables consist of three levels.The multiple levels enable a sparsely populated address space, even on 64-bit machines. If the page tables were implemented asPage Tables 321 a single static array, their size on even 32-bit architectures would be enormous. Linux uses three levels of page tables even on architectures that do not support three levels in hardware. 
+In Linux, the page tables consist of three levels. The multiple levels enable a sparsely populated address space, even on 64-bit machines. If the page tables were implemented as Page Tables 321 a single static array, their size on even 32-bit architectures would be enormous. Linux uses three levels of page tables even on architectures that do not support three levels in hardware. 
 
 In most architectures, page table lookups are handled (at least to some degree) by hardware. 
 

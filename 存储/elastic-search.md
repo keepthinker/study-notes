@@ -16,7 +16,7 @@ An index can be thought of as an optimized collection of documents and each docu
 
 Elasticsearch also has the ability to be schema-less, which means that documents can be indexed without explicitly specifying how to handle each of the different fields that might occur in a document. 
 
-前面看到往Elasticsearch里插入一条记录，其实就是直接PUT一个json的对象，这个对象有多个fields，比如上面例子中的*name, sex, age, about, interests*，那么在插入这些数据到Elasticsearch的同时，Elasticsearch还默默[1](https://link.jianshu.com?t=https://neway6655.github.io/elasticsearch/2015/09/11/elasticsearch-study-notes.html#fn:1)的为这些字段建立索引–倒排索引，因为Elasticsearch最核心功能是搜索。
+前面看到往Elasticsearch里插入一条记录，其实就是直接PUT一个json的对象，这个对象有多个fields，比如上面例子中的*name, sex, age, about, interests*，那么在插入这些数据到Elasticsearch的同时，Elasticsearch还默默的为这些字段建立索引–倒排索引，因为Elasticsearch最核心功能是搜索。
 
 
 
@@ -32,7 +32,7 @@ Elasticsearch is built to be always available and to scale with your needs. It d
 
 An Elasticsearch index is really just a logical grouping of one or more physical shards, where each shard is actually a self-contained index. By distributing the documents in an index across multiple shards, and distributing those shards across multiple nodes, Elasticsearch can ensure redundancy, which both protects against hardware failures and increases query capacity as nodes are added to a cluster. As the cluster grows (or shrinks), Elasticsearch automatically migrates shards to rebalance the cluster.
 
-There are two types of shards: primaries and replicas. Each document in an index belongs to one primary shard. A replica shard is a copy of a primary shard. Replicas provide redundant copies of your data to protect against hardware failure and increase capacity to serve read requests like searching or retrieving a document.
+There are two types of shards: **primaries** and **replicas**. Each document in an index belongs to one primary shard. A replica shard is a copy of a primary shard. **Replicas provide redundant copies of your data to protect against hardware failure** and **increase capacity to serve read requests like searching or retrieving a document.**
 
 There are a number of performance considerations and trade offs with respect to shard size and the number of primary shards configured for an index. The more shards, the more overhead there is simply in maintaining those indices. The larger the shard size, the longer it takes to move shards around when Elasticsearch needs to rebalance a cluster.
 
@@ -40,7 +40,7 @@ There are a number of performance considerations and trade offs with respect to 
 
 CCR provides a way to automatically synchronize indices from your primary cluster to a secondary remote cluster that can serve as a hot backup. 
 
-Cross-cluster replication is active-passive. The index on the primary cluster is the active leader index and handles all write requests. Indices replicated to secondary clusters are read-only followers.
+Cross-cluster replication is active-passive. **The index on the primary cluster is the active leader index and handles all write requests. Indices replicated to secondary clusters are read-only followers.**
 
 
 
@@ -518,3 +518,78 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html
 [干货 | Elasticsearch多表关联设计指南](https://juejin.cn/post/6844903807042715655)
 
 [relations](https://www.elastic.co/guide/en/elasticsearch/guide/current/relations.html)
+
+
+
+# Design
+
+## Inverted indices are at the heart of Elasticsearch
+
+An Elasticsearch index is made up of 'Shards'
+
+A shard is a standalone lucene instance
+
+This instance are called **Inverted Indices**
+
+Inverted Indices map tokens(like) words to documents that contains those words 
+
+| Document Id | Content                         |
+| ----------- | ------------------------------- |
+| 1           | Hello world, my name is Vincent |
+| 2           | Hello USA is the name of a song |
+
+Inverted Index
+
+| term    | doc id with term |
+| ------- | ---------------- |
+| hello   | 1, 2             |
+| is      | 1, 2             |
+| world   | 1                |
+| Vincent | 1                |
+| song    | 1,  2            |
+
+
+
+## Anatomy of Elasticsearch Cluster
+
+The figure below illustrates how cluster works. 
+
+Nodes are physically independent of each other.
+
+Replica shards do read-only operations and only copy data from their primary shards.
+
+Primary shards do write/read operations.
+
+![elastic-search-design](elastic-search-cluster.png)
+
+
+
+
+
+## Anatomy of an Elasticsearch Index
+
+Writing data Example:
+
+Doc Id 13 is hashed into Shard ID 2 of your Elasticsearch Index.
+
+Primary Shard 2 writes the data from Doc ID 13.
+
+Replicas of Shard 2 copy the data from Primary Shard 2.
+
+If Primary Shard 2 is busy writing data, any of the available Replica Shard 2's can return data.
+
+
+
+![elastic-search-index](elastic-search-index.png)
+
+
+
+
+
+## Design Consideration
+
+If your app will be read-heavy, you should have many Replica Shards avaliable.
+
+If your app will be POST/PUT-heavy(lots of writes/updates), you should have more Primary Shards avaliable.
+
+Note: number of Primary and Replica shards is fixed at Index creation(you cannot change the number of Primary and Replica shards after creating an index)
