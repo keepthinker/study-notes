@@ -518,6 +518,55 @@ Write operations are deferred in the page cache. When data in the page cache is 
 
 A gang of kernel threads, the flusher threads, performs all three jobs.
 
+## Definitions and Differences between Buffer and Cache
+
+The **page cache stores pages of files** to optimize file I/O performance.
+The **buffer cache stores disk blocks** to optimize block I/O.
+
+There is a major difference what data gets stored or cached by page & buffer cache prior to Linux kernel 2.4 and after this kernel release.
+
+Lets have a look at their behavior before & after kernel 2.4 release.
+
+**Behavior of Page and Buffer Cache prior to Linux kernel version 2.4**
+Prior to 2.4 kernel, the two caches were different.
+
+```
+Files' cache gets stored in page cache, and disk blocks were stored in buffer cache. 
+The disk blocks usually refers to same file data and hence there was duplicate data gets cached.
+```
+
+Hence **data gets referenced twice once in each of the caches**.
+
+To avoid this behavior, Page & Buffer cache is modified from 2.4 kernel release.
+
+**Behavior of Page & Buffer Cache from Linux kernel 2.4 Onwards**
+Starting from kernel version 2.4, the contents of the page & buffer caches are unified.
+
+```
+The Virtual machine subsystem now carry out Input-Output by caching files' data/pages in page cache. 
+If cached data includes both the file and block representation of data —as most of the data does—then the buffer cache will simply point/link to the data in page cache.
+```
+
+Hence only one instance of file data gets cached in memory.
+
+We can define page and buffer cache w.r.t Linux 2.4 and later kernel release:
+
+**1. What is page cache?**
+Page Cache contains code and data i.e. file’s IO block pages. In reality, all our applications reside in page cache pool. When cpu accesses a chunk of pages, the new pages get immediately updated to the cache.
+
+On next access, CPU first checks the page cache and then access from disk if not available. It caches file data from a disk to make subsequent I/O faster.
+
+**2. What is Buffer Cache ?**
+The buffer cache remains when the kernel still needs to perform block I/O operations in terms of blocks, not pages.
+Blocks usually also represent file data. Hence most of the buffer cache is pointed/linked to the page cache.
+However a *small amount of block data which isn’t present in file cache is solely represented by the buffer cache*.
+
+
+
+### Reference
+
+[Difference between buffer and page cache in Linux ?](https://ngelinux.com/difference-between-buffer-and-page-cache-in-linux/)
+
 
 
 ## Devices and Modules
@@ -543,6 +592,8 @@ Not all device drivers represent physical devices. Some device drivers are virtu
 
 Despite being “monolithic,” in the sense that the whole kernel runs in a single address space, the Linux kernel is modular, supporting the dynamic insertion and removal of code from itself at runtime. Related subroutines, data, and entry and exit points are grouped together in a single binary image, a loadable kernel object, called a module. Support for modules allows systems to have only a minimal base kernel image, with optional features and drivers supplied via loadable, separate objects. Modules also enable the removal and reloading of kernel code, facilitate debugging, and allow for the loading of new drivers on
 demand in response to the hot plugging of new devices.
+
+
 
 
 
@@ -610,13 +661,13 @@ I've seen a server have a load of over 15,000 (yes really that's not a typo) and
 [CPU_time-Wikipedia](https://en.wikipedia.org/wiki/CPU_time)
 
 # inode
-The inode (index node) is a data structure in a **Unix-style file system** that describes a file-system object such as a file or a directory. Each inode stores the attributes and disk block location(s) of the object's data. File-system object attributes may include metadata (times of last change, access, modification), as well as owner and permission data.
+The inode (index node) is a data structure in a **Unix-style file system** that describes a file-system object such as a file or a directory. **Each inode stores the attributes and disk block location(s) of the object's data**. File-system **object attributes may include metadata (times of last change, access, modification), as well as owner and permission data.**
 
 A file system relies on data structures about the files, beside the file content. The former are called metadata—data that describe data. Each file is associated with an inode, which is **identified by an integer number**, often referred to as an i-number or inode number.
 
 Inodes store information about files and directories (folders), such as file **ownership, access mode (read, write, execute permissions), and file type**. On many types of file system implementations, the maximum number of inodes is fixed at file system creation, limiting the maximum number of files the file system can hold. A typical allocation heuristic for inodes in a file system is one percent of total size.
 
-The inode number indexes a table of inodes in a known location on the device. From the inode number, the kernel's file system driver can access the inode contents, including the location of the file - thus allowing access to the file.
+**The inode number indexes a table of inodes in a known location on the device.** From the inode number, the kernel's file system driver can access the inode contents, including the location of the file - thus allowing access to the file.
 
 ## Implications
 Files can have multiple names. If multiple names hard link to the same inode then the names are equivalent; i.e., the first to be created has no special status. This is unlike symbolic links, which depend on the original name, not the inode (number).

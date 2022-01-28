@@ -15,6 +15,24 @@ indicating the end of the header fields.
 
 ## 4. Optionally a message-body
 
+
+
+## HTTP example
+
+```json
+// Request Example
+GET /hello.htm HTTP/1.1\r\t
+content-length:15\r\t
+Content-Type:application/json\r\t
+\r\t
+{"key":"field"}
+
+```
+
+官方文档：[Hypertext Transfer Protocol -- HTTP/1.1](https://datatracker.ietf.org/doc/html/rfc2616)
+
+
+
 # 常见报头
 ## Accept
 The Accept request-header field can be used to specify certain media types which are acceptable for the response.
@@ -57,7 +75,15 @@ The Content-Encoding entity-header field is used as a modifier to the media-type
 media type.
 
 ### example
+```properties
 Content-Encoding: gzip
+Content-Encoding: compress //deprecated
+Content-Encoding: deflate
+Content-Encoding: identity //未经过压缩和修改
+Content-Encoding: br
+```
+
+
 
 ## Content-Length
 The Content-Length entity-header field indicates the size of the entity-body, in decimal number of OCTETs, sent to the recipient or, in the case of the HEAD method, the size of the entity-body that would have been sent had the request been a GET.
@@ -78,8 +104,7 @@ The Expires entity-header field gives the date/time after which the response is 
 The Host request-header field specifies the Internet host and port number of the resource being requested, as obtained from the original URI given by the user or referring resource.
 
 ## Last-Modified
-The Last-Modified entity-header field indicates the date and time at which the origin server believes the variant
-was last modified.
+The Last-Modified entity-header field indicates the date and time at which the origin server believes the variant was last modified.
 
 ## Referer
 The Referer[sic] request-header field allows the client to specify, for the server's benefit, the address (URI) of the resource from which the Request-URI was obtained.
@@ -94,67 +119,70 @@ The Server response-header field contains information about the software used by
 Server: apache
 
 # 常见状态码
-## Successful1xx
+## 1xx informational response
+
 This class of status code indicates a provisional response, consisting only of the Status-Line and optional headers, and is terminated by an empty line. There are no required headers for this class of status code. 
 
 这一类型的状态码，代表请求已被接受，需要继续处理。这类响应是临时响应，只包含状态行和某些可选的响应头信息，并以空行结束。由于HTTP/1.0协议中没有定义任何1xx状态码，所以除非在某些试验条件下，服务器禁止向此类客户端发送1xx响应。这些状态码代表的响应都是信息性的，标示客户应该等待服务器采取进一步行动。
 
 ### 100 Continue
-The client SHOULD continue with its request. This interim response is used to inform the client that the initial part of the request has been received and has not yet been rejected by the server. The client SHOULD continue by sending the remainder of the request or, if the request has already been completed, ignore this response. The server MUST send a final response after the request has been completed. 
+The client SHOULD continue with its request. This interim response is used to inform the client that the **initial part of the request has been received and has not yet been rejected by the server.** The client SHOULD continue by sending the remainder of the request or, if the request has already been completed, ignore this response. The server MUST send a final response after the request has been completed. 
 
+### 101 Switching Protocols
 
-## Successful 2xx
+This code is sent in response to an Upgrade request header from the client and indicates the protocol the server is switching to.
+
+## 2xx success
+
 This class of status code indicates that the client’s request was **successfully** received, understood, and accepted.
 
 ### 200 OK
 The request has succeeded. 
 
 ### 201 Created
-The request has been fulfilled and resulted in a new resource being created. The request has been fulfilled and resulted in a new resource being created. 
+The request has been fulfilled and resulted in **a new resource being created**. The request has been fulfilled and resulted in a new resource being created. 
 
 ### 202 Accepted
-The request has been accepted for processing, but the processing has not been completed. The request might or might not eventually be acted upon, as it might be disallowed when processing actually takes place. There is no
-facility for re-sending a status code from an asynchronous operation such as this.
+The request has been received but not yet acted upon. It is noncommittal, since there is no way in HTTP to later send an asynchronous response indicating the outcome of the request. It is intended for cases where another process or server handles the request, or for batch processing.
 
 ### 204 No Content
 The server has fulfilled the request but does not need to return an entity-body, and might want to return updated metainformation. 
 
+## 3xx redirection
 
-## Redirection 3xx
 ### 300 Multiple Choices
 The requested resource corresponds to any one of a set of representations, each with its own specific location, and agent-driven negotiation information (section 12) is being provided so that the user (or user agent) can select a preferred representation and redirect its request to that location.
 ### 301 Moved Permanently
-The requested resource has been assigned a new permanent URI and any future references to this resource SHOULD use one of the returned URIs.
+The requested resource has been **assigned a new permanent URI** and any future references to this resource SHOULD use one of the returned URIs.
 
 The new permanent URI SHOULD be given by the Location field in the response. Unless the request method was HEAD, the entity of the response SHOULD contain a short hypertext note with a hyperlink to the new URI(s).
 
 ### 302 Found
-The requested resource resides temporarily under a different URI. Since the redirection might be altered on occasion, the client SHOULD continue to use the Request-URI for future requests.
+The requested resource **resides temporarily under a different URI**. Since the redirection might be altered on occasion, **the client SHOULD continue to use the Request-URI for future requests.**
 
 The temporary URI SHOULD be given by the Location field in the response.
 
 ### 304 Not Modified
-If the client has performed a conditional GET request and access is allowed, but the document has not been modified, the server SHOULD respond with this status code. 
+This is used for caching purposes. It tells the client that the response has not been modified, so the client can continue to use the same cached version of the response.
 
 ### 307 Temporary Redirect
-The requested resource resides temporarily under a different URI. Since the redirection MAY be altered on occasion, the client SHOULD continue to use the Request-URI for future requests.
+In this case, the request should be repeated with another URI; however, future requests should still use the original URI. In contrast to how 302 was historically implemented, the request method is not allowed to be changed when reissuing the original request. For example, a POST request should be repeated using another POST request.
 
-The temporary URI SHOULD be given by the Location field in the response. 
+## 4xx client errors
 
-
-## Client Error 4xx
 ### 400 Bad Request
 The request could not be understood by the server due to malformed syntax. The client SHOULD NOT repeat the request without modifications.
 ### 401 Unauthorized
 The request requires user authentication. 
 ### 403 Forbidden
-The server understood the request, but is refusing to fulfill it. Authorization will not help and the request SHOULD NOT be repeated. If the request method was not HEAD and the server wishes to make public why the request has not been fulfilled, it SHOULD describe the reason for the refusal in the entity. If the server does not wish to make this information available to the client, the status code 404 (Not Found) can be used instead.
+The server understood the request, but is refusing to fulfill it. **Authorization will not help and the request SHOULD NOT be repeated.** If the request method was not HEAD and the server wishes to make public why the request has not been fulfilled, it SHOULD describe the reason for the refusal in the entity. If the server does not wish to make this information available to the client, the status code 404 (Not Found) can be used instead.
 ### 404 Not Found
-The server has not found anything matching the Request-URI. No indication is given of whether the condition is temporary or permanent.
+**The server has not found anything matching the Request-URI.** No indication is given of whether the condition is temporary or permanent.
 
-## Server Error 5xx
+## 5xx server errors
+
 ### 500 Internal Server Error
-The server encountered an unexpected condition which prevented it from fulfilling the request.
+**The server encountered an unexpected condition** which prevented it from fulfilling the request.
 
 ### 502 Bad Gateway
 The server, while acting as a gateway or proxy, received an invalid response from the upstream server it accessed in attempting to fulfill the request.
@@ -165,9 +193,13 @@ The server is currently unable to handle the request due to a temporary overload
 ### 504 Gateway Timeout
 The server, while acting as a gateway or proxy, did not receive a timely response from the upstream server specified by the URI (e.g. HTTP, FTP, LDAP) or some other auxiliary server (e.g. DNS) it needed to access in attempting to complete the request.
 
+## 参考
+
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+
 # 工具使用
 ## curl
-```
+```shell
 //http post请求设置Host与Content-Type两个报头
 curl -d '{"key": "value"}' -H 'Host: www.vivo.com.cn' -H 'Content-Type:application/json'  http://110.23.2.323
 
@@ -190,5 +222,4 @@ curl --resolve www.vivo.com.cn:443:183.61.27.136 https://www.vivo.com.cn
 
 curl --resolve www.vivo.com.cn:183.61.27.136 https://www.vivo.com.cn
 ```
-
 

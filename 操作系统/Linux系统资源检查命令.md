@@ -1,5 +1,5 @@
 # 工具
-![image](https://note.youdao.com/yws/api/personal/file/9015459827D045DA88073161E2F5D33F?method=getImage&version=5794&cstk=dipEa6If)
+![image](linux_perf_tools_full.png)
 # vmstat
 ## FIELD DESCRIPTION FOR VM MODE
 ### Procs
@@ -109,9 +109,25 @@ Device:  tps kB_read/s kB_wrtn/s kB_read kB_wrtn
 top -H -p $pid
 
 # free
-Display amount of free and used memory in the system
+free displays the total amount of free and used physical and swap memory in the system, as well as the buffers and caches used by the kernel. The information is gathered by parsing /proc/meminfo. The displayed columns are:
 
+```properties
+   total:  Total installed memory (MemTotal and SwapTotal in /proc/meminfo)
 
+   used:   Used memory (calculated as total - free - buffers - cache)
+
+   free:   Unused memory (MemFree and SwapFree in /proc/meminfo)
+
+   shared: Memory used (mostly) by tmpfs (Shmem in /proc/meminfo)
+
+   buffers:Memory used by kernel buffers (Buffers in /proc/meminfo)
+
+   cache:  Memory used by the page cache and slabs (Cached and SReclaimable in /proc/meminfo)
+
+   buff/cache: Sum of buffers and cache
+
+   available: Estimation  of  how  much  memory is available for starting new applications, without swapping. Unlike the data provided by the cache or free fields, this field takes into account page cache and also that not all reclaimable memory slabs will be re‐claimed due to items being in use (MemAvailable in /proc/meminfo, available on kernels 3.14, emulated on kernels 2.6.27+, otherwise the same as free)
+```
 
 # uptime
 Gives a one line display of the following information.  The current time, how long the system has been running, how many users are currently logged on, and the system **load averages** for the past **1, 5, and 15** minutes.
