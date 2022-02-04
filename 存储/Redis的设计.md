@@ -5,32 +5,32 @@
 3. Redis除了 K-V 之外，还支持多种数据格式，例如 list、set、sorted set、hash 等。
 4. Redis 提供主从同步机制，以及 Cluster 集群部署能力，能够提供高可用服务。
 
-
 ## 数据基础类型
 
 ### String
+
 String 类型是 Redis 中最常使用的类型，内部的实现是通过 SDS（Simple Dynamic String ）来存储的。SDS 类似于 Java 中的 ArrayList，可以通过预分配冗余空间的方式来减少内存的频繁分配。
 
 这是最简单的类型，就是普通的 set 和 get，做简单的 KV缓存。当然可以用作数字进行计数。
 
 ### Hash
+
 redis的哈希对象的底层存储可以使用ziplist（压缩列表）和hashtable。当hash对象可以同时满足以下两个条件时，哈希对象使用ziplist编码。
 
 哈希对象保存的所有键值对的键和值的字符串长度都小于64字节。
 哈希对象保存的键值对数量小于512个。
 
-
-命令 | 时间复杂度
----|---
-HDEL key field [field ...] | O(N) where N is the number of fields to be removed.
-HMGET key field [field ...] | O(N) where N is the number of fields being requested.
-HMSET key field value [field value ...] | O(N) where N is the number of fields being requested.
-HLEN key | O(N) where N is the size of the hash.
-HEXISTS key field | O(1)
-HINCRBY key field | O(1)
-
+| 命令                                      | 时间复杂度                                                 |
+| --------------------------------------- | ----------------------------------------------------- |
+| HDEL key field [field ...]              | O(N) where N is the number of fields to be removed.   |
+| HMGET key field [field ...]             | O(N) where N is the number of fields being requested. |
+| HMSET key field value [field value ...] | O(N) where N is the number of fields being requested. |
+| HLEN key                                | O(N) where N is the size of the hash.                 |
+| HEXISTS key field                       | O(1)                                                  |
+| HINCRBY key field                       | O(1)                                                  |
 
 ### List
+
 redis list数据结构底层采用压缩列表ziplist或linkedlist两种数据结构进行存储，首先以ziplist进行存储，在不满足ziplist的存储要求后转换为linkedlist列表。
 
 当列表对象同时满足以下两个条件时，列表对象使用ziplist进行存储，否则用linkedlist存储。
@@ -40,19 +40,20 @@ redis list数据结构底层采用压缩列表ziplist或linkedlist两种数据�
 
 quicklist是在Redis 3.2之后出现的一种Redis底层数据结构用于List结构的具体实现，List在Redis中更像是数据结构中常说的双向链表，可以被用作栈或者队列。
 
-命令 | 时间复杂度
----|---
-LLEN key | O(1)
-LINDEX key index | O(N) where N is the number of elements to traverse to get to the element at index. This makes asking for the first or the last element of the list O(1).
-LINSERT key BEFORE\|AFTER pivot element |  O(N) where N is the number of elements to traverse before seeing the value pivot. This means that inserting somewhere on the left end on the list (head) can be considered O(1) and inserting somewhere on the right end (tail) is O(N).
-LPOP key | O(1)
-LPUSH key element [element ...] | O(1) for each element added, so O(N) to add N elements when the command is called with multiple arguments.
-LRANGE key start stop | O(S+N) where S is the distance of start offset from HEAD for small lists, from nearest end (HEAD or TAIL) for large lists; and N is the number of elements in the specified range.
-LREM key count element | O(N+M) where N is the length of the list and M is the number of elements removed.
-RPOP key | O(1)
-RPUSH key element [element ...] | O(1) for each element added, so O(N) to add N elements when the command is called with multiple arguments.
+| 命令                                      | 时间复杂度                                                                                                                                                                                                                                    |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LLEN key                                | O(1)                                                                                                                                                                                                                                     |
+| LINDEX key index                        | O(N) where N is the number of elements to traverse to get to the element at index. This makes asking for the first or the last element of the list O(1).                                                                                 |
+| LINSERT key BEFORE\|AFTER pivot element | O(N) where N is the number of elements to traverse before seeing the value pivot. This means that inserting somewhere on the left end on the list (head) can be considered O(1) and inserting somewhere on the right end (tail) is O(N). |
+| LPOP key                                | O(1)                                                                                                                                                                                                                                     |
+| LPUSH key element [element ...]         | O(1) for each element added, so O(N) to add N elements when the command is called with multiple arguments.                                                                                                                               |
+| LRANGE key start stop                   | O(S+N) where S is the distance of start offset from HEAD for small lists, from nearest end (HEAD or TAIL) for large lists; and N is the number of elements in the specified range.                                                       |
+| LREM key count element                  | O(N+M) where N is the length of the list and M is the number of elements removed.                                                                                                                                                        |
+| RPOP key                                | O(1)                                                                                                                                                                                                                                     |
+| RPUSH key element [element ...]         | O(1) for each element added, so O(N) to add N elements when the command is called with multiple arguments.                                                                                                                               |
 
 ### Set
+
 set底层存储
 redis的集合对象set的底层存储结构特别神奇，我估计一般人想象不到，底层使用了intset和hashtable两种数据结构存储的，intset我们可以理解为数组，hashtable就是普通的哈希表（key为set的值，value为null）。是不是觉得用hashtable存储set是一件很神奇的事情。
 
@@ -61,17 +62,18 @@ set的底层存储intset和hashtable是存在编码转换的，使用intset存�
 结合对象保存的所有元素都是整数值
 集合对象保存的元素数量不超过512个。
 
-命令 | 时间复杂度
----|---
-SADD key member [member ...] | O(1) for each element added, so O(N) to add N elements when the command is called with multiple arguments.
-SINTER key [key ...] | O(N*M) worst case where N is the cardinality of the smallest set and M is the number of sets.
-SREM key member [member ...] | O(N) where N is the number of members to be removed.
-SISMEMBER key member | O(1)
-SMOVE source destination member | O(1)
-SPOP key [count] | O(1)
-SCARD key | O(1)
+| 命令                              | 时间复杂度                                                                                                      |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| SADD key member [member ...]    | O(1) for each element added, so O(N) to add N elements when the command is called with multiple arguments. |
+| SINTER key [key ...]            | O(N*M) worst case where N is the cardinality of the smallest set and M is the number of sets.              |
+| SREM key member [member ...]    | O(N) where N is the number of members to be removed.                                                       |
+| SISMEMBER key member            | O(1)                                                                                                       |
+| SMOVE source destination member | O(1)                                                                                                       |
+| SPOP key [count]                | O(1)                                                                                                       |
+| SCARD key                       | O(1)                                                                                                       |
 
 ### Zset
+
 zset底层的存储结构包括ziplist或skiplist，在同时满足以下两个条件的时候使用ziplist，其他时候使用skiplist，两个条件如下：
 
 有序集合保存的元素数量小于128个
@@ -80,17 +82,16 @@ zset底层的存储结构包括ziplist或skiplist，在同时满足以下两个�
 
 当skiplist作为zset的底层存储结构的时候，使用skiplist按序保存元素及分值，使用dict来保存元素和分值的映射关系。
 
-| 命令                                                      | 时间复杂度                                                   |
-| --------------------------------------------------------- | ------------------------------------------------------------ |
-| ZADD key score member [[score member] [score member] ...] | O(M*log(N))，`N` 是有序集的基数， `M` 为成功添加的新成员的数量。 |
-| ZCARD key                                                 | O(1)                                                         |
-| ZRANK key member                                          | O(log(N))                                                    |
-| ZRANGE                                                    | O(log(N)+M)， `N` 为有序集的基数，而 `M` 为结果集的基数。    |
+| 命令                                                        | 时间复杂度                                       |
+| --------------------------------------------------------- | ------------------------------------------- |
+| ZADD key score member [[score member] [score member] ...] | O(M*log(N))，`N` 是有序集的基数， `M` 为成功添加的新成员的数量。  |
+| ZCARD key                                                 | O(1)                                        |
+| ZRANK key member                                          | O(log(N))                                   |
+| ZRANGE                                                    | O(log(N)+M)， `N` 为有序集的基数，而 `M` 为结果集的基数。     |
 | ZREM key member [member ...]                              | O(M*log(N))， `N` 为有序集的基数， `M` 为被成功移除的成员的数量。 |
 
-
-
 ### Expire
+
 How Redis expires keys
 Redis keys are expired in two ways: a passive way, and an active way.
 
@@ -111,11 +112,11 @@ Specifically this is what Redis does 10 times per second:
 Ziplist 是由一系列特殊编码的内存块构成的列表， 一个 ziplist 可以包含多个节点（entry）， 每个节点可以保存一个长度受限的字符数组（不以 `\0` 结尾的 `char` 数组）或者整数， 包括：
 
 - - 字符数组
-
+    
     长度小于等于 `63` （26−126−1）字节的字符数组长度小于等于 `16383` （214−1214−1） 字节的字符数组长度小于等于 `4294967295` （232−1232−1）字节的字符数组
 
 - - 整数
-
+    
     `4` 位长，介于 `0` 至 `12` 之间的无符号整数`1` 字节长，有符号整数`3` 字节长，有符号整数`int16_t` 类型整数`int32_t` 类型整数`int64_t` 类型整数
 
 因为 ziplist 节约内存的性质， 哈希键、列表键和有序集合键初始化的底层实现皆有采用 ziplist。
@@ -138,42 +139,42 @@ address                                |                          |        |
 
 图中各个域的作用如下：
 
-| 域        | 长度/类型  | 域的值                                                       |
-| :-------- | :--------- | :----------------------------------------------------------- |
-| `zlbytes` | `uint32_t` | 整个 ziplist 占用的内存字节数，对 ziplist 进行内存重分配，或者计算末端时使用。 |
-| `zltail`  | `uint32_t` | 到达 ziplist 表尾节点的偏移量。 通过这个偏移量，可以在不遍历整个 ziplist 的前提下，弹出表尾节点。 |
+| 域         | 长度/类型      | 域的值                                                                                                                    |
+|:--------- |:---------- |:---------------------------------------------------------------------------------------------------------------------- |
+| `zlbytes` | `uint32_t` | 整个 ziplist 占用的内存字节数，对 ziplist 进行内存重分配，或者计算末端时使用。                                                                       |
+| `zltail`  | `uint32_t` | 到达 ziplist 表尾节点的偏移量。 通过这个偏移量，可以在不遍历整个 ziplist 的前提下，弹出表尾节点。                                                             |
 | `zllen`   | `uint16_t` | ziplist 中节点的数量。 当这个值小于 `UINT16_MAX` （`65535`）时，这个值就是 ziplist 中节点的数量； 当这个值等于 `UINT16_MAX` 时，节点的数量需要遍历整个 ziplist 才能计算得出。 |
-| `entryX`  | `?`        | ziplist 所保存的节点，各个节点的长度根据内容而定。           |
-| `zlend`   | `uint8_t`  | `255` 的二进制值 `1111 1111` （`UINT8_MAX`） ，用于标记 ziplist 的末端。 |
+| `entryX`  | `?`        | ziplist 所保存的节点，各个节点的长度根据内容而定。                                                                                          |
+| `zlend`   | `uint8_t`  | `255` 的二进制值 `1111 1111` （`UINT8_MAX`） ，用于标记 ziplist 的末端。                                                               |
 
 为了方便地取出 ziplist 的各个域以及一些指针地址， ziplist 模块定义了以下宏：
 
-| 宏                             | 作用                                                 | 算法复杂度 |
-| :----------------------------- | :--------------------------------------------------- | :--------- |
-| `ZIPLIST_BYTES(ziplist)`       | 取出 `zlbytes` 的值                                  | θ(1)θ(1)   |
-| `ZIPLIST_TAIL_OFFSET(ziplist)` | 取出 `zltail` 的值                                   | θ(1)θ(1)   |
-| `ZIPLIST_LENGTH(ziplist)`      | 取出 `zllen` 的值                                    | θ(1)θ(1)   |
-| `ZIPLIST_HEADER_SIZE`          | 返回 ziplist header 部分的长度，总是固定的 `10` 字节 | θ(1)θ(1)   |
-| `ZIPLIST_ENTRY_HEAD(ziplist)`  | 返回到达 ziplist 第一个节点（表头）的地址            | θ(1)θ(1)   |
-| `ZIPLIST_ENTRY_TAIL(ziplist)`  | 返回到达 ziplist 最后一个节点（表尾）的地址          | θ(1)θ(1)   |
-| `ZIPLIST_ENTRY_END(ziplist)`   | 返回 ziplist 的末端，也即是 `zlend` 之前的地址       | θ(1)θ(1)   |
+| 宏                              | 作用                                    | 算法复杂度    |
+|:------------------------------ |:------------------------------------- |:-------- |
+| `ZIPLIST_BYTES(ziplist)`       | 取出 `zlbytes` 的值                       | θ(1)θ(1) |
+| `ZIPLIST_TAIL_OFFSET(ziplist)` | 取出 `zltail` 的值                        | θ(1)θ(1) |
+| `ZIPLIST_LENGTH(ziplist)`      | 取出 `zllen` 的值                         | θ(1)θ(1) |
+| `ZIPLIST_HEADER_SIZE`          | 返回 ziplist header 部分的长度，总是固定的 `10` 字节 | θ(1)θ(1) |
+| `ZIPLIST_ENTRY_HEAD(ziplist)`  | 返回到达 ziplist 第一个节点（表头）的地址             | θ(1)θ(1) |
+| `ZIPLIST_ENTRY_TAIL(ziplist)`  | 返回到达 ziplist 最后一个节点（表尾）的地址            | θ(1)θ(1) |
+| `ZIPLIST_ENTRY_END(ziplist)`   | 返回 ziplist 的末端，也即是 `zlend` 之前的地址      | θ(1)θ(1) |
 
 因为 ziplist header 部分的长度总是固定的（`4` 字节 + `4` 字节 + `2` 字节）， 因此将指针移动到表头节点的复杂度为常数时间； 除此之外， 因为表尾节点的地址可以通过 `zltail` 计算得出， 因此将指针移动到表尾节点的复杂度也为常数时间。
 
 以下是用于操作 ziplist 的函数：
 
-| 函数名               | 作用                                                         | 算法复杂度 |
-| :------------------- | :----------------------------------------------------------- | :--------- |
-| `ziplistNew`         | 创建一个新的 ziplist                                         | θ(1)θ(1)   |
-| `ziplistResize`      | 重新调整 ziplist 的内存大小                                  | O(N)O(N)   |
-| `ziplistPush`        | 将一个包含给定值的新节点推入 ziplist 的表头或者表尾          | O(N2)O(N2) |
+| 函数名                  | 作用                                    | 算法复杂度      |
+|:-------------------- |:------------------------------------- |:---------- |
+| `ziplistNew`         | 创建一个新的 ziplist                        | θ(1)θ(1)   |
+| `ziplistResize`      | 重新调整 ziplist 的内存大小                    | O(N)O(N)   |
+| `ziplistPush`        | 将一个包含给定值的新节点推入 ziplist 的表头或者表尾        | O(N2)O(N2) |
 | `zipEntry`           | 取出给定地址上的节点，并将它的属性保存到 `zlentry` 结构然后返回 | θ(1)θ(1)   |
-| `ziplistInsert`      | 将一个包含给定值的新节点插入到给定地址                       | O(N2)O(N2) |
-| `ziplistDelete`      | 删除给定地址上的节点                                         | O(N2)O(N2) |
-| `ziplistDeleteRange` | 在给定索引上，连续进行多次删除                               | O(N2)O(N2) |
-| `ziplistFind`        | 在 ziplist 中查找并返回包含给定值的节点                      | O(N)O(N)   |
-| `ziplistLen`         | 返回 ziplist 保存的节点数量                                  | O(N)O(N)   |
-| `ziplistBlobLen`     | 以字节为单位，返回 ziplist 占用的内存大小                    | θ(1)θ(1)   |
+| `ziplistInsert`      | 将一个包含给定值的新节点插入到给定地址                   | O(N2)O(N2) |
+| `ziplistDelete`      | 删除给定地址上的节点                            | O(N2)O(N2) |
+| `ziplistDeleteRange` | 在给定索引上，连续进行多次删除                       | O(N2)O(N2) |
+| `ziplistFind`        | 在 ziplist 中查找并返回包含给定值的节点              | O(N)O(N)   |
+| `ziplistLen`         | 返回 ziplist 保存的节点数量                    | O(N)O(N)   |
+| `ziplistBlobLen`     | 以字节为单位，返回 ziplist 占用的内存大小             | θ(1)θ(1)   |
 
 因为 ziplist 由连续的内存块构成， 在最坏情况下， 当 `ziplistPush` 、 `ziplistDelete` 这类对节点进行增加或删除的函数之后， 程序需要执行一种称为连锁更新的动作来维持 ziplist 结构本身的性质， 所以这些函数的最坏复杂度都为 O(N2)O(N2) 。 不过，因为这种最坏情况出现的概率并不高， 所以大可以放心使用 ziplist ， 而不必太担心出现最坏情况。
 
@@ -195,7 +196,7 @@ The exact behavior Redis follows when the maxmemory limit is reached is configur
 
 5. allkeys-random：从数据集(server.db[i].dict)中选择任意数据淘汰。evict keys randomly in order to make space for the new data added.
 
-6. no-enviction：禁止驱逐数据，也就是当内存不足以容纳新入数据时，新写入操作就会报错，请求可以继续进行，线上任务也不能持续进行，采用no-enviction策略可以保证数据不被丢失，这也是系统默认的一种淘汰策略。return errors when the memory limit was reached and the client is trying to execute commands that could result in more memory to be used (most write commands, but DEL and a few more exceptions).
+6. no-enviction：禁止驱逐数据，也就是当内存不足以容纳新入数据时，新写入操作就会报错，请求可以继续进行，线上任务也不能持续进行，采用no-enviction策略可以保证数据不被丢失，这也是**系统默认的一种淘汰策略**。return errors when the memory limit was reached and the client is trying to execute commands that could result in more memory to be used (most write commands, but DEL and a few more exceptions).
 
 How the eviction process works
 It is important to understand that the eviction process works like this:
@@ -207,18 +208,23 @@ It is important to understand that the eviction process works like this:
 ## 持久化
 
 ### RDB模式
+
 RDB其实就是把数据以快照的形式保存在磁盘上。
 
 对于RDB来说，提供了三种机制：save、bgsave、自动化
+
 #### SAVE
+
 该命令会阻塞当前Redis服务器，执行save命令期间，Redis不能处理其他命令，直到RDB过程完成为止。
 
 #### BGSAVE
+
 执行该命令时，Redis会在后台异步进行快照操作，快照同时还可以响应客户端请求。
 
 具体操作是Redis进程执行fork操作创建子进程，RDB持久化过程由子进程负责，完成后自动结束。阻塞只发生在fork阶段，一般时间很短。基本上 Redis 内部所有的RDB操作都是采用 bgsave 命令。
 
 #### 自动触发
+
 自动触发是由我们的配置文件来完成的。在redis.conf配置文件中，里面有如下配置，我们可以去设置：
 
 save：这里是用来配置触发 Redis的 RDB 持久化条件，也就是什么时候将内存中的数据保存到硬盘。比如“save m n”。表示m秒内数据集存在n次修改时，自动触发bgsave。
@@ -235,11 +241,12 @@ save：这里是用来配置触发 Redis的 RDB 持久化条件，也就是什�
 
 2、 劣势
 
-　RDB快照是一次全量备份，存储的是内存数据的二进制序列化形式，存储上非常紧凑。当进行快照持久化时，会开启一个子进程专门负责快照持久化，子进程会拥有父进程的内存数据，父进程修改内存子进程不会反应出来，所以在快照持久化期间修改的数据不会被保存，可能丢失数据。假如同步过程中发生父进程对内存修改，由于Copy on Write机制，会使操作系统申请额外内存给父进程做内存修改。
-　
+RDB快照是一次全量备份，存储的是内存数据的二进制序列化形式，存储上非常紧凑。当进行快照持久化时，会开启一个子进程专门负责快照持久化，子进程会拥有父进程的内存数据，父进程修改内存子进程不会反应出来，所以在快照持久化期间修改的数据不会被保存，可能丢失数据。假如同步过程中发生父进程对内存修改，由于Copy on Write机制，会使操作系统申请额外内存给父进程做内存修改。
+
 ### AOF模式（Append Only File）
+
 全量备份总是耗时的，有时候我们提供一种更加高效的方式AOF，工作机制很简单，redis会将每一个收到的写命令都通过write函数追加到文件中。通俗的理解就是日志记录。
-　
+
 #### AOF也有三种触发机制
 
 （1）每修改同步"always"：同步持久化 每次发生数据变更会被立即记录到磁盘 性能较差但数据完整性比较好
@@ -266,26 +273,28 @@ save：这里是用来配置触发 Redis的 RDB 持久化条件，也就是什�
 （3）以前AOF发生过bug，就是通过AOF记录的日志，进行数据恢复的时候，没有恢复一模一样的数据出来。
 
 ### 面试问题
+
 bgsave做镜像全量持久化，aof做增量持久化。因为bgsave会耗费较长时间，不够实时，在停机的时候会导致大量丢失数据，所以需要aof来配合使用。在redis实例重启时，会使用bgsave持久化文件重新构建内存，再使用aof重放近期的操作指令来实现完整恢复重启之前的状态。
 
 对方追问那如果突然机器掉电会怎样？取决于aof日志sync属性的配置，如果不要求性能，在每条写指令时都sync一下磁盘，就不会丢失数据。但是在高性能的要求下每次都sync是不现实的，一般都使用定时sync，比如1s1次，这个时候最多就会丢失1s的数据。
 
 对方追问bgsave的原理是什么？你给出两个词汇就可以了，fork和cow。fork是指redis通过创建子进程来进行bgsave操作，cow指的是copy on write，子进程创建后，父子进程共享数据段，父进程继续提供读写服务，写脏的页面数据会逐渐和子进程分离开来。
 
-
 ## Pipeline
+
 Pipeline有什么好处，为什么要用pipeline？
 
 可以将多次IO往返的时间缩减为一次，前提是pipeline执行的指令之间没有因果相关性。使用redis-benchmark进行压测的时候可以发现影响redis的QPS峰值的一个重要因素是pipeline批次指令的数目。
 
 ## 同步机制
+
 Redis的同步机制了解么？
 
 Redis可以使用主从同步，从从同步。第一次同步时，主节点做一次bgsave，并同时将后续修改操作记录到内存buffer，待完成后将rdb文件全量同步到复制节点，复制节点接受完成后将rdb镜像加载到内存。加载完成后，再通知主节点将期间修改的操作记录同步到复制节点进行重放就完成了同步过程。
 
  Redis全量复制一般发生在Slave初始化阶段，这时Slave需要将Master上的所有数据都复制一份。具体步骤如下：
 
- 1）从服务器连接主服务器，发送SYNC命令；
+ 1）从服务器连接主服务器，发送SYNC(Actually SYNC is an old protocol no longer used by newer Redis instances, but is still there for backward compatibility: it does not allow partial resynchronizations, so now PSYNC is used instead.)命令；
 
  2）主服务器接收到SYNC命名后，开始执行BGSAVE命令生成RDB文件，并使用缓冲区记录此后执行的所有写命令；
 
@@ -299,7 +308,25 @@ Redis可以使用主从同步，从从同步。第一次同步时，主节点做
 
 ![img](7226119-8966c52711461a4d.webp)
 
+### 参考
+
 [Redis主从同步原理-SYNC](https://blog.csdn.net/sk199048/article/details/50725369)
+
+### Replication
+
+ there is a very simple to use and configure leader follower (master-replica) replication: it allows replica Redis instances to be exact copies of master instances. The replica will automatically reconnect to the master every time the link breaks, and will attempt to be an exact copy of it regardless of what happens to the master.
+
+ This system works using three main mechanisms:
+
+**When a master and a replica instances are well-connected, the master keeps the replica updated by sending a stream of commands to the replica**, in order to replicate the effects on the dataset happening in the master side due to: client writes, keys expired or evicted, any other action changing the master dataset.
+
+When the link between the master and the replica breaks, for network issues or because a timeout is sensed in the master or the replica, the replica **reconnects and attempts to proceed with a partial resynchronization**: it means that it will try to just obtain the part of the stream of commands it missed during the disconnection.
+
+**When a partial resynchronization is not possible, the replica will ask for a full resynchronization.** This will involve a more complex process in which the master needs to create a snapshot of all its data, send it to the replica, and then continue sending the stream of commands as the dataset changes.
+
+Redis uses by **default asynchronous replication**, which being low latency and high performance, is the natural replication mode for the vast majority of Redis use cases.
+
+[redis-replication](https://redis.io/topics/replication)
 
 ## Redis 集群
 
@@ -328,6 +355,7 @@ PFAIL就是主观下线，比如节点1判定节点3下线，那么他会标记�
 // todo
 
 ## Redis Server事件模型
+
 redis服务器是一个事件驱动的程序，内部需要处理两类事件，一类是文件事件（file event），一类是时间事件（time event），前者对应着处理各种io事件，后者对应着处理各种定时任务。
 
 file event 和 time event都是由单个线程驱动的，file event 底层其实是通过select/epoll等模型去执行驱动的，time event是通过内部维持一个定时任务列表来实现的。
@@ -337,6 +365,3 @@ redis server的事件模型其实就是经典的NIO模型，底层通过select/e
 [redis数据淘汰原理](https://www.jianshu.com/p/60cc093d6c36)
 
 [Redis两种持久化机制RDB和AOF详解（面试常问，工作常用）](https://database.51cto.com/art/202002/610603.htm)
-
-
-

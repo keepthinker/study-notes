@@ -6,7 +6,7 @@ Elasticsearch provides near real-time search and analytics for all types of data
 
 Kibana local address: http://localhost:5601/
 
-##  Data in: documents and indices
+## Data in: documents and indices
 
 Elasticsearch is a distributed document store. Instead of storing information as rows of columnar data, Elasticsearch stores complex data structures that have been serialized as JSON documents.
 
@@ -17,8 +17,6 @@ An index can be thought of as an optimized collection of documents and each docu
 Elasticsearch also has the ability to be schema-less, which means that documents can be indexed without explicitly specifying how to handle each of the different fields that might occur in a document. 
 
 前面看到往Elasticsearch里插入一条记录，其实就是直接PUT一个json的对象，这个对象有多个fields，比如上面例子中的*name, sex, age, about, interests*，那么在插入这些数据到Elasticsearch的同时，Elasticsearch还默默的为这些字段建立索引–倒排索引，因为Elasticsearch最核心功能是搜索。
-
-
 
 ## Information out: search and analyze
 
@@ -41,8 +39,6 @@ There are a number of performance considerations and trade offs with respect to 
 CCR provides a way to automatically synchronize indices from your primary cluster to a secondary remote cluster that can serve as a hot backup. 
 
 Cross-cluster replication is active-passive. **The index on the primary cluster is the active leader index and handles all write requests. Indices replicated to secondary clusters are read-only followers.**
-
-
 
 ## 命令
 
@@ -74,7 +70,7 @@ curl -X PUT "localhost:9200/logs-my_app-default/_bulk?pretty" -H 'Content-Type: 
 '
 ```
 
-###  Search data
+### Search data
 
 Indexed documents are available for search in near real-time. The following search matches all log entries in `logs-my_app-default` and sorts them by `@timestamp` in descending order.
 
@@ -93,7 +89,7 @@ curl -X GET "localhost:9200/logs-my_app-default/_search?pretty" -H 'Content-Type
 '
 ```
 
-####  Get specific fields
+#### Get specific fields
 
 Parsing the entire `_source` is unwieldy for large documents. To exclude it from the response, set the `_source` parameter to `false`. Instead, use the `fields` parameter to retrieve the fields you want.
 
@@ -125,10 +121,9 @@ curl -X GET "localhost:9200/logs-my_app-default/_search?pretty" -H 'Content-Type
   "_source": ["name", "play_year"]
 }
 '
-
 ```
 
-####  Search a date range
+#### Search a date range
 
 To search across a specific time or IP range, use a `range` query.
 
@@ -186,8 +181,6 @@ curl -X GET "http://localhost:9200/ds-logs-my_app-default/_search" -H 'Content-T
 '
 ```
 
-
-
 ## Query DSL (Domain Specific Language)
 
 official doc: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html
@@ -214,9 +207,7 @@ Like the match query, the match_phrase query first analyzes the query string to 
 
 只有当这三个条件满足，才会命中文档！
 
-
-
-##  测试分析器
+## 测试分析器
 
 有些时候很难理解分词的过程和实际被存储到索引中的词条，特别是你刚接触Elasticsearch。为了理解发生了什么，你可以使用 `analyze` API 来看文本是如何被分析的。在消息体里，指定分析器和要分析的文本：
 
@@ -234,18 +225,16 @@ GET ds-logs-my_app-default/_analyze
 }
 ```
 
-
-
-##  Boolean query
+## Boolean query
 
 A query that matches documents matching boolean combinations of other queries. The bool query maps to Lucene `BooleanQuery`. It is built using one or more boolean clauses, each clause with a typed occurrence. The occurrence types are:
 
-| Occur      | Description                                                  |
-| ---------- | ------------------------------------------------------------ |
-| `must`     | The clause (query) must appear in matching documents and will contribute to the score. 所有的语句都*必须（must）*匹配，与`AND`等价。返回的文档必须满足must子句的条件，并且参与计算分值。 |
+| Occur      | Description                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `must`     | The clause (query) must appear in matching documents and will contribute to the score. 所有的语句都*必须（must）*匹配，与`AND`等价。返回的文档必须满足must子句的条件，并且参与计算分值。                                                                                                                                                                                                                                                                                |
 | `filter`   | The clause (query) must appear in matching documents. However unlike `must` the score of the query will be ignored. Filter clauses are executed in [filter context](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-filter-context.html), meaning that scoring is ignored and clauses are considered for caching. 返回的文档必须满足filter子句的条件。但是跟Must不一样的是，不会计算分值， 并且可以使用缓存。如果你的业务场景不需要算分，使用filter比must查询速度快很多。 |
-| `should`   | The clause (query) should appear in the matching document. 至少有一个语句要匹配，与 `OR` 等价。 |
-| `must_not` | The clause (query) must not appear in the matching documents. Clauses are executed in [filter context](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-filter-context.html) meaning that scoring is ignored and clauses are considered for caching. Because scoring is ignored, a score of `0` for all documents is returned. 所有的语句都 *不能（must not）* 匹配，与 `NOT` 等价。 |
+| `should`   | The clause (query) should appear in the matching document. 至少有一个语句要匹配，与 `OR` 等价。                                                                                                                                                                                                                                                                                                                                               |
+| `must_not` | The clause (query) must not appear in the matching documents. Clauses are executed in [filter context](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-filter-context.html) meaning that scoring is ignored and clauses are considered for caching. Because scoring is ignored, a score of `0` for all documents is returned. 所有的语句都 *不能（must not）* 匹配，与 `NOT` 等价。                                       |
 
 ### 例子
 
@@ -346,8 +335,6 @@ http://localhost:9200/ds-logs-my_app-default/_search
 }
 ```
 
-
-
 ### Mapping
 
 #### Create Mapping and add fields
@@ -383,11 +370,7 @@ PUT /publications/_mapping
     "content":  { "type": "text"}
   }
 }
-
-
 ```
-
-
 
 ##### Change the mapping of an existing field
 
@@ -474,14 +457,9 @@ response:
                     20
                 ]}]}
 }
-
 ```
 
-
-
-
-
-##  Elasticsearch关联关系如何存储
+## Elasticsearch关联关系如何存储
 
 关联关系仍然非常重要。某些时候，我们需要缩小扁平化和现实世界关系模型的差异。 以下`四种`常用的方法，用来在 Elasticsearch 中进行关联数据的管理：
 
@@ -503,8 +481,6 @@ Join类型是ES Mapping定义的类型之一，用于在同一索引的文档中
 
 ## 参考文献
 
-
-
 https://www.elastic.co/
 
 [Elasticsearch是如何做到快速索引的](https://www.jianshu.com/p/ed7e1ebb2fb7)
@@ -518,8 +494,6 @@ https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html
 [干货 | Elasticsearch多表关联设计指南](https://juejin.cn/post/6844903807042715655)
 
 [relations](https://www.elastic.co/guide/en/elasticsearch/guide/current/relations.html)
-
-
 
 # Design
 
@@ -548,8 +522,6 @@ Inverted Index
 | Vincent | 1                |
 | song    | 1,  2            |
 
-
-
 ## Anatomy of Elasticsearch Cluster
 
 The figure below illustrates how cluster works. 
@@ -561,10 +533,6 @@ Replica shards do read-only operations and only copy data from their primary sha
 Primary shards do write/read operations.
 
 ![elastic-search-design](elastic-search-cluster.png)
-
-
-
-
 
 ## Anatomy of an Elasticsearch Index
 
@@ -578,13 +546,7 @@ Replicas of Shard 2 copy the data from Primary Shard 2.
 
 If Primary Shard 2 is busy writing data, any of the available Replica Shard 2's can return data.
 
-
-
 ![elastic-search-index](elastic-search-index.png)
-
-
-
-
 
 ## Design Consideration
 

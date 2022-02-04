@@ -30,7 +30,7 @@ The kernel stores the list of processes in a circular doubly linked list called 
 
 ![process-task-list](process-decriptor-task-list.png)
 
-### Process State 
+### Process State
 
 - **TASK_RUNNING**—The process is runnable; it is either currently running or on a runqueue waiting to run. This is the only possible state for a process executing in user-space; it can also apply to a process in kernel-space that is actively running.
 
@@ -43,10 +43,10 @@ The kernel stores the list of processes in a circular doubly linked list called 
 - **TASK_STOPPED**—Process execution has stopped; the task is not running nor is it eligible to run. This occurs if the task receives the SIGSTOP, SIGTSTP, SIGTTIN, or SIGTTOU signal or if it receives any signal while it is being debugged.  
 
 - ![process-state](process-state.png)
-
+  
   Normal program execution occurs in user-space.  When a program executes a system call or triggers an exception, it enters kernel-space.  
 
-### The Process Family Tree 
+### The Process Family Tree
 
 A distinct hierarchy exists between processes in Unix systems, and Linux is no exception. **All processes are descendants of the init process**, whose PID is one. The kernel starts init in the last step of the boot process. The init process, in turn, reads the system initscripts and executes more programs, eventually completing the boot process. 
 
@@ -65,14 +65,14 @@ In Linux, fork() is implemented through the use of copy-on-write pages. Copy-on-
 
 The only overhead incurred by fork() is the duplication of the parent’s page tables and the creation of a unique process descriptor for the child.  
 
-### The Linux Implementation of Threads  
+### The Linux Implementation of Threads
 
 To the Linux kernel, there is no concept of a thread. Linux implements all threads as standard processes. The Linux kernel does not provide any special scheduling semantics or data structures to represent threads.  Instead, **a thread is merely a process that shares certain resources with other processes.**  
 
 This approach to threads contrasts greatly with operating systems such as Microsoft Windows or Sun Solaris, which have explicit kernel support for threads (and sometimes call threads lightweight processes).  To Linux, threads are simply a manner of sharing resources between processes (which are
 already quite lightweight).  
 
-#### Creating Threads  
+#### Creating Threads
 
 Threads are created the same as normal tasks, with the exception that the clone() system call is passed flags corresponding to the specific resources to be shared:  
 
@@ -114,11 +114,11 @@ CFS uses a **red-black tree** to manage the list of runnable processes and effic
 ps -el
 ```
 
-#### real-time priority 
+#### real-time priority
 
 The values are configurable, but by default range from 0 to 99, inclusive. Opposite from nice values, higher real-time priority values correspond to a greater priority. All real-time processes are at a higher priority than normal processes; that is, the real-time priority and nice value are in disjoint value spaces.  
 
-```  shell
+```shell
 # rtprio is real-time priority
 ps -eo state,uid,pid,ppid,rtprio,time,comm.  
 ```
@@ -129,7 +129,7 @@ When CFS is deciding what process to run next, it picks the process with the sma
 
 CFS uses a red-black tree to manage the list of runnable processes and efficiently find the process with the smallest vruntime.  
 
-### Sleeping and Waking Up 
+### Sleeping and Waking Up
 
 A task sleeps for a number of reasons, but always while it is waiting for some event. The event can be a specified amount of time, more data from a file I/O, or another hardware event. 
 
@@ -162,7 +162,7 @@ An interrupt is physically produced by electronic signals originating from hardw
 
 These interrupt values are often called **interrupt request (IRQ)** lines.  Each IRQ line is assigned a numeric value—for example, on the classic PC, IRQ zero is the timer interrupt and IRQ one is the keyboard interrupt.  
 
-### Interrupt handler 
+### Interrupt handler
 
 The function the kernel runs in response to a specific interrupt is called an **interrupt handler** or **interrupt service routine (ISR)**. Each device that generates interrupts has an associated interrupt handler.   
 
@@ -170,7 +170,7 @@ The interrupt handler for a device is part of the device’s driver—the kernel
 
 Interrupt handlers run with the current interrupt line disabled on all processors.
 
-### Top Halves Versus Bottom Halves  
+### Top Halves Versus Bottom Halves
 
 Because of these competing goals, the processing of interrupts is split into two parts, or halves. **The interrupt handler is the top half**.
 **The top half is run immediately upon receipt of the interrupt and performs only the work that is time-critical**, such as acknowledging receipt of the interrupt or resetting the hardware. **Work that can be performed later is deferred until the bottom half.** The bottom half runs in the future, at a more convenient time, with all interrupts enabled.
@@ -189,9 +189,7 @@ Bottom Halves例子：上述TopHavles例子处理完毕后，接下来就是Bott
 
 [linux中断处理-顶半部（top half）和底半部（bottom half）](https://blog.csdn.net/weixin_30716725/article/details/95298142)
 
-
-
-### Interrupt Context  
+### Interrupt Context
 
 When executing an interrupt handler, the kernel is in interrupt context.   
 
@@ -203,7 +201,7 @@ Interrupt context is time-critical because the interrupt handler interrupts othe
 
 A device issues an interrupt by sending an electric signal over its bus to the interrupt controller. If the interrupt line is enabled (they can be masked out), the interrupt controller sends the interrupt to the processor.  
 
-### /proc/interrupts  
+### /proc/interrupts
 
 A relevant example is the /proc/interrupts file, which is populated with statistics related to interrupts on the system.  
 
@@ -211,7 +209,7 @@ A relevant example is the /proc/interrupts file, which is populated with statist
 
 The first column is the interrupt line. On this system, interrupts numbered 0–2, 4, 5, 12, and 15 are present. Handlers are not installed on lines not displayed.The second column is a counter of the number of interrupts received. The third column is the interrupt controller handling this interrupt.  The last column is the device associated with this interrupt.  
 
-## Interrupt Control  
+## Interrupt Control
 
 The Linux kernel implements a family of interfaces for manipulating the state of interrupts on a machine.These interfaces enable you to disable the interrupt system for the current processor or mask out an interrupt line for the entire machine.  
 
@@ -222,8 +220,6 @@ The Linux kernel implements a family of interfaces for manipulating the state of
 系统调用一般都需要保存用户程序的上下文(context), 在进入内核的时候需要保存用户态的寄存器，在内核态返回用户态的时候会恢复这些寄存器的内容。这是一个开销的地方。 如果需要在不同用户程序间切换的话，那么还要更新cr3寄存器，这样会更换每个程序的虚拟内存到物理内存映射表的地址，也是一个比较高负担的操作
 
 [Linux | 用户态和内核态的切换耗费时间的原因](https://www.cnblogs.com/gtblog/p/12155109.html)
-
-
 
 ## Kernel Synchronization
 
@@ -242,8 +238,6 @@ spin_lock(&mr_lock);
 spin_unlock(&mr_lock);
 ```
 
- 
-
 ### Semaphore
 
 Semaphores in Linux are sleeping locks.When a task attempts to acquire a semaphore that is unavailable, the semaphore places the task onto a wait queue and puts the task to sleep.The processor is then free to execute other code.When the semaphore becomes available, one of the tasks on the wait queue is awakened so that it can then acquire the semaphore.
@@ -260,7 +254,7 @@ if (down_interruptible(&mr_sem)) {
 up(&mr_sem);
 ```
 
-###  Mutex
+### Mutex
 
 The mutex is represented by struct mutex. It behaves similar to a semaphore with a count of one, but it has a simpler interface, more efficient performance, and additional constraints on its use.
 
@@ -273,7 +267,6 @@ mutex_init(&mutex);
 mutex_lock(&mutex);
 /* critical region ... */ 
 mutex_unlock(&mutex);
-
 ```
 
 ### Preemption Disabling
@@ -300,7 +293,7 @@ The mb() call provides both a read barrier and a write barrier.
 
 ### Pages
 
-The kernel treats physical pages as the basic unit of memory management. Although the processor’s smallest addressable unit is a byte or a word, the memory management unit (MMU, the hardware that manages memory and performs virtual to physical address translations) typically deals in pages. In terms of virtual memory, pages are the smallest unit that matters.
+**The kernel treats physical pages as the basic unit of memory management.** Although the processor’s smallest addressable unit is a byte or a word, the memory management unit (MMU, the hardware that manages memory and performs virtual to physical address translations) typically deals in pages. In terms of virtual memory, pages are the smallest unit that matters.
 
 Most 32-bit architectures have 4KB pages, whereas most 64-bit architectures have 8KB pages.
 
@@ -352,7 +345,7 @@ The region of memory allocated is physically contiguous.
 
 The counterpart to kmalloc() is kfree(), which is declared in <linux/slab.h>: 
 
-``` c
+```c
 void kfree(const void *ptr) 
 ```
 
@@ -379,8 +372,6 @@ The slab layer divides different objects into groups called *caches*, each of wh
 The caches are then divided into *slabs* (hence the name of this subsystem). The slabs are composed of one or more physically contiguous pages. Typically, slabs are composed of only a single page. Each cache may consist of multiple slabs.
 
 Each slab contains some number of *objects*, which are the data structures being cached. Each slab is in one of three states: full, partial, or empty. A full slab has no free objects. (All objects in the slab are allocated.) An empty slab has no allocated objects. (All objects in the slab are free.) A partial slab has some allocated objects and some free objects.
-
- 
 
 ## Virtual File System(VFS)
 
@@ -418,8 +409,6 @@ An operations object is contained within each of these primary objects. These ob
 
 Because multiple processes can open and manipulate a file at the same time, there can be multiple file objects in existence for the same file. The file object merely represents a process’s view of an open file. The object points back to the dentry (which in turn points back to the inode) that actually represents the open file. The inode and dentry objects, of course, are unique.
 
-
-
 ## The Block I/O Layer
 
 Block devices are hardware devices distinguished by the random (that is, not necessarily sequential) access of fixed-size chunks of data. The fixed-size chunks of data are called blocks. 
@@ -432,7 +421,7 @@ The difference comes down to whether the device accesses data randomly—in othe
 
 **The smallest addressable unit on a block device is a sector.** Sectors come in various powers of two, but **512 bytes is the most common size**. The sector size is a physical property of the device, and **the sector is the fundamental unit of all block devices—the device cannot address or operate on a unit smaller than the sector**.
 
-The block is an abstraction of the filesystem—filesystems can be accessed only in multiples of a block. Although the physical device is addressable at the sector level, the kernel performs all disk operations in terms of blocks. Because the device’s smallest addressable unit is the sector, the block size can be no smaller than the sector and must be a multiple of a sector. The kernel also requires that a block be no larger than the page size. Therefore, **block sizes are a power-of-two multiple of the sector size and are not greater than the page size.** 
+The block is an abstraction of the filesystem—filesystems can be accessed only in multiples of a block. Although the physical device is addressable at the sector level, the kernel performs all disk operations in terms of blocks. Because the device’s smallest addressable unit is the sector, the block size can be no smaller than the sector and must be a multiple of a sector. The kernel also requires that a block be no larger than the page size. Therefore, **block sizes are a power-of-two multiple of the sector size and are not greater than the page size.  A page is made up of unit blocks or groups of blocks.**
 
 ![sector-block](sector-block-relationship.png)
 
@@ -456,8 +445,6 @@ The I/O scheduler divides the resource of disk I/O among the pending block I/O r
 
 I/O schedulers perform two primary actions to minimize seeks: **merging** and **sorting**. **Merging is the coalescing of two or more requests into one.** If a request is already in the queue to read from an adjacent sector on the disk (for example, an earlier chunk of the same file), the two requests can be merged into a single request operating on one or more adjacent on-disk sectors. **The entire request queue is kept sorted**, sectorwise, so that **all seeking activity along the queue moves (as much as possible) sequentially** over the sectors of the hard disk.
 
-
-
 ## The Process Address Space
 
 ### Address Spaces
@@ -478,8 +465,6 @@ Memory areas can contain all sorts of goodies, such as
 - Any memory mapped files.
 - Any shared memory segments.
 - Any anonymous memory mappings, such as those associated with malloc(). 
-
-
 
 ## Page Tables
 
@@ -561,13 +546,9 @@ The buffer cache remains when the kernel still needs to perform block I/O operat
 Blocks usually also represent file data. Hence most of the buffer cache is pointed/linked to the page cache.
 However a *small amount of block data which isn’t present in file cache is solely represented by the buffer cache*.
 
-
-
 ### Reference
 
 [Difference between buffer and page cache in Linux ?](https://ngelinux.com/difference-between-buffer-and-page-cache-in-linux/)
-
-
 
 ## Devices and Modules
 
@@ -593,13 +574,10 @@ Not all device drivers represent physical devices. Some device drivers are virtu
 Despite being “monolithic,” in the sense that the whole kernel runs in a single address space, the Linux kernel is modular, supporting the dynamic insertion and removal of code from itself at runtime. Related subroutines, data, and entry and exit points are grouped together in a single binary image, a loadable kernel object, called a module. Support for modules allows systems to have only a minimal base kernel image, with optional features and drivers supplied via loadable, separate objects. Modules also enable the removal and reloading of kernel code, facilitate debugging, and allow for the loading of new drivers on
 demand in response to the hot plugging of new devices.
 
-
-
-
-
 # 用户登录文件执行顺序
 
 ## 全局文件名称
+
 1. /etc/profile
 2. /etc/bashrc(bash resource config)
 
@@ -611,19 +589,21 @@ demand in response to the hot plugging of new devices.
 2. ~/.bash_profile
 
 ### 历史文件
+
 ~/.bash_history
 
 ### 退出文件
+
 1. ~/.bash_logout
 
-
 ## 过程
+
 在刚登录Linux时，首先启动/etc/profile文件，然后在profile文件里面去启动/etc/profile.d目录里面的脚本，然后再启动用户根目录下的 .bash_profile文件，查看.bash_profile文件，.bash_profile文件还会判断.bashrc文件是否存在并执行。
 
 再查看.bashrc文件，它会再去判断并执行/etc/bashrc
 
-
 ## 各文件含义
+
 （1）/etc/profile： 此文件为系统的每个用户设置环境信息，当用户第一次登录时，该文件被执行. 并从/etc/profile.d目录的配置文件中搜集shell的设置。
 
 （2）/etc/bashrc: 为每一个运行bash shell的用户执行此文件.当bash shell被打开时，该文件被读取。
@@ -637,30 +617,35 @@ demand in response to the hot plugging of new devices.
 （6）~/.bash_profile 是交互式、login 方式进入 bash 运行的~/.bashrc 是交互式 non-login 方式进入 bash 运行的通常二者设置大致相同，所以通常前者会调用后者。
 
 ## 参考博客
+
 [Linux 用户登录后执行的脚本](https://www.jianshu.com/p/a47c9e6f6ff3)
 
 # CPU指标
 
 ## cpu utilization
+
 CPU utilization is a measure of how busy the CPU is right now. It is useful to measure CPU time as **a percentage of the CPU's capacity**, which is called the CPU usage. When the CPU usage is **above 70%**, the user may experience lag. Such high CPU usage indicates **insufficient processing power**. Either the CPU needs to be upgraded, or the user experience reduced, for example, by switching to lower resolution graphics or reducing animations.
 
 ## cpu load averages
+
 An idle computer has a load number of 0 (the idle process isn't counted). Each process **using** or **waiting for CPU** (the ready queue or run queue) increments the load number by 1. Each process that terminates decrements it by 1. Most UNIX systems count only processes in the running (on CPU) or runnable (waiting for CPU) states. However, Linux also includes processes in uninterruptible sleep states (usually waiting for disk activity), which can lead to markedly different results if many processes remain blocked in I/O due to a busy or stalled I/O system
 
 ## Details about cpu utilization and load averages
+
 On Linux at least, the load average and CPU utilization are actually two different things. Load average is a measurement of how many tasks are waiting in a kernel run queue (not just CPU time but also disk activity) over a period of time. CPU utilization is a measure of how busy the CPU is right now. The most load that a single CPU thread pegged at 100% for one minute can "contribute" to the 1 minute load average is 1. A 4 core CPU with hyperthreading (8 virtual cores) all at 100% for 1 minute would contribute 8 to the 1 minute load average.
 
 Often times these two numbers have patterns that correlate to each other, but you can't think of them as the same. You can have a high load with nearly 0% CPU utilization (such as when you have a lot of IO data stuck in a wait state) and you can have a load of 1 and 100% CPU, when you have a single threaded process running full tilt. Also for short periods of time you can see the CPU at close to 100% but the load is still below 1 because the average metrics haven't "caught up" yet.
 
 I've seen a server have a load of over 15,000 (yes really that's not a typo) and a CPU % of close to 0%. It happened because a Samba share was having issues and lots and lots of clients started getting stuck in an IO wait state. Chances are if you are seeing a regular high load number with no corresponding CPU activity, you are having a storage problem of some kind. On virtual machines this can also mean that there are other VMs heavily competing for storage resources on the same VM host.
 
-
 ## 参考文献
+
 [Load_(computing)-Wikipedia](https://en.wikipedia.org/wiki/Load_(computing))
 
 [CPU_time-Wikipedia](https://en.wikipedia.org/wiki/CPU_time)
 
 # inode
+
 The inode (index node) is a data structure in a **Unix-style file system** that describes a file-system object such as a file or a directory. **Each inode stores the attributes and disk block location(s) of the object's data**. File-system **object attributes may include metadata (times of last change, access, modification), as well as owner and permission data.**
 
 A file system relies on data structures about the files, beside the file content. The former are called metadata—data that describe data. Each file is associated with an inode, which is **identified by an integer number**, often referred to as an i-number or inode number.
@@ -670,14 +655,17 @@ Inodes store information about files and directories (folders), such as file **o
 **The inode number indexes a table of inodes in a known location on the device.** From the inode number, the kernel's file system driver can access the inode contents, including the location of the file - thus allowing access to the file.
 
 ## Implications
+
 Files can have multiple names. If multiple names hard link to the same inode then the names are equivalent; i.e., the first to be created has no special status. This is unlike symbolic links, which depend on the original name, not the inode (number).
 
 A file's inode number stays the same when it is moved to another directory on the same device, or when the disk is defragmented which may change its physical location. This also implies that completely conforming inode behavior is impossible to implement with many non-Unix file systems, such as FAT and its descendants, which don't have a way of storing this invariance when both a file's directory entry and its data are moved around.
 
 ## 参考文献
+
 [inode-Wikipedia](https://en.wikipedia.org/wiki/Inode)
 
 # File Descriptor
+
 In Unix and related computer operating systems, a file descriptor (FD, less frequently fildes) is an abstract indicator (handle) used to access a file or other input/output resource, such as a pipe or network socket.
 
 To perform input or output, the process passes the file descriptor to the kernel through a system call, and the kernel will access the file on behalf of the process. The process does not have direct access to the file or inode tables.
@@ -685,19 +673,23 @@ To perform input or output, the process passes the file descriptor to the kernel
 On Linux, the set of file descriptors open in a process can be accessed under the path /proc/PID/fd/, where PID is the process identifier.
 
 ## 参考文献
+
 [File descriptor-Wikipedia](https://en.wikipedia.org/wiki/File_descriptor)
 
 # Inode number vs File Descriptor
+
 An inode number unambiguously identifies a file or directory on a given device, but two files on **different mounts** may have **the same inode**. A file descriptor does not unambiguously identify anything by itself; in combination with a process ID it unambiguously identifies some resource on the system, even if you don't know which device it's on.
 
 在不同的逻辑分区，两个文件的inode可以相同。
 
 ## 参考文献
+
 [What's the difference between inode number and file descriptor?](https://www.quora.com/Whats-the-difference-between-inode-number-and-file-descriptor)
 
-
 # 中断
+
 ## 硬中断
+
 1. 硬中断是由硬件产生的，比如，像磁盘，网卡，键盘，时钟等。每个设备或设备集都有它自己的IRQ（中断请求）。基于IRQ，CPU可以将相应的请求分发到对应的硬件驱动上（注：硬件驱动通常是内核中的一个子程序，而不是一个独立的进程）。
 
 2. 处理中断的驱动是需要运行在CPU上的，因此，当中断产生的时候，CPU会中断当前正在运行的任务，来处理中断。在有多核心的系统上，一个中断通常只能中断一颗CPU（也有一种特殊的情况，就是在大型主机上是有硬件通道的，它可以在没有主CPU的支持下，可以同时处理多个中断。）。
@@ -717,6 +709,7 @@ An inode number unambiguously identifies a file or directory on a given device, 
 4. 软中断并不会直接中断CPU。也只有当前正在运行的代码（或进程）才会产生软中断。这种中断是一种需要内核为正在运行的进程去做一些事情（通常为I/O）的请求。有一个特殊的软中断是Yield调用，它的作用是请求内核调度器去查看是否有一些其他的进程可以运行。
 
 ## 参考文献
+
 [硬中断与软中断的区别！！！](https://blog.51cto.com/noican/1361087)
 
 # 页缓存
@@ -724,6 +717,7 @@ An inode number unambiguously identifies a file or directory on a given device, 
 # mmap
 
 # 文件锁
+
 文件锁（也叫记录锁）的作用是，当一个进程读写文件的某部分时，其他进程就无法修改同一文件区域。
 
 能够实现文件锁的函数主要有2个：flock和fcntl。
@@ -731,9 +725,11 @@ An inode number unambiguously identifies a file or directory on a given device, 
 lockf是在fcntl基础上构造的函数，它提供了一个简化的接口。它们允许对文件中任意字节区域加锁，短至一个字节，长至整个文件。
 
 ## 锁类型
+
 共享读锁F_RDLCK，独占性写锁F_WRLCK，解锁F_UNLCK
 
 ## 使用锁的基本规则
+
 - 任意多个进程在一个给定的字节上可以有一把共享的读锁（F_RDLCK），但是在一个给定的字节上只能有一个进程有一把独占性写锁（F_WRLCK）。
 
 - 如果在一个给定字节上已经有一把或多把读锁，则不能在该字节上再加写锁，如果在一个字节上已经有一把独占性写锁，则不能再对它加任何读锁。
@@ -743,4 +739,5 @@ lockf是在fcntl基础上构造的函数，它提供了一个简化的接口。�
 - 加读锁时，该描述符必须是读打开，加写锁时，该描述符必须是写打开
 
 ## 参考
+
 [件锁的使用浅析](https://blog.csdn.net/guotianqing/article/details/80044087)
