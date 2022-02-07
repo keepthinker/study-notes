@@ -25,6 +25,7 @@ Integrating new or improved services, such as changing message formats or adding
 Porting a server to a new OS platform should not require significant effort.
 
 ## Handles
+
 Identify resources that are managed by an OS. These resources commonly include network connections, open files, timers, synchronization objects, etc.
 Handles are used in the logging server to identify socket endpoints so that a Synchronous Event Demultiplexer can wait for events to occur on
 them. The two types of events the logging server is interested in are connection events and read events, which represent incoming client connections and logging data, respectively. The logging server maintains a separate connection for each client. **Every connection is represented in the server by a socket handle.**
@@ -38,8 +39,11 @@ Blocks awaiting events to occur on a set of Handles. It returns when it is possi
 Defines an interface for registering, removing, and dispatching Event Handlers. Ultimately, the Synchronous Event Demultiplexer is responsible for waiting until new events occur. When it detects new events, it informs the Initiation Dispatcher to call back application-specific event handlers. Common events include **connection acceptance events**, **data input and output events**, and **timeout events**.
 
 ## Event Handler
+
 Specifies an interface consisting of a hook method that abstractly represents the dispatching operation for service-specific events. This method must be implemented by application-specific services.
+
 ## Concrete Event Handler
+
 Implements the hook method, as well as the methods to process these events in an application-specific manner. Applications register Concrete Event
 Handlers with the Initiation Dispatcher to process certain types of events. When these events arrive, the Initiation Dispatcher calls back the hook method of the appropriate Concrete Event Handler. There are two Concrete Event Handlers in the logging server: **Logging Handler** and **Logging Acceptor**. The Logging Handler is responsible for receiving and processing logging records. The Logging Acceptor creates and connects Logging Handlers that process subsequent logging records from clients.
 
@@ -69,8 +73,6 @@ Reactor线程是个多面手，负责多路分离套接字，Accept新连接，�
 
 ![multiple-threads](reactor-multiple-threads.png)
 
-
-
 上图中，Reactor是一条独立的线程，Hander 处于线程池中执行。如果是多核CPU，Reactor也可以使用线程池处理。
 
 ## References
@@ -83,8 +85,6 @@ Scalable IO in Java ------ Doug Lea
 
 Reactor An Object Behavioral Pattern for Demultiplexing and Dispatching Handles for Synchronous Events  ------ Douglas C. Schmidt  
 
-
-
 # Proactor pattern
 
 Proactor is a software design pattern for event handling in which **long running activities are running in an asynchronous part**. **A completion handler is called after the asynchronous part has terminated.** The proactor pattern can be considered to be an asynchronous variant of the synchronous reactor pattern.
@@ -94,6 +94,7 @@ Proactor is a software design pattern for event handling in which **long running
 **Reactor模式是一种被动的处理**，即有事件发生时被动处理。而**Proator模式则是主动发起异步调用**，然后循环检测完成事件。
 
 ## Interaction
+
 ### Operation specific actors
 
 - The Proactive Initiator starts the asynchronous operation via the Asynchronous Operation Processor and defines the Completion Handler

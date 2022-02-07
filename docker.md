@@ -1,4 +1,5 @@
 ## docker command
+
 ```shell
 ## to kill a docker container process
 docker kill 9f215ed0b0d3
@@ -28,8 +29,6 @@ docker rename bb1a263ad46b ubuntu-bash
 docker exec -i -t 0ce1dc54c68c sh
 ```
 
-
-
 ## Minikube
 
 docker pull anjone/kicbase 
@@ -39,7 +38,6 @@ minikube start --vm-driver=docker --base-image="anjone/kicbase" --image-mirror-c
 docker   load  -i kicbase.tar 
 
 [minikube start启动集群失败Unable to find image gcr.io/k8s-minikube/kicbase:v0.0.10](https://blog.csdn.net/kelsel/article/details/107728562)
-
 
 ## **对比虚拟机与Docker**
 
@@ -67,6 +65,18 @@ Docker有着小巧、迁移部署快速、运行高效等特点，但隔离性�
 
 然后Docker并没有和虚拟机一样利用一个独立的Guest OS执行环境的隔离，它利用的是目前当前Linux内核本身支持的容器方式，实现了资源和环境的隔离，简单来说，Docker就是利用Namespace 实现了系统环境的隔离，利用了cgroup实现了资源的限制，利用镜像实例实现跟环境的隔离。
 
+
+
+#### **Docker vs. VM – where is the difference?**
+
+Docker is container based technology and containers are just **user space of the operating system**. At the low level, a container is just a set of processes that are isolated from the rest of the system, running from a distinct image that provides all files necessary to support the processes. It is built for running applications. In Docker, **the containers running share the host OS kernel.**
+
+A Virtual Machine, on the other hand, is not based on container technology. They are made up of **user space plus kernel space of an operating system**. Under VMs, server hardware is virtualized. **Each VM has Operating system (OS) & apps. It shares hardware resource from the host.**
+
+VMs & Docker – each comes with benefits and demerits. Under a VM environment, each workload needs a complete OS. But with a container environment, multiple workloads can run with 1 OS. The bigger the OS footprint, the more environment benefits from containers. With this, it brings further benefits like Reduced IT management resources, reduced size of snapshots, quicker spinning up apps, reduced & simplified security updates, less code to transfer, migrate and upload workloads.
+
 #### 参考
 
 [docker容器与虚拟机有什么区别？](https://www.zhihu.com/question/48174633)
+
+[DOCKER VS. VIRTUAL MACHINE: WHERE ARE THE DIFFERENCES?](https://devopscon.io/blog/docker/docker-vs-virtual-machine-where-are-the-differences/[Docker vs. Virtual Machine: Where are the differences? - DevOps Conference](https://devopscon.io/blog/docker/docker-vs-virtual-machine-where-are-the-differences/))
