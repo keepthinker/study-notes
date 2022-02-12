@@ -1,4 +1,5 @@
 # Divide and Conquer
+
 1. Divide the problem into a number of subproblems that are smaller instances of the same problem.
 2. Conquer the subproblems by solving them recursively. If the subproblem sizes are small enough, however, just solve the subproblems in a straightforward manner.
 3. Combine the solutions to the subproblems into the solution for the original problem.
@@ -8,43 +9,47 @@
 构造完全二叉树
 
 ### 自底向上堆调整
+
 定义root节点位置为0，树的大小为k，则从第k/2-1子节点向第0节点进行堆调整。调整堆过程中若发现子树不满足堆条件需要再次递归子节点进行堆调整。
 
 i=k，接着将A[0]根节点与A[i]尾节点进行交换，从i从k到2再次进行堆调整，循环k-1次。
 
 ### 算法复杂度
+
 第一次建立堆，时间复杂度为O(n)。每次堆头节点与堆尾部节点进行交换，则堆再次调整复杂度为lg(n)，由于要调整n次，所以时间复杂度为nlg(n)。所以总体上是nlg(n)复杂度。
 
 不需要存额外空间存中间计算结果，所以空间复杂度为O(1)。
 
 ### 优先队列
+
 #### 出队
+
 以大顶堆为例，直接取出堆顶节点，就是出队，然后将堆末尾节点赋值到堆顶节点，然后做一次大顶堆计算。因为只做一次顶部的大顶堆计算所以时间复杂度为O(lg(N))
+
 #### 入队
+
 插入节点到到堆尾，然后循环与父节点比较，若比父节点大，则与父节点交换，直到到达root节点
 
-
-
 # Dynamic Programing
+
 1. Characterize the structure of an optimal solution.
 2. Recursively define the value of an optimal solution.
 3. Compute the value of an optimal solution, typically in a bottom-up fashion.
 4. Construct an optimal solution from computed information.
 
-
-
 # Greedy Algorithms
+
 1. Determine the optimal substructure of the problem.
 2. Develop a recursive solution. (For the activity-selection problem, we formulated recurrence (16.2), but we bypassed developing a recursive algorithm based
-on this recurrence.)
+   on this recurrence.)
 3. Show that if we make the greedy choice, then only one subproblem remains.
 4. Prove that it is always safe to make the greedy choice. (Steps 3 and 4 can occur
-in either order.)
+   in either order.)
 5. Develop a recursive algorithm that implements the greedy strategy.
 6. Convert the recursive algorithm to an iterative algorithm.
- 
 
 # MapReduce
+
 A MapReduce program is composed of a map procedure (or method), which performs filtering and sorting (such as sorting students by first name into queues, one queue for each name), and a reduce method, which performs a summary operation (such as counting the number of students in each queue, yielding name frequencies)
 
 A MapReduce framework (or system) is usually composed of three operations (or steps):
@@ -54,45 +59,67 @@ A MapReduce framework (or system) is usually composed of three operations (or st
 3. Reduce: worker nodes now process each group of output data, per key, in parallel.
 
 # BitMap
+
 利用bit位的0,1，做一些节省内存空间和提升运算性能。大部分用于内容匹配，查找，去重的运算。
 
 # 布隆过滤器
+
 布隆过滤器（英语：Bloom Filter）是1970年由布隆提出的。它实际上是一个很长的二进制向量和一系列随机映射函数。布隆过滤器可以用**于检索一个元素是否在一个集合中**。它的优点是空间效率和查询时间都远远超过一般的算法，缺点是有一定的误识别率和删除困难。
 
+本质上布隆过滤器是一种数据结构，比较巧妙的概率型数据结构（probabilistic data structure），特点是高效地插入和查询，可以用来告诉你 **“某样东西一定不存在或者可能存在”**。
+
+相比于传统的 List、Set、Map 等数据结构，它更高效、占用空间更少，但是缺点是其返回的结果是概率性的，而不是确切的。
+
+https://zhuanlan.zhihu.com/p/43263751
 
 ## 原理
+
 布隆过滤器的原理是，当一个元素被加入集合时，通过K个散列函数将这个元素映射成一个位数组中的K个点，把它们置为1。检索时，我们只要看看这些点是不是都是1就（大约）知道集合中有没有它了：如果这些点**有任何一个0**，则被检元素**一定不在**；如果**都是1**，则被检元素**很可能在**。这就是布隆过滤器的基本思想。
 
+### ## 实现
+
+//todo
+
+采用redis的bitmap实现。
+
+[布隆过滤器 - 维基百科，自由的百科全书](https://zh.wikipedia.org/wiki/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8)
 
 # 回溯法
+
 回溯算法实际上一个类似枚举的搜索尝试过程，主要是在搜索尝试过程中寻找问题的解，当发现已不满足求解条件时，就“回溯”返回，尝试别的路径。
 
 回溯法是一种选优搜索法，按选优条件向前搜索，以达到目标。但当探索到某一步时，发现原先选择并不优或达不到目标，就退回一步重新选择，这种走不通就退回再走的技术为回溯法，而满足回溯条件的某个状态的点称为“回溯点”。
 
-
 # 树
+
 ## B树
+
 在B树中，内部（非叶子）节点可以拥有可变数量的子节点（数量范围预先定义好）。当数据被插入或从一个节点中移除，它的子节点数量发生变化。为了维持在预先设定的数量范围内，内部节点可能会被合并或者分离。因为子节点数量有一定的允许范围，所以B树不需要像其他自平衡查找树那样频繁地重新保持平衡，但是由于节点没有被完全填充，可能浪费了一些空间。子节点数量的上界和下界依特定的实现而设置。例如，在一个2-3 B树（通常简称2-3树），每一个内部节点只能有2或3个子节点。
 
 B树中每一个内部节点会包含一定数量的键，键将节点的子树分开。例如，如果一个内部节点有3个子节点（子树），那么它就必须有两个键： a1 和 a2 。左边子树的所有值都必须小于 a1 ，中间子树的所有值都必须在 a1 和a2 之间，右边子树的所有值都必须大于 a2 。
 
-### B树插入 
+### B树插入
+
 节点最多有3个孩子 (Knuth 阶为 3).
 
 ![image](https://upload.wikimedia.org/wikipedia/commons/3/33/B_tree_insertion_example.png)
 
 ## B+树
+
 A B+ tree can be viewed as a B-tree in which each node contains only keys (not key–value pairs), and to which an additional level is added at the bottom with linked leaves.
 
 The primary value of a B+ tree is in storing data for efficient retrieval in a block-oriented storage context — in particular, filesystems. This is primarily because unlike binary search trees, B+ trees have very high fanout (number of pointers to child nodes in a node,[1] typically on the order of 100 or more), which reduces the number of I/O operations required to find an element in the tree.
 
 ### Overview
+
 The order, or branching factor, b of a B+ tree measures the capacity of nodes (i.e., the number of children nodes) for internal nodes in the tree. The actual number of children for a node, referred to here as m, is constrained for internal nodes so that [b/2]{ceilling} <= M <= b. The root is an exception: it is allowed to have as few as two children.
 
 ### Implementation
+
 **The leaves** (the bottom-most index blocks) of the B+ tree are often **linked to one another in a linked list**; this makes range queries or an (ordered) iteration through the blocks simpler and more efficient (though the aforementioned upper bound can be achieved even without this addition). This does not substantially increase space consumption or maintenance on the tree. This illustrates one of the significant advantages of a B+tree over a B-tree; in a B-tree, since not all keys are present in the leaves, such an ordered linked list cannot be constructed. A B+tree is thus particularly useful as a database system index, where the data typically resides on disk, as it allows the B+tree to actually provide an efficient structure for housing the data itself (this is described in[4]:238 as index structure "Alternative 1").
 
 ### 插入
+
 节点要处于违规状态，它必须包含在可接受范围之外数目的元素。
 
 首先，查找要插入其中的节点的位置。接着把值插入这个节点中。
@@ -103,6 +130,7 @@ The order, or branching factor, b of a B+ tree measures the capacity of nodes (i
 把键1-7连接到值 d1-d7 的B+树。链表（红色）用于快速顺序遍历叶子节点。树的分叉因子 {\displaystyle b} b=4。
 
 ## B*树
+
 B*树是B+树的变种，相对于B+树他们的不同之处如下：
 
 1. 首先是关键字个数限制问题，B+树初始化的关键字初始化个数是cei(m/2)，b*树的初始化个数为（cei(2/3*m)）
@@ -118,17 +146,18 @@ B*树是B+树的变种，相对于B+树他们的不同之处如下：
 ## Differences between B+ trees and B trees.
 
 ### Advantages of B+ trees:
+
 Because B+ trees don't have data associated with interior nodes, more keys can fit on a page of memory. Therefore, it will require fewer cache misses in order to access data that is on a leaf node.
 The leaf nodes of B+ trees are linked, so doing a full scan of all objects in a tree requires just one linear pass through all the leaf nodes. A B tree, on the other hand, would require a traversal of every level in the tree. This full-tree traversal will likely involve more cache misses than the linear traversal of B+ leaves.
 
 ### Advantage of B trees:
+
 Because B trees contain data with each key, frequently accessed nodes can lie closer to the root, and therefore can be accessed more quickly.
 
 ![image](https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Bplustree.png/400px-Bplustree.png)
 
-
-
 ### 参考文献
+
 [MySQL索引背后的数据结构及算法原理](http://blog.codinglabs.org/articles/theory-of-mysql-index.html)
 
 [B树-Wikipedia](https://zh.wikipedia.org/wiki/B%E6%A0%91)
@@ -139,12 +168,10 @@ Because B trees contain data with each key, frequently accessed nodes can lie cl
 
 [MySQL索引背后的数据结构及算法原理](http://blog.codinglabs.org/articles/theory-of-mysql-index.html)
 
-
 [布隆过滤器-Wikipedia](https://zh.wikipedia.org/wiki/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8)
 
-
-
 # Log-structured merge-tree
+
 In computer science, the log-structured merge-tree (or LSM tree) is a data structure with performance characteristics that make it attractive for providing indexed access to files with **high insert volume**, such as transactional log data.
 
 磁盘随机操作缓慢，但当顺序访问时很快，不管磁盘是固态还是磁性材料。这种影响在主存较小。
@@ -167,14 +194,14 @@ LSM树不同于有一个大的索引结构来存下批量的写操作（像机�
 
 # SkipList
 
-
 ## 参考文献
+
 [Log Structured Merge Trees译文以及LSM调研心得](http://weakyon.com/2015/04/08/Log-Structured-Merge-Trees.html)
 
 # HyperLogLog
 
-
 # LRU
+
 LRU 缓存机制可以通过哈希表辅以双向链表实现，我们用一个哈希表和一个双向链表维护所有在缓存中的键值对。
 
 双向链表按照被使用的顺序存储了这些键值对，靠近头部的键值对是最近使用的，而靠近尾部的键值对是最久未使用的。
@@ -202,4 +229,5 @@ LRU 缓存机制可以通过哈希表辅以双向链表实现，我们用一个�
 在双向链表的实现中，使用一个伪头部（dummy head）和伪尾部（dummy tail）标记界限，这样在添加节点和删除节点的时候就不需要检查相邻的节点是否存在。
 
 ## 参考
+
 [lruhuan-cun-ji-zhi-by-leetcode-solution](https://leetcode-cn.com/problems/lru-cache/solution/lruhuan-cun-ji-zhi-by-leetcode-solution/)

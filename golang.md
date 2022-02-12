@@ -58,7 +58,6 @@ Golang的GC算法主要是基于`标记-清扫(mark and sweep)`算法，并在�
 
 操作非常简单，但是有一点需要额外注意：mark and sweep算法在执行的时候，需要程序暂停！即`stop the world`。 也就是说，这段时间程序会卡在哪儿。
 
-
 #### 标记-清扫(Mark And Sweep)算法存在什么问题？
 
 标记-清扫(Mark And Sweep)算法这种算法虽然非常的简单，但是还存在一些问题：
@@ -82,15 +81,12 @@ Golang的GC算法主要是基于`标记-清扫(mark and sweep)`算法，并在�
 5. 此时，gc回收白色对象。
 
 6. 最后，将所有黑色对象变为白色，并重复以上所有过程。
+
 7. 回收白色对象时经过写内存屏障可监视白色对象是否被修改，如果被修改那么进行重新标记。
-
-
 
 标记-清除(mark and sweep)算法的STW(stop the world)操作，就是runtime把所有的线程全部冻结掉，所有的线程全部冻结意味着用户逻辑是暂停的。这样所有的对象都不会被修改了，这时候去扫描是绝对安全的。
 
 Go如何减短这个过程呢？标记-清除(mark and sweep)算法包含两部分逻辑：标记和清除。 我们知道Golang三色标记法中最后只剩下的黑白两种对象，黑色对象是程序恢复后接着使用的对象，如果不碰触黑色对象，只清除白色的对象，肯定不会影响程序逻辑。所以：`清除操作和用户逻辑可以并发。
-
-
 
 #### gc和用户逻辑如何并行操作？
 
@@ -118,8 +114,3 @@ Garbage Collectors in Go are either optimized for **lower latency** or **higher 
 [Implementing memory management with Golang’s garbage collector](https://hub.packtpub.com/implementing-memory-management-with-golang-garbage-collector/)
 
 ## kubernetes 的架构
-
-
-
-
-

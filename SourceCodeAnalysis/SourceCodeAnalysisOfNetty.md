@@ -3,7 +3,9 @@
 # Netty基本结构
 
 ## Reactor线程模型
+
 ### 服务端线程模型
+
 一种比较流行的做法是服务端监听线程和IO线程分离，类似于Reactor的多线程模型，它的工作原理图如下：
 
 ![image](Reactor.png)
@@ -25,15 +27,26 @@ EventLoopGroup管理的线程数可以通过构造函数设置，如果没有设
 TCP连接请求是相比IO读写事件，一般来说是低频操作，并且将TCP连接请求和I/O读写操作的线程池分开可以让两者不互相影响。
 
 ## Channel实现
+
 每一个Channel在其生命周期里绑定一个线程。
+
+## EventLop原理
+
+//todo 
+
 ## Pipeline
+
 ### Creation of a pipeline
+
 Each channel has its own pipeline and it is created automatically when a new channel is created.
+
 ### How an event flows in a pipeline
+
 The following diagram describes how I/O events are processed by ChannelHandlers in a ChannelPipeline typically. An I/O event is handled by either a ChannelInboundHandler or a ChannelOutboundHandler and be forwarded to its closest handler by calling the event propagation methods defined in ChannelHandlerContext, such as ChannelHandlerContext.fireChannelRead(Object) and ChannelHandlerContext.write(Object).
+
 <html>
 
-  <pre>
+<pre>
   I/O Request
                                                via Channel or
                                            ChannelHandlerContext
@@ -74,6 +87,7 @@ The following diagram describes how I/O events are processed by ChannelHandlers 
   |  Netty Internal I/O Threads (Transport Implementation)            |
   +--------------------------------------------------------------------
   </pre>
+
 </html>
 
 Let us assume that we created the following pipeline:
@@ -99,10 +113,13 @@ If 5 implements both ChannelInboundHandler and ChannelOutboundHandler, the evalu
 ChannelPipeline.addLast意思是不断往尾部追加Handler元素，如果是读，那么数据是从head到tail，如果是写，那么数据处理是从tail到head。
 
 ## ByteBuf
+
 A random and sequential accessible sequence of zero or more bytes (octets). This interface provides an abstract view for one or more **primitive byte arrays** (byte[]) and **NIO buffers**.
 
 ### Sequential Access Indexing
+
 ByteBuf provides two pointer variables to support sequential read and write operations - readerIndex for a read operation and writerIndex for a write operation respectively. The following diagram shows how a buffer is segmented into three areas by the two pointers:
+
 <html>
 
 <pre>
@@ -113,9 +130,11 @@ ByteBuf provides two pointer variables to support sequential read and write oper
       |                   |                  |                  |
       0      <=      readerIndex   <=   writerIndex    <=    capacity
 </pre>
+
 </html>
 
 ### Derived buffers
+
 You can create a view of an existing buffer by calling either duplicate(), slice() or slice(int, int). A derived buffer will have an independent readerIndex, writerIndex and marker indexes, while it shares other internal data representation, just like a NIO buffer does.
 
 In case a completely fresh copy of an existing buffer is required, please call copy() method instead.
@@ -123,6 +142,7 @@ In case a completely fresh copy of an existing buffer is required, please call c
 Also be aware that **obtaining derived** buffers will NOT call retain() and so the **reference count will NOT be increased**.
 
 ## 内存回收原理
+
 ### 软引用（SoftReference）
 
 ### 弱引用（WeakReference）
@@ -131,10 +151,10 @@ Also be aware that **obtaining derived** buffers will NOT call retain() and so t
 
 TODO  在Netty中的作用
 
-
 ## 操作系统select, poll, epoll与Netty的对应关系
 
 # 源码分析
+
 ## DefaultChannelConfig
 
 ```
@@ -164,13 +184,14 @@ if (option == CONNECT_TIMEOUT_MILLIS) {
     return false;
 }
 ```
+
 ## ServerBootstrap启动
+
 设置option，独有的option总共有三种既SO_RCVBUF，SO_REUSEADDR与SO_BACKLOG。
 具体代码位于DefaultServerSocketChannelConfig。
 
 设置childOption，独有的option有SO_RCVBUF，SO_SNDBUF，TCP_NODELAY，SO_KEEPALIVE，SO_REUSEADDR，SO_LINGER，IP_TOS，ALLOW_HALF_CLOSURE
 具体代码位于DefaultSocketChannelConfig。
-
 
 bootstrap.bind(port)。
 绑定一个端口，未指定IP，则为0.0.0.0。

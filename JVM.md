@@ -82,8 +82,6 @@ Java NIO的IO读写如果不是DirectBuffer就把数据复制到临时的DirectB
 
 [java内存模型深度解读](https://www.cnblogs.com/wxd0108/p/5488290.html)
 
-
-
 ## Java基本数据类型及其默认内存占用
 
 | 关键字     | 占用空间字节)                                  | 取值范围               |
@@ -374,6 +372,14 @@ public static void recursiveCallParentCL(ClassLoader cl){
 ### 破坏双亲委派模型
 
 // todo
+
+# SPI
+
+SPI全称Service Provider Interface，是Java提供的一套用来被第三方实现或者扩展的API，它可以用来启用框架扩展和替换组件。
+
+Java SPI 实际上是“**基于接口的编程＋策略模式＋配置文件**”组合实现的动态加载机制。
+
+[高级开发必须理解的Java中SPI机制 - 简书](https://www.jianshu.com/p/46b42f7f593c)
 
 # JVM工具使用
 
@@ -883,8 +889,18 @@ public class ProxyFilter implements CallbackFilter {
 }
 ```
 
+
+
 ## JDK动态代理 VS CGLIB 对比
 
 字节码创建方式：JDK动态代理通过JVM实现代理类字节码的创建，cglib通过ASM创建字节码。JDK动态代理强制要求目标类必须实现了某一接口，否则无法进行代理。而CGLIB则要求目标类和目标方法不能是final的，因为CGLIB通过继承的方式实现代理。**CGLib不能对声明为final的方法进行代理**，因为是通过继承父类的方式实现，如果父类是final的，那么无法继承父类。
 
 [设计模式（11）动态代理 JDK VS CGLIB面试必问](https://www.jianshu.com/p/3caa0c23a157)
+
+# 字节码处理工具
+
+### ASM
+
+### Javassist
+
+//todo

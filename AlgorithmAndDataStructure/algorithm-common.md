@@ -1,6 +1,9 @@
 ## 常见算法实现思路
+
 ### LRU(Least Recently Used)
+
 #### 方法一：哈希表 + 双向链表
+
 需要用到一个哈希表和一个双向链表
 算法
 
@@ -31,9 +34,11 @@ LRU 缓存机制可以通过哈希表辅以双向链表实现，我们用一个�
 在双向链表的实现中，使用一个伪头部（dummy head）和伪尾部（dummy tail）标记界限，这样在添加节点和删除节点的时候就不需要检查相邻的节点是否存在。
 
 #### 参考
+
 [LRU缓存机制](https://leetcode-cn.com/problems/lru-cache/solution/lruhuan-cun-ji-zhi-by-leetcode-solution/)
 
 ### LFU(Lesast Frequently Used)
+
 方法一：哈希表 + 平衡二叉树
 说明
 
@@ -48,7 +53,7 @@ struct Node {
     int cnt;
     int time;
     int key, value;
-    
+
     // 我们需要实现一个 Node 类的比较函数
     // 将 cnt（使用频率）作为第一关键字，time（最近一次使用的时间）作为第二关键字
     // 下面是 C++ 语言的一个比较函数的例子
@@ -57,6 +62,7 @@ struct Node {
     }
 };
 ```
+
 其中 cnt 表示缓存使用的频率，time 表示缓存的使用时间，key 和 value 表示缓存的键值。
 
 比较直观的想法就是我们用哈希表 key_table 以键 key 为索引存储缓存，建立一个平衡二叉树 S 来保持缓存根据 (cnt，time) 双关键字由于。在 C++ 中，我们可以使用 STL 提供的 std::set 类，set 背后的实现是红黑树：
@@ -70,6 +76,7 @@ struct Node {
 空间复杂度：O(capacity)，其中 capacity 为 LFU 的缓存容量。哈希表和平衡二叉树不会存放超过缓存容量的键值对。
 
 #### 方法二：双哈希表
+
 我们定义两个哈希表，第一个 freq_table 以频率 freq 为索引，每个索引存放一个双向链表，这个链表里存放所有使用频率为 freq 的缓存，缓存里存放三个信息，分别为键 key，值 value，以及使用频率 freq。第二个 key_table 以键值 key 为索引，每个索引存放对应缓存在 freq_table 中链表里的内存地址，这样我们就能利用两个哈希表来使得两个操作的时间复杂度均为 O(1)。同时需要记录一个当前缓存最少使用的频率 minFreq，这是为了删除操作服务的。
 
 对于 get(key) 操作，我们能通过索引 key 在 key_table 中找到缓存在 freq_table 中的链表的内存地址，如果不存在直接返回 -1，否则我们能获取到对应缓存的相关信息，这样我们就能知道缓存的键值还有使用频率，直接返回 key 对应的值即可。
@@ -97,4 +104,5 @@ min_freq 记录最小freq数值，方便找到key_table删除最小访问频率�
 ```
 
 #### 参考
+
 [LFU缓存-哈希表+平衡二叉树或双哈希表](https://leetcode-cn.com/problems/lfu-cache/solution/lfuhuan-cun-by-leetcode-solution/)

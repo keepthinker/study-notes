@@ -180,6 +180,25 @@ address                                |                          |        |
 
 参考：[压缩列表--Redis设计与实现](https://redisbook.readthedocs.io/en/latest/compress-datastruct/ziplist.html#ziplist-chapter)
 
+### SkipList
+
+#### 为什么多级链表，最多几层
+
+和红黑树的区别
+
+### Bitmap
+
+When *key* does not exist, a new string value is created. The string is grown to make sure it can hold a bit at *offset*. The *offset* argument is required to **be greater than or equal to 0, and smaller than 2^32** (this limits bitmaps to 512MB). When the string at *key* is grown, added bits are set to 0.
+
+```c
+127.0.0.1:6379> SETBIT mykey 7 1
+(integer) 0
+127.0.0.1:6379> GETBIT mykey 7
+(integer) 1
+```
+
+#### 布隆过滤器的使用
+
 ## 内存淘汰策略
 
 The exact behavior Redis follows when the maxmemory limit is reached is configured using the maxmemory-policy configuration directive.

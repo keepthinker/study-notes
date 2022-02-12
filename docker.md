@@ -65,8 +65,6 @@ Docker有着小巧、迁移部署快速、运行高效等特点，但隔离性�
 
 然后Docker并没有和虚拟机一样利用一个独立的Guest OS执行环境的隔离，它利用的是目前当前Linux内核本身支持的容器方式，实现了资源和环境的隔离，简单来说，Docker就是利用Namespace 实现了系统环境的隔离，利用了cgroup实现了资源的限制，利用镜像实例实现跟环境的隔离。
 
-
-
 #### **Docker vs. VM – where is the difference?**
 
 Docker is container based technology and containers are just **user space of the operating system**. At the low level, a container is just a set of processes that are isolated from the rest of the system, running from a distinct image that provides all files necessary to support the processes. It is built for running applications. In Docker, **the containers running share the host OS kernel.**
