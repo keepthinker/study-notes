@@ -377,7 +377,113 @@ public static void recursiveCallParentCL(ClassLoader cl){
 
 SPI全称Service Provider Interface，是Java提供的一套用来被第三方实现或者扩展的API，它可以用来启用框架扩展和替换组件。
 
+![spi.webp](spi.webp)
+
 Java SPI 实际上是“**基于接口的编程＋策略模式＋配置文件**”组合实现的动态加载机制。
+
+Java SPI就是提供这样的一个机制：为某个接口寻找服务实现的机制。有点类似IOC的思想，就是将装配的控制权移到程序之外，在模块化设计中这个机制尤其重要。所以SPI的核心思想就是**解耦**。
+
+## 使用场景
+
+概括地说，适用于：**调用者根据实际使用需要，启用、扩展、或者替换框架的实现策略**
+
+比较常见的例子：
+
+- 数据库驱动加载接口实现类的加载  
+  
+  JDBC加载不同类型数据库的驱动
+  
+  ![mysql-spi](mysql-spi.png)
+
+- 日志门面接口实现类加载  
+  
+  SLF4J加载不同提供商的日志实现类
+
+- Spring  
+  
+  Spring中大量使用了SPI，比如：对servlet3.0规范对ServletContainerInitializer的实现、自动类型转换Type Conversion SPI(Converter SPI、Formatter SPI)等
+
+- Dubbo  
+  
+  Dubbo中也大量使用SPI的方式实现框架的扩展, 不过它对Java提供的原生SPI做了封装，允许用户扩展实现Filter接口
+
+## 使用介绍
+
+要使用Java SPI，需要遵循如下约定：
+
+1. 当服务提供者提供了接口的一种具体实现后，在jar包的META-INF/services目录下创建一个以“接口全限定名”为命名的文件，内容为实现类的全限定名；
+
+2. 接口实现类所在的jar包放在主程序的classpath中；
+
+3. 主程序通过java.util.ServiceLoder动态装载实现模块，它通过扫描META-INF/services目录下的配置文件找到实现类的全限定名，把类加载到JVM；
+
+4. SPI的实现类必须携带一个不带参数的构造方法；
+
+### 例子
+
+```java
+/**建立一个文件到如下目录，这个文件包含需要被SPI加载的实现类
+classpath:/META-INF/services/com.keepthinker.example.general.spi.MoveAction
+文件内容例子如：
+com.keepthinker.example.general.spi.Dog
+com.keepthinker.example.general.spi.Bird
+*/
+package com.keepthinker.example.general.spi;
+
+public interface MoveAction {
+    void move();
+}
+
+public class Bird implements MoveAction{
+    private static final Logger logger = LoggerFactory.getLogger(Bird.class);
+    public Bird(){
+        logger.info("initialized");
+    }
+    @Override
+    public void move() {
+        logger.info("I am flying");
+    }
+}
+
+public class Dog implements MoveAction{
+    private static final Logger logger = LoggerFactory.getLogger(Dog.class);
+    public Dog(){
+        logger.info("initialized");
+    }
+    @Override
+    public void move() {
+        logger.info("I am running");
+    }
+}
+
+public class SPIMain {
+    private static final Logger logger = LoggerFactory.getLogger(SPIMain.class);
+    public static void main(String[] args) {
+        ServiceLoader<MoveAction> shouts = ServiceLoader.load(MoveAction.class);
+        Iterator<MoveAction> it = shouts.iterator();
+        while (it.hasNext()) {
+            logger.info("before Iterator.next()");
+            MoveAction action = it.next();
+            logger.info("after Iterator.next()");
+            action.move();
+        }
+    }
+}
+
+/**
+* main输出：
+* [0] 2022-02-13 22:30:30,319 INFO  [com.keepthinker.example.general.spi.SPIMain]: before Iterator.next()
+* [0] 2022-02-13 22:30:30,319 INFO  [com.keepthinker.example.general.spi.Dog]: initialized
+* [0] 2022-02-13 22:30:30,319 INFO  [com.keepthinker.example.general.spi.SPIMain]: after Iterator.next()
+* [0] 2022-02-13 22:30:30,319 INFO  [com.keepthinker.example.general.spi.Dog]: I am running
+* [0] 2022-02-13 22:30:30,319 INFO  [com.keepthinker.example.general.spi.SPIMain]: before Iterator.next()
+* [0] 2022-02-13 22:30:30,319 INFO  [com.keepthinker.example.general.spi.Bird]: initialized
+* [0] 2022-02-13 22:30:30,319 INFO  [com.keepthinker.example.general.spi.SPIMain]: after Iterator.next()
+* [0] 2022-02-13 22:30:30,319 INFO  [com.keepthinker.example.general.spi.Bird]: I am flying
+*/
+```
+
+### 参考
 
 [高级开发必须理解的Java中SPI机制 - 简书](https://www.jianshu.com/p/46b42f7f593c)
 
@@ -385,7 +491,7 @@ Java SPI 实际上是“**基于接口的编程＋策略模式＋配置文件**�
 
 ## 定位线程问题
 
-在Linux上用**top -H -p ${processId}**，找到问题线程（比如cpu占比高），比如线程ID为11164，通过命令**echo 'ibase=10;obase=16;11164' | bc**来把线程ID 11164转化成16进制数字2B9C。 然后通过jstack命令找到该问题线程的线程栈日志，如**jstack ${processId} | grep -A 100 -i 2B9C**
+在Linux上用**top -H -p {processId}**，找到问题线程（比如cpu占比高），比如线程ID为11164，通过命令**echo 'ibase=10;obase=16;11164' | bc**来把线程ID 11164转化成16进制数字2B9C。 然后通过jstack命令找到该问题线程的线程栈日志，如**jstack {processId} | grep -A 100 -i 2B9C**
 
 ## 查看JVM内存GC情况
 
@@ -888,8 +994,6 @@ public class ProxyFilter implements CallbackFilter {
     }
 }
 ```
-
-
 
 ## JDK动态代理 VS CGLIB 对比
 

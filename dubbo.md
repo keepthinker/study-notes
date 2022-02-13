@@ -1,24 +1,18 @@
 ## Dubbo支持的协议及其特点
 
-### Dubbo
-
-### Hessian
-
-### Dubbo
-
-### Json
-
-### Thrift协议
-
-### Redis协议
+- **dubbo://**（推荐）
+- rmi://
+- **hessian://**
+- **http://**
+- webservice://
+- thrift://
+- memcached://
+- **redis://**
+- rest://
 
 ### Dubbo热插拔机制
 
 #### SPI的应用及其原理
-
-
-
-
 
 ## Dubbo与Spring Cloud的区别
 
@@ -35,8 +29,4 @@ SpringCloud 生态丰富，功能完善，更像是品牌机，Dubbo 则相对�
 SpringCloud：Spring 公司开源的微服务框架，SpirngCloud 定位为微服务架构下的一站式解决方案。
 Dubbo：阿里巴巴开源的 RPC 框架，Dubbo 是 SOA 时代的产物，它的关注点主要在于服务的调用，流量分发、流量监控和熔断。
 
-
-
 [SpringCloud与Dubbo的区别 | Oldman](https://oldman.run/posts/42d9c690/)
-
-

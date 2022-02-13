@@ -137,3 +137,42 @@ SQL线程负责读取relay log中的内容，解析成具体的操作并执行�
 [MySQL 主从复制原理不再难](https://www.cnblogs.com/rickiyang/p/13856388.html)
 
 [深度探索MySQL主从复制原理](https://zhuanlan.zhihu.com/p/50597960)
+
+## MySQL的SQL预处理
+
+### 语法
+
+```sql
+# 定义预处理语句
+PREPARE $stmt_name FROM $preparable_stmt;
+# 执行预处理语句
+EXECUTE $stmt_name [USING @var_name [, @var_name] ...];
+# 删除(释放)定义
+{DEALLOCATE | DROP} PREPARE $stmt_name;
+```
+
+### 例子
+
+```sql
+mysql> insert into user(name, age) values("John", 18);
+Query OK, 1 row affected (0.04 sec)
+
+mysql> prepare stmt1 from 'select * from user where name = ?'
+    -> ;
+Query OK, 0 rows affected (0.00 sec)
+Statement prepared
+
+mysql> set @n = 'John';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> execute stmt1 using @n;
++----+------+-----+
+| id | name | age |
++----+------+-----+
+|  1 | John |  18 |
++----+------+-----+
+1 row in set (0.00 sec))
+
+mysql> deallocate prepare stmt1;
+Query OK, 0 rows affected (0.00 sec)
+```

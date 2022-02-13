@@ -18,31 +18,33 @@ Bean实例生命周期的执行过程如下：
 
 <img title="" src="bean-life-circle.png" alt="" width="718">
 
-1. Spring对bean进行实例化，默认bean是单例；
+1. Spring对bean进行实例化，默认bean是单例。
 
-2. Spring对bean进行依赖注入；
+2. Spring对bean进行依赖注入。
 
-3. 如果bean实现了BeanNameAware接口，Spring将bean的名称传给setBeanName()方法；
+3. 如果bean实现了BeanNameAware接口，Spring将bean的名称传给setBeanName()方法。
 
-4. 如果bean实现了BeanFactoryAware接口，Spring将调用setBeanFactory()方法，将BeanFactory实例传进来；
+4. 如果bean实现了BeanFactoryAware接口，Spring将调用setBeanFactory()方法，将BeanFactory实例传进来。
 
-5. 如果bean实现了<mark>ApplicationContextAware</mark>接口，它的setApplicationContext()方法将被调用，将应用上下文的引用传入到bean中；
+5. 如果bean实现了<mark>ApplicationContextAware</mark>接口，它的setApplicationContext()方法将被调用，将应用上下文的引用传入到bean中。
 
-6. 如果bean实现了BeanPostProcessor接口，它的postProcessBeforeInitialization()方法将被调用；
+6. 如果bean实现了BeanPostProcessor接口，它的postProcessBeforeInitialization()方法将被调用。
 
-7. 如果bean中有方法添加了@PostConstruct注解，那么该方法将被调用；
+7. 如果bean中有方法添加了@PostConstruct注解，那么该方法将被调用。
 
 8. 如果bean实现了InitializingBean接口，spring将调用它的afterPropertiesSet()接口方法。
 
-9. 如果在xml文件中通过<bean>标签的init-method元素指定了初始化方法，那么该方法将被调用；
+9. 如果在xml文件中通过<bean>标签的init-method元素指定了初始化方法，那么该方法将被调用。
 
-10. 如果bean实现了BeanPostProcessor接口，它的postProcessAfterInitialization()接口方法将被调用；
+10. 如果bean实现了BeanPostProcessor接口，它的postProcessAfterInitialization()接口方法将被调用。
 
-11. 此时bean已经准备就绪，可以被应用程序使用了，他们将一直驻留在应用上下文中，直到该应用上下文被销毁；
+11. 此时bean已经准备就绪，可以被应用程序使用了，他们将一直驻留在应用上下文中，直到该应用上下文被销毁。
 
-12. 如果bean中有方法添加了@PreDestroy注解，那么该方法将被调用；
+12. 如果bean中有方法添加了@PreDestroy注解，那么该方法将被调用。
 
-13. 若bean实现了DisposableBean接口，spring将调用它的distroy()接口方法。同样的，如果bean使用了destroy-method属性声明了销毁方法，则该方法被调用；
+13. 若bean实现了DisposableBean接口，spring将调用它的distroy()接口方法。
+
+14. 如果bean使用了destroy-method属性声明了销毁方法，则该方法被调用。
 
 [Spring中bean的作用域与生命周期](https://blog.csdn.net/fuzhongmin05/article/details/73389779)
 
@@ -61,42 +63,91 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 
 /**
- 2022-02-12 17:38:48,400 [main] DEBUG [org.springframework.context.support.ClassPathXmlApplicationContext]: Bean factory for org.springframework.context.support.ClassPathXmlApplicationContext@28ba21f3: org.springframework.beans.factory.support.DefaultListableBeanFactory@6500df86: defining beans [annotationConfig,beanInsideComponent,beanInsideConfiguration,configA,configB,cglibBean,person,xmlMain,org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,org.springframework.context.event.internalEventListenerProcessor,org.springframework.context.event.internalEventListenerFactory,abstractAnimal,animal,animalDuplicate,inheritedAnimal,overrideAnimal,earth,earthFromFactory,inner,main,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor2#0,com.keepthinker.example.spring.ioc.postprocessor.MyInstantiationAwareBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.ObscenityRemovingBeanFactoryPostProcessor#0,com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0]; root of factory hierarchy
- 2022-02-12 17:38:48,587 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Creating shared instance of singleton bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
- 2022-02-12 17:38:48,587 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Creating instance of bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
- 2022-02-12 17:38:48,587 [main] DEBUG [org.springframework.context.annotation.CommonAnnotationBeanPostProcessor]: Found init method on class [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: public void com.keepthinker.example.spring.ioc.BeanLifeCircleObserver.PostConstructMethod()
- 2022-02-12 17:38:48,587 [main] DEBUG [org.springframework.context.annotation.CommonAnnotationBeanPostProcessor]: Registered init method on class [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleElement@8c636b8
- 2022-02-12 17:38:48,587 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Eagerly caching bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0' to allow for resolving potential circular references
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------setBeanName|com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------setBeanFactory|org.springframework.beans.factory.support.DefaultListableBeanFactory@6500df86: defining beans [annotationConfig,beanInsideComponent,beanInsideConfiguration,configA,configB,cglibBean,person,xmlMain,org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,org.springframework.context.event.internalEventListenerProcessor,org.springframework.context.event.internalEventListenerFactory,abstractAnimal,animal,animalDuplicate,inheritedAnimal,overrideAnimal,earth,earthFromFactory,inner,main,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor2#0,com.keepthinker.example.spring.ioc.postprocessor.MyInstantiationAwareBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.ObscenityRemovingBeanFactoryPostProcessor#0,com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0,panda,compTiger,confTiger,a,b,myTiger,tiger,propertyConfigInDev]; root of factory hierarchy
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------setApplicationContext|org.springframework.context.support.ClassPathXmlApplicationContext@28ba21f3: startup date [Sat Feb 12 17:38:48 CST 2022]; root of context hierarchy
- 2022-02-12 17:38:48,587 [main] DEBUG [org.springframework.context.annotation.CommonAnnotationBeanPostProcessor]: Invoking init method on bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0': public void com.keepthinker.example.spring.ioc.BeanLifeCircleObserver.PostConstructMethod()
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------PostConstructMethod
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor]: postProcessBeforeInitialization before init0 : com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor]: postProcessBeforeInitialization before init1 : com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0
- 2022-02-12 17:38:48,587 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Invoking afterPropertiesSet() on bean with name 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------afterPropertiesSet
- 2022-02-12 17:38:48,587 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Invoking init method  'xmlInitMethod' on bean with name 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------XmlInitMethod
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor]: postProcessAfterInitialization after init0 : com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor]: postProcessAfterInitialization after init1 : com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0
- 2022-02-12 17:38:48,587 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Finished creating instance of bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
- 2022-02-12 17:38:48,587 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Pre-instantiating singletons in org.springframework.beans.factory.support.DefaultListableBeanFactory@6500df86: defining beans [annotationConfig,beanInsideComponent,beanInsideConfiguration,configA,configB,cglibBean,person,xmlMain,org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,org.springframework.context.event.internalEventListenerProcessor,org.springframework.context.event.internalEventListenerFactory,abstractAnimal,animal,animalDuplicate,inheritedAnimal,overrideAnimal,earth,earthFromFactory,inner,main,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor2#0,com.keepthinker.example.spring.ioc.postprocessor.MyInstantiationAwareBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.ObscenityRemovingBeanFactoryPostProcessor#0,com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0,panda,compTiger,confTiger,a,b,myTiger,tiger,propertyConfigInDev]; root of factory hierarchy
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.AnnotationConfig$$EnhancerBySpringCGLIB$$ec1b4486@78b1cc93|beanName:annotationConfig
- 2022-02-12 17:38:48,587 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.AnnotationConfig$$EnhancerBySpringCGLIB$$ec1b4486@78b1cc93|beanName:annotationConfig
- 2022-02-12 17:38:48,603 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.AtBean.BeanInsideComponent@6646153|beanName:beanInsideComponent
- 2022-02-12 17:38:48,603 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.AtBean.BeanInsideComponent@6646153|beanName:beanInsideComponent
- 2022-02-12 17:38:48,697 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.XmlMain@6af93788|beanName:main
- 2022-02-12 17:38:48,697 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.XmlMain@6af93788|beanName:main
- 2022-02-12 17:38:48,697 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Returning cached instance of singleton bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
- 2022-02-12 17:38:48,697 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.atimport.A@ef9296d|beanName:a
- 2022-02-12 17:38:48,697 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.atimport.A@ef9296d|beanName:a
- 2022-02-12 17:38:49,743 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Destroying singletons in org.springframework.beans.factory.support.DefaultListableBeanFactory@6500df86: defining beans [annotationConfig,beanInsideComponent,beanInsideConfiguration,configA,configB,cglibBean,person,xmlMain,org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,org.springframework.context.event.internalEventListenerProcessor,org.springframework.context.event.internalEventListenerFactory,abstractAnimal,animal,animalDuplicate,inheritedAnimal,overrideAnimal,earth,earthFromFactory,inner,main,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor2#0,com.keepthinker.example.spring.ioc.postprocessor.MyInstantiationAwareBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.ObscenityRemovingBeanFactoryPostProcessor#0,com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0,panda,compTiger,confTiger,a,b,myTiger,tiger,propertyConfigInDev]; root of factory hierarchy
- 2022-02-12 17:38:49,743 [main] DEBUG [org.springframework.beans.factory.support.DisposableBeanAdapter]: Invoking destroy() on bean with name 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
- 2022-02-12 17:38:49,743 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------destroy
- 2022-02-12 17:38:49,743 [main] DEBUG [org.springframework.beans.factory.support.DisposableBeanAdapter]: Invoking destroy method 'xmlDestroyMethod' on bean with name 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
- 2022-02-12 17:38:49,743 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------xmlDestroyMethod
- */
+2022-02-13 01:46:21,745 [main] DEBUG [org.springframework.context.support.ClassPathXmlApplicationContext]: Bean factory for org.springframework.context.support.ClassPathXmlApplicationContext@28ba21f3: org.springframework.beans.factory.support.DefaultListableBeanFactory@402a079c: defining beans [annotationConfig,beanInsideComponent,beanInsideConfiguration,configA,configB,cglibBean,person,xmlMain,org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,org.springframework.context.event.internalEventListenerProcessor,org.springframework.context.event.internalEventListenerFactory,abstractAnimal,animal,animalDuplicate,inheritedAnimal,overrideAnimal,earth,earthFromFactory,inner,main,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor2#0,com.keepthinker.example.spring.ioc.postprocessor.MyInstantiationAwareBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.AnimalNamePrefixAddBeanFactoryPostProcessor#0,com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0]; root of factory hierarchy
+2022-02-13 01:46:21,912 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Creating shared instance of singleton bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
+2022-02-13 01:46:21,912 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Creating instance of bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
+2022-02-13 01:46:21,912 [main] DEBUG [org.springframework.context.annotation.CommonAnnotationBeanPostProcessor]: Found destroy method on class [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: public void com.keepthinker.example.spring.ioc.BeanLifeCircleObserver.preDestroyMethod() throws java.lang.Exception
+2022-02-13 01:46:21,912 [main] DEBUG [org.springframework.context.annotation.CommonAnnotationBeanPostProcessor]: Found init method on class [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: public void com.keepthinker.example.spring.ioc.BeanLifeCircleObserver.PostConstructMethod()
+2022-02-13 01:46:21,912 [main] DEBUG [org.springframework.context.annotation.CommonAnnotationBeanPostProcessor]: Registered init method on class [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleElement@8c636b8
+2022-02-13 01:46:21,912 [main] DEBUG [org.springframework.context.annotation.CommonAnnotationBeanPostProcessor]: Registered destroy method on class [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleElement@63071798
+2022-02-13 01:46:21,912 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Eagerly caching bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0' to allow for resolving potential circular references
+2022-02-13 01:46:21,912 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------setBeanName|com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0
+2022-02-13 01:46:21,912 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------setBeanFactory|org.springframework.beans.factory.support.DefaultListableBeanFactory@402a079c: defining beans [annotationConfig,beanInsideComponent,beanInsideConfiguration,configA,configB,cglibBean,person,xmlMain,org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,org.springframework.context.event.internalEventListenerProcessor,org.springframework.context.event.internalEventListenerFactory,abstractAnimal,animal,animalDuplicate,inheritedAnimal,overrideAnimal,earth,earthFromFactory,inner,main,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor2#0,com.keepthinker.example.spring.ioc.postprocessor.MyInstantiationAwareBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.AnimalNamePrefixAddBeanFactoryPostProcessor#0,com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0,panda,compTiger,confTiger,a,b,myTiger,tiger,propertyConfigInDev]; root of factory hierarchy
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------setApplicationContext|org.springframework.context.support.ClassPathXmlApplicationContext@28ba21f3: startup date [Sun Feb 13 01:46:21 CST 2022]; root of context hierarchy
+2022-02-13 01:46:21,928 [main] DEBUG [org.springframework.context.annotation.CommonAnnotationBeanPostProcessor]: Invoking init method on bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0': public void com.keepthinker.example.spring.ioc.BeanLifeCircleObserver.PostConstructMethod()
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------@PostConstructMethod
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor]: postProcessBeforeInitialization before init0 : com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor]: postProcessBeforeInitialization before init1 : com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0
+2022-02-13 01:46:21,928 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Invoking afterPropertiesSet() on bean with name 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------afterPropertiesSet
+2022-02-13 01:46:21,928 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Invoking init method  'xmlInitMethod' on bean with name 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------XmlInitMethod
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor]: postProcessAfterInitialization after init0 : com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor]: postProcessAfterInitialization after init1 : com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0
+2022-02-13 01:46:21,928 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Finished creating instance of bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
+2022-02-13 01:46:21,928 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Pre-instantiating singletons in org.springframework.beans.factory.support.DefaultListableBeanFactory@402a079c: defining beans [annotationConfig,beanInsideComponent,beanInsideConfiguration,configA,configB,cglibBean,person,xmlMain,org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,org.springframework.context.event.internalEventListenerProcessor,org.springframework.context.event.internalEventListenerFactory,abstractAnimal,animal,animalDuplicate,inheritedAnimal,overrideAnimal,earth,earthFromFactory,inner,main,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor2#0,com.keepthinker.example.spring.ioc.postprocessor.MyInstantiationAwareBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.AnimalNamePrefixAddBeanFactoryPostProcessor#0,com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0,panda,compTiger,confTiger,a,b,myTiger,tiger,propertyConfigInDev]; root of factory hierarchy
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.AnnotationConfig$$EnhancerBySpringCGLIB$$e14d7637@143640d5|beanName:annotationConfig
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.AnnotationConfig$$EnhancerBySpringCGLIB$$e14d7637@143640d5|beanName:annotationConfig
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.AtBean.BeanInsideComponent@6295d394|beanName:beanInsideComponent
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.AtBean.BeanInsideComponent@6295d394|beanName:beanInsideComponent
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.AtBean.BeanInsideConfiguration$$EnhancerBySpringCGLIB$$d6c289e5@657c8ad9|beanName:beanInsideConfiguration
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.AtBean.BeanInsideConfiguration$$EnhancerBySpringCGLIB$$d6c289e5@657c8ad9|beanName:beanInsideConfiguration
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.atimport.ConfigA$$EnhancerBySpringCGLIB$$2c186c8f@436a4e4b|beanName:configA
+2022-02-13 01:46:21,928 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.atimport.ConfigA$$EnhancerBySpringCGLIB$$2c186c8f@436a4e4b|beanName:configA
+2022-02-13 01:46:21,945 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.atimport.ConfigB$$EnhancerBySpringCGLIB$$647b0fb0@f2f2cc1|beanName:configB
+2022-02-13 01:46:21,945 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.atimport.ConfigB$$EnhancerBySpringCGLIB$$647b0fb0@f2f2cc1|beanName:configB
+2022-02-13 01:46:21,947 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.cglib.CglibBean$$EnhancerBySpringCGLIB$$d5f21fb0@3a079870|beanName:cglibBean
+2022-02-13 01:46:21,947 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.cglib.CglibBean$$EnhancerBySpringCGLIB$$d5f21fb0@3a079870|beanName:cglibBean
+2022-02-13 01:46:21,981 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Person@12e61fe6|beanName:person
+2022-02-13 01:46:21,982 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Person@12e61fe6|beanName:person
+2022-02-13 01:46:21,989 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Animal@5ccddd20|beanName:animal
+2022-02-13 01:46:21,989 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Animal@5ccddd20|beanName:animal
+2022-02-13 01:46:21,990 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Animal@1ed1993a|beanName:animalDuplicate
+2022-02-13 01:46:21,990 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Animal@1ed1993a|beanName:animalDuplicate
+2022-02-13 01:46:21,991 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Animal@1f3f4916|beanName:inheritedAnimal
+2022-02-13 01:46:21,991 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Animal@1f3f4916|beanName:inheritedAnimal
+2022-02-13 01:46:21,992 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Animal@794cb805|beanName:overrideAnimal
+2022-02-13 01:46:21,992 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Animal@794cb805|beanName:overrideAnimal
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Panda@4b5a5ed1|beanName:panda
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Panda@4b5a5ed1|beanName:panda
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Tiger@78e117e3|beanName:compTiger
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Tiger@78e117e3|beanName:compTiger
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Tiger@2ea227af|beanName:confTiger
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Tiger@2ea227af|beanName:confTiger
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Tiger@4386f16|beanName:tiger
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Tiger@4386f16|beanName:tiger
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Tiger@4386f16|beanName:myTiger
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Tiger@4386f16|beanName:myTiger
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.XmlMain@4690b489|beanName:xmlMain
+2022-02-13 01:46:21,998 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.XmlMain@4690b489|beanName:xmlMain
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:org.springframework.context.event.EventListenerMethodProcessor@47d90b9e|beanName:org.springframework.context.event.internalEventListenerProcessor
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:org.springframework.context.event.EventListenerMethodProcessor@47d90b9e|beanName:org.springframework.context.event.internalEventListenerProcessor
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:org.springframework.context.event.DefaultEventListenerFactory@3aefe5e5|beanName:org.springframework.context.event.internalEventListenerFactory
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:org.springframework.context.event.DefaultEventListenerFactory@3aefe5e5|beanName:org.springframework.context.event.internalEventListenerFactory
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.MyFactoryBean@149e0f5d|beanName:earthFromFactory
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.MyFactoryBean@149e0f5d|beanName:earthFromFactory
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:Inner class|beanName:inner
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:Inner class|beanName:inner
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.XmlMain@36c88a32|beanName:main
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.XmlMain@36c88a32|beanName:main
+2022-02-13 01:46:22,014 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Returning cached instance of singleton bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.atimport.A@7880cdf3|beanName:a
+2022-02-13 01:46:22,014 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.atimport.A@7880cdf3|beanName:a
+2022-02-13 01:46:22,029 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.atimport.B@1c93084c|beanName:b
+2022-02-13 01:46:22,029 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.atimport.B@1c93084c|beanName:b
+2022-02-13 01:46:22,071 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Earth@43195e57|beanName:earth
+2022-02-13 01:46:22,071 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Earth@43195e57|beanName:earth
+2022-02-13 01:46:22,073 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessBeforeInitialization|bean:com.keepthinker.example.spring.ioc.model.Earth@479d31f3|beanName:earth
+2022-02-13 01:46:22,073 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Earth@479d31f3|beanName:earth
+2022-02-13 01:46:23,097 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------postProcessAfterInitialization|bean:com.keepthinker.example.spring.ioc.model.Earth@40ef3420|beanName:earthFromFactory
+2022-02-13 01:46:23,097 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Destroying singletons in org.springframework.beans.factory.support.DefaultListableBeanFactory@402a079c: defining beans [annotationConfig,beanInsideComponent,beanInsideConfiguration,configA,configB,cglibBean,person,xmlMain,org.springframework.context.annotation.internalConfigurationAnnotationProcessor,org.springframework.context.annotation.internalAutowiredAnnotationProcessor,org.springframework.context.annotation.internalRequiredAnnotationProcessor,org.springframework.context.annotation.internalCommonAnnotationProcessor,org.springframework.context.event.internalEventListenerProcessor,org.springframework.context.event.internalEventListenerFactory,abstractAnimal,animal,animalDuplicate,inheritedAnimal,overrideAnimal,earth,earthFromFactory,inner,main,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.InstantiationTracingBeanPostProcessor2#0,com.keepthinker.example.spring.ioc.postprocessor.MyInstantiationAwareBeanPostProcessor#0,com.keepthinker.example.spring.ioc.postprocessor.AnimalNamePrefixAddBeanFactoryPostProcessor#0,com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0,panda,compTiger,confTiger,a,b,myTiger,tiger,propertyConfigInDev]; root of factory hierarchy
+2022-02-13 01:46:23,097 [main] DEBUG [org.springframework.context.annotation.CommonAnnotationBeanPostProcessor]: Invoking destroy method on bean 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0': public void com.keepthinker.example.spring.ioc.BeanLifeCircleObserver.preDestroyMethod() throws java.lang.Exception
+2022-02-13 01:46:23,097 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------@PreDestroyMethod
+2022-02-13 01:46:23,097 [main] DEBUG [org.springframework.beans.factory.support.DisposableBeanAdapter]: Invoking destroy() on bean with name 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
+2022-02-13 01:46:23,097 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------destroy
+2022-02-13 01:46:23,097 [main] DEBUG [org.springframework.beans.factory.support.DisposableBeanAdapter]: Invoking destroy method 'xmlDestroyMethod' on bean with name 'com.keepthinker.example.spring.ioc.BeanLifeCircleObserver#0'
+2022-02-13 01:46:23,097 [main] INFO  [com.keepthinker.example.spring.ioc.BeanLifeCircleObserver]: -------xmlDestroyMethod 
+*/
 public class BeanLifeCircleObserver implements BeanNameAware, BeanFactoryAware, ApplicationContextAware, InitializingBean, BeanPostProcessor, DisposableBean {
     private static Logger logger = LoggerFactory.getLogger(BeanLifeCircleObserver.class);
 
@@ -271,6 +322,95 @@ AOP 主要应用场景有：
 
 12. Transactions 事务
 
+### 例子
+
+```java
+@Configuration
+@EnableAspectJAutoProxy
+public class AspectJContext {
+
+    @Bean
+    LoggingHandler loggingHandler(){
+        return new LoggingHandler();
+    }    
+    @Bean
+    public StringService stringService(){
+        return new StringService();
+    }
+}
+
+
+@Aspect
+public class LoggingHandler {
+
+    @Pointcut("execution(* com.keepthinker.example.spring.aop.aspectj.StringService.*(..))")
+    private void log(){}
+
+    @Before("log()")
+    public void beforeAdvice(JoinPoint joinpoint){
+        System.out.println("beforeAdvice");
+        String targetClassName=joinpoint.getTarget().getClass().getName();
+
+        String signature=joinpoint.getSignature().toString();
+        StringBuilder argsInfo = new StringBuilder();
+        for(Object obj:joinpoint.getArgs()){
+            argsInfo.append(obj).append(":").append(obj.getClass().getName()).append("  ");
+        }
+        Logger logger = Logger.getLogger(targetClassName);
+        logger.info("get into via " + signature + (argsInfo.length() > 0 ? 
+                (" with args: " + argsInfo) : ""));
+    }
+
+    @After("log()")
+    public void afterAdvice(){
+        System.out.println("afterAdvice");
+    }
+
+    @AfterReturning(pointcut = "log()", returning="retVal")
+    public void afterReturningAdvice(Object retVal){
+        System.out.println("afterReturningAdvice : Returning:" + retVal.toString() );
+    }
+
+    @AfterThrowing(pointcut = "log()", throwing = "ex")
+    public void AfterThrowingAdvice(IllegalArgumentException ex){
+        System.out.println("AfterThrowingAdvice: There has been an exception: " + ex.toString());   
+    }
+}
+
+public class StringService {
+    private String str = "string";
+
+    public String getStr(String suffix) {
+        return str + ":" + suffix;
+    }
+    public void setStr(String str) {
+        this.str = str;
+    }    
+}
+
+public class Main {
+    public static void main(String[] args){
+        AbstractApplicationContext context = new AnnotationConfigApplicationContext(AspectJContext.class);
+        StringService service = context.getBean(StringService.class);
+
+        System.out.println("main string:" + service.getStr("suffix"));
+
+        context.registerShutdownHook();
+        context.close();
+    }
+}
+
+
+/**
+输出如下：
+beforeAdvice
+get into via String com.keepthinker.example.spring.aop.aspectj.StringService.getStr(String) with args: suffix:java.lang.String  
+afterAdvice
+afterReturningAdvice : Returning:string:suffix
+main string:string:suffix
+*/
+```
+
 ### AOP 核心概念
 
 1. 切面（aspect） ： 类是对物体特征的抽象，切面就是对横切关注点的抽象。
@@ -281,7 +421,7 @@ AOP 主要应用场景有：
 
 4. 切入点（pointcut） ： 对连接点进行拦截的定义。
 
-5. 通知（advice） ： 所谓通知指的就是指拦截到连接点之后要执行的代码， 通知分为前置、后置、 异常、最终、环绕通知五类。
+5. 通知（advice） ： 所谓通知指的就是指拦截到连接点之后要执行的代码， 通知分为**前置**、**后置**、 **异常**、**最终**、**环绕**通知五类。
 
 6. 目标对象： 代理的目标对象。
 
@@ -290,6 +430,22 @@ AOP 主要应用场景有：
 8. 引入（introduction） ： 在不修改代码的前提下，引入可以在运行期为类动态地添加一些方法或字段。
 
 Spring 提供了两种方式来生成代理对象: JDKProxy 和 Cglib，具体使用哪种方式 生成由  AopProxyFactory 根据 AdvisedSupport 对象的配置来决定。 默认的策略是如果目标类是接口， 则使用 JDK 动态代理技术，否则使用 Cglib 来生成代理。
+
+## Spring AOP的JDK与Cglib代理总结
+
+如果目标对象实现了接口，默认情况下会采用JDK的动态代理实现AOP。
+
+如果目标对象实现了接口，可以强制使用CGLIB实现AOP。
+
+如果目标对象没有实现接口，必须采用CGLIB库，Spring会自动在JDK动态代理和CGLIB之间转换。
+
+#### 如何强制使用CGLIB实现AOP
+
+添加CGLIB库，Spring_HOME、cglib/*.jar
+
+在Spring配置文件中加入<aop:aspectj-autoproxy proxy-target-class="true"/>
+
+
 
 ## Resource
 
