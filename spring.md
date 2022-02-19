@@ -16,7 +16,7 @@ Spring 通过一个配置文件描述 Bean 及 Bean 之间的依赖关系，利�
 
 Bean实例生命周期的执行过程如下：
 
-<img title="" src="bean-life-circle.png" alt="" width="718">
+<img title="" src="bean-life-circle.png" alt="" width="1280">
 
 1. Spring对bean进行实例化，默认bean是单例。
 
@@ -173,11 +173,6 @@ public class BeanLifeCircleObserver implements BeanNameAware, BeanFactoryAware, 
         return bean;
     }
 
-    /*
-    init-method
-    如果 Bean 在 Spring 配置文件中配置了 init-method 属性会自动调用其配置的初始化方法。
-    */
-
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         logger.info("-------postProcessAfterInitialization|bean:{}|beanName:{}", bean, beanName);
@@ -215,8 +210,6 @@ public class BeanLifeCircleObserver implements BeanNameAware, BeanFactoryAware, 
 
 ## BeanFactoryPostProcessor
 
-### BeanFactoryPostProcessor
-
 ```java
 public interface BeanFactoryPostProcessor {
    void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException;
@@ -225,7 +218,11 @@ public interface BeanFactoryPostProcessor {
 
 实现该接口，可以在 Spring 创建 bean 之前修改 bean 的定义属性。也就是说，Spring 允许 BeanFactoryPostProcessor 在容器实例化 bean 之前读取配置元数据，并可以根据需要进行修改。例如可以把 bean 的 Scope 从 singleton 改为 prototype ，也可以把 **property 的值给修改掉**。另外可以同时配置多个 BeanFactoryPostProcessor，并通过 order 属性来控制 BeanFactoryPostProcessor 的执行顺序 （ 在实现 BeanFactoryPostProcessor 时应该考虑实现 Ordered 接口 ）。比如PropertyPlaceholderConfigurer就是在postProcessBeanFactory方法里实现property值的替换。
 
-BeanFactoryPostProcessor 是在 Spring 容器加载了定义 bean 的 XML 文件之后，在 bean 实例化之前执行的，也就是一定会在BeanNameAware.SetBeanName之前执行。接口方法的入参是 ConfigurrableListableBeanFactory 类型，使用该参数可以获取到相关的 bean 的定义信息。
+BeanFactoryPostProcessor 是在 Spring 容器加载了定义 bean 的 XML 文件之后，在 bean 实例化之前执行的，**也就是一定会在BeanNameAware.SetBeanName之前执行**。接口方法的入参是 ConfigurrableListableBeanFactory 类型，使用该参数可以获取到相关的 bean 的定义信息。
+
+使用BeanFactoryPostProcessor可以修改Spring Bean的全限定类名，scope，是否懒加载，所依赖的类名等。
+
+[Spring扩展点之BeanFactoryPostProcessor：彻底搞懂原理以及使用场景【源码分析】_CoderOu-CSDN博客_beanfactorypostprocessor使用场景](https://blog.csdn.net/qq_42154259/article/details/108305938)
 
 ## PostProcessor
 

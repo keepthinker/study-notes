@@ -45,6 +45,25 @@ GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP ON bankaccount.* to 'monty'@'10.%'
 
 flush privileges;
 
+
+
+# Ubuntu开放端口
+
+```shell
+#防火墙开放3306端口
+iptables -A INPUT -p tcp --dport 3306 -j ACCEPT
+#修改MySQL监听
+vi /etc/mysql/mysql.conf.d/mysqld.cnf
+##注释掉bind-address = 127.0.0.1
+#重启动MySQL
+sudo /etc/init.d/mysql restart
+#开放MySQL用户远程访问权限
+grant all privileges on *.* to 'root'@'%' identified by '123456';
+flush privileges;
+```
+
+
+
 # 导出导入数据
 
 #### 导出

@@ -176,3 +176,53 @@ mysql> execute stmt1 using @n;
 mysql> deallocate prepare stmt1;
 Query OK, 0 rows affected (0.00 sec)
 ```
+
+## MVCC原理
+
+MVCC的实现是通过保存数据在某个时间点的快照来实现的。
+
+InnoDB的MVCC，是通过在每行记录后面保存两个隐藏的列来实现的。这两个列，一个保存了行的创建时间，一个保存行的过期时间（或删除时间）。当然存储的并不是实际的时间值，而是系统版本号（system version number）。每开始一个新的事务，系统版本号都会自动递增。
+
+### Repeatable Read隔离级别下的操作
+
+#### SELECT
+
+InnoDB会根据以下两个条件来检查每行记录：
+
+a. InnoDB只查找版本早于当前事务版本的数据行（也就是，行的系统版本号小于或等于事务的系统版本号），这样就可以确保事务读取的行，要么是在事务开始前已经存在的，要么是事务自身插入或者修改过的。
+
+b. 行的删除版本要么未定义，要么大于当前事务版本号。这可以确保事务读取到的行，在事务开始前未被删除。
+
+只有符合上述两个条件的记录，才能返回作为查询结果。
+
+#### Insert
+
+InnoDB为新插入的每一行保存当前系统版本号作为行版本号。
+
+#### DELETE
+
+InnoDB为删除的每一行保存当前系统版本号作为行删除标记。
+
+#### UPDATE
+
+InnoDB为插入一行新记录，保存当前系统版本号作为行版本号，同时保存当前系统版本号到原来的行作为行删除标识。
+
+上述事务版本号和行版本号，使大多数读操作都可以不用加锁。这样做使读性能高，并且符合事务标准。不足之处是每行记录都需要额外的存储空间，做更多检查和维护工作。
+
+MVCC只能在Repeatable Read和Read Committed两个隔离级别下工作。起来隔离级别和MVCC不兼容，因为Read Uncommited总是读取最新的数据行，而不是符合当前事务版本的数据行。而Serializable则会对所有读取的行都加锁。
+
+## bin log
+
+binlog，是mysql服务层产生的日志，常用来进行数据恢复、数据库复制，常见的mysql主从架构，就是采用slave同步master的binlog实现的, 另外通过解析binlog能够实现mysql到其他数据源（如ElasticSearch)的数据复制。
+
+## redo log
+
+redo log记录了数据操作在物理层面的修改，mysql中使用了大量缓存，缓存存在于内存中，修改操作时会直接修改内存，而不是立刻修改磁盘，当内存和磁盘的数据不一致时，称内存中的数据为脏页(dirty page)。为了保证数据的安全性，事务进行中时会不断的产生redo log，在事务提交时进行一次flush操作，保存到磁盘中, redo log是按照顺序写入的，磁盘的顺序读写的速度远大于随机读写。当数据库或主机失效重启时，会根据redo log进行数据的恢复，如果redo log中有事务提交，则进行事务提交修改数据。这样实现了事务的原子性、一致性和持久性。
+
+## undo log
+
+Undo log分为Insert和Update两种，delete可以看做是一种特殊的update，即在记录上修改删除标记。除了记录redo log外，当进行数据修改时还会记录undo log，undo log用于数据的撤回操作，它记录了修改的**反向操作**，比如，插入对应删除，修改对应修改为原来的数据，通过undo log可以实现事务回滚，并且可以根据undo log回溯到某个特定的版本的数据，实现MVCC。
+
+[一文理解Mysql MVCC](https://zhuanlan.zhihu.com/p/66791480)
+
+[MySQL MVCC机制 · Issue #68 · zhangyachen/zhangyachen.github.io · GitHub](https://github.com/zhangyachen/zhangyachen.github.io/issues/68)

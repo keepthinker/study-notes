@@ -24,8 +24,6 @@ kubectl get nodes
 kubectl get nodes --help
 ```
 
-
-
 Once the application instances are created, a Kubernetes Deployment Controller continuously monitors those instances. If the Node hosting an instance goes down or is deleted, the Deployment controller replaces the instance with an instance on another Node in the cluster. **This provides a self-healing mechanism to address machine failure or maintenance.**
 
 ![img](kubernetes_cluster_deploy.png)
@@ -33,8 +31,6 @@ Once the application instances are created, a Kubernetes Deployment Controller c
 You can create and manage a Deployment by using the Kubernetes command line interface, **Kubectl**. Kubectl uses the Kubernetes API to interact with the cluster. 
 
 A Pod is the basic execution unit of a Kubernetes application. Each Pod represents a part of a workload that is running on your cluster.
-
-
 
 ```shell
 kubectl create deployment
@@ -112,8 +108,6 @@ If your Kubernetes cluster uses etcd as its backing store, make sure you have a 
 
 Every change in the cluster, for example new pod gets scheduled when the pod dies, all of these changes get saved in or updated in this key-value store of etcd. Cluster informaction stored in etcd is used to for master processes to communicate with the worker processes and vice versa.
 
-
-
 ## Kubernetes Pods
 
 When you created a Deployment in Module 2, Kubernetes created a **Pod** to host your application instance. **A Pod is a Kubernetes abstraction that represents a group of one or more application containers (such as Docker), and some shared resources for those containers.** Those resources include:
@@ -138,10 +132,6 @@ Pod就像是我们的一个”专有主机”，上面除了运行我们的主�
 
 http://dockone.io/article/9065
 
-
-
-
-
 ![img](pods-overview.png)
 
 ## Nodes
@@ -155,9 +145,9 @@ Every Kubernetes Node runs at least:
 - A **container runtime (like Docker)** responsible for pulling the container image from a registry, unpacking the container, and running the application.
 
 - **kube-proxy** is a network proxy that runs on each node in your cluster, implementing part of the Kubernetes Servce concept.
-
+  
   kube-proxy maintains network rules on nodes. These network rules allow network communication to your Pods from network sessions inside or outside of your cluster.
-
+  
   kube-proxy uses the operating system packet filtering layer if there is one and it's available. Otherwise, kube-proxy forwards the traffic itself.
 
 Node 是 Pod 真正运行的主机，可以是物理机，也可以是虚拟机。为了管理 Pod，每个 Node 节点上至少要运行 container runtime（比如 docker 或者 rkt）、`kubelet` 和 `kube-proxy` 服务。
@@ -196,8 +186,6 @@ ervices allow your applications to receive traffic. Services can be exposed in d
 - *NodePort* - Exposes the Service on the same port of each selected Node in the cluster using NAT. Makes a Service accessible from outside the cluster using `:`. Superset of ClusterIP.
 - *LoadBalancer* - Creates an external load balancer in the current cloud (if supported) and assigns a fixed, external IP to the Service. Superset of NodePort.
 - *ExternalName* - Maps the Service to the contents of the `externalName` field (e.g. `foo.bar.example.com`), by returning a `CNAME` record with its value. No proxying of any kind is set up. This type requires v1.7 or higher of `kube-dns`, or CoreDNS version 0.0.8 or higher.
-
-
 
 ### Services
 
@@ -252,10 +240,12 @@ Label 不提供唯一性，并且实际上经常是很多对象（如 Pods）都
 Label 定义好后其他对象可以使用 Label Selector 来选择一组相同 label 的对象（比如 ReplicaSet 和 Service 用 label 来选择一组 Pod）。Label Selector 支持以下几种方式：
 
 - 等式，如 `app=nginx` 和 `env!=production`
-- 集合，如 `env in (production, qa)`
-- 多个 label（它们之间是 AND 关系），如 `app=nginx,env=test`
 
- ![img](kubernetes_label.png)
+- 集合，如 `env in (production, qa)`
+
+- 多个 label（它们之间是 AND 关系），如 `app=nginx,env=test`
+  
+  ![img](kubernetes_label.png)
 
 Labels can be attached to objects at creation time or later on. They can be modified at any time.
 
@@ -318,8 +308,6 @@ kubectl delete service -l app=kubernetes-bootcamp
 
 # The application is up. This is because the Deployment is managing the application. To shut down the application, you would need to delete the Deployment as well.
 ```
-
-
 
 ## Running Multiple Instances of Your App
 
@@ -388,7 +376,7 @@ kubectl describe pods
 #  kubernetes-bootcamp:
 #    Container ID:   docker://90ae604836899843452f01a632975cb45ed477d6e8ecb62c2e89c8ccb0a960a1
 #    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
-    
+
 # To update the image of the application to version 2, use the set image command, followed by the deployment name and the new image version:
 kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=jocatalin/kubernetes-bootcamp:v2
 # deployment.apps/kubernetes-bootcamp image updated
@@ -418,4 +406,3 @@ kubectl rollout undo deployments/kubernetes-bootcamp
 
 # The rollout undo command reverts the deployment to the previous known state (v2 of the image). Updates are versioned and you can revert to any previously known state of a deployment.
 ```
-

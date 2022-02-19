@@ -156,6 +156,10 @@ xxx=com.xxx.XxxProtocol
 | Forking Cluster   | 并行调用多个服务器，只要一个成功即返回。通常用于实时性要求较高的读操作，但需要浪费更多服务资源。可通过 forks="2" 来设置最大并行数。 |
 | Broadcast Cluster | 广播调用所有提供者，逐个调用，任意一台报错则报错。通常用于通知所有提供者更新缓存或日志等本地资源信息。                     |
 
+## 代理对象的创建
+
+Dubbo实现代理对象的方式有两种，一种是使用JDK动态代理，使用的是JDKProxyFactory；另外一种是使用Javassist字节码来实现，使用JavassistProxyFactory来实现。Dubbo默认使用的是JavassistProxyFactory。
+
 ## 参考
 
 [Dubbo3 简介 | Apache Dubbo](https://dubbo.apache.org/zh/docs/introduction/)

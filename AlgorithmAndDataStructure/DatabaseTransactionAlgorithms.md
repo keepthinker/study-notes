@@ -174,8 +174,14 @@ The DBMS check timestamps for every operation. If transaction tries to access an
 
 Even though this technique is a non-locking one, in as much as the Object is not locked from concurrent access for the duration of a transaction, the act of recording each timestamp against the Object requires an extremely short duration lock on the Object or its proxy.
 
+# Multiversion concurrency control
+
 ### 参考文献
 
 [Lecture 19: Timestamp Ordering](https://15445.courses.cs.cmu.edu/fall2017/notes/19-notes-timestampordering.pdf)
 
 [Timestamp-based Concurrentcy Control](https://en.wikipedia.org/wiki/Timestamp-based_concurrency_control)
+
+[Multiversion concurrency control - Wikipedia](https://en.wikipedia.org/wiki/Multiversion_concurrency_control)
+
+[MVCC 原理](https://zhuanlan.zhihu.com/p/147372839)
