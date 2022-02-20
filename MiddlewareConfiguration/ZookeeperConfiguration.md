@@ -1,4 +1,5 @@
 # 单机配置
+
 ```
 # The number of milliseconds of each tick
 tickTime=2000
@@ -28,15 +29,16 @@ clientPort=2181
 # Purge task interval in hours
 # Set to "0" to disable auto purge feature
 #autopurge.purgeInterval=1
-
 ```
 
 # 集群配置
+
 假如一台机器配置3个节点，那么注意dataDir要三个不一样目录，并同时放入三个不一样的myid一般是1，2，3。
 
 server.1，server.2，server.3中的6个IP:port组合必须不一样。
 
 在同一台机器因为ip一样，故clientPort必须不一样。
+
 ```
 # The number of milliseconds of each tick
 tickTime=2000
@@ -79,4 +81,3 @@ server.1=192.168.1.104:2888:3888
 server.2=192.168.1.104:4888:5888 
 server.3=192.168.1.104:6888:7888
 ```
-

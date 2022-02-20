@@ -184,11 +184,23 @@ address                                |                          |        |
 
 #### 为什么多级链表，最多几层
 
-和红黑树的区别
+支持平均O(logN)、最坏O(N)复杂度的节点查找。
+
+#### 和红黑树的区别
+
+大部分情况下，跳跃表的效率可以和平衡树相媲美，实现比平衡树简单，但是跳跃表浪费了很多空间。
+
+跳表和红黑树的插入、删除、查找效率都是O（logN），都可以顺序遍历所有元素（红黑树通过中序遍历）。红黑树更稳定一些，跳表恶化是存在概率的，虽然概率极低。
+
+在Redis中，如果**有序集合包含的数量比较多**，又或者**有序集合中元素的成员是比较长的字符串时**，Redis会使用跳跃表来作为有序集合键的底层实现。
+
+![](skiplist-search.png)
+
+![img](skiplist-insert.png)
+
+跳表──没听过但很犀利的数据结构 | 三点水]([跳表──没听过但很犀利的数据结构 | 三点水](https://lotabout.me/2018/skip-list/))
 
 ### Bitmap
-
-When *key* does not exist, a new string value is created. The string is grown to make sure it can hold a bit at *offset*. The *offset* argument is required to **be greater than or equal to 0, and smaller than 2^32** (this limits bitmaps to 512MB). When the string at *key* is grown, added bits are set to 0.
 
 ```c
 127.0.0.1:6379> SETBIT mykey 7 1

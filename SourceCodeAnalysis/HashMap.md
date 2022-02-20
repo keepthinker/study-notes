@@ -1,11 +1,11 @@
 ```java
 public class HashMap<K,V> extends AbstractMap<K,V>
     implements Map<K,V>, Cloneable, Serializable {
-    
-	 public V put(K key, V value) {
+
+     public V put(K key, V value) {
         return putVal(hash(key), key, value, false, true);
     }   
-    
+
      /**
      * Implements Map.put and related methods.
      *
@@ -58,14 +58,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         afterNodeInsertion(evict);
         return null;
     }
-    
-    
+
+
 }
 ```
-
-
-
-
 
 ## 参考文献
 

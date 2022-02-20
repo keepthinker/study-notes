@@ -223,6 +223,60 @@ redo log记录了数据操作在物理层面的修改，mysql中使用了大量�
 
 Undo log分为Insert和Update两种，delete可以看做是一种特殊的update，即在记录上修改删除标记。除了记录redo log外，当进行数据修改时还会记录undo log，undo log用于数据的撤回操作，它记录了修改的**反向操作**，比如，插入对应删除，修改对应修改为原来的数据，通过undo log可以实现事务回滚，并且可以根据undo log回溯到某个特定的版本的数据，实现MVCC。
 
-[一文理解Mysql MVCC](https://zhuanlan.zhihu.com/p/66791480)
+Undo logs in the rollback segment are divided into insert and update undo logs. Insert undo logs are needed only in transaction rollback and can be discarded as soon as the transaction commits.
+
+Internally, `InnoDB` adds three fields to each row stored in the database:
+
+- A 6-byte **DB_TRX_ID** field indicates the transaction identifier for the last transaction that inserted or updated the row. Also, a deletion is treated internally as an update where a special bit in the row is set to mark it as deleted.
+
+- A 7-byte **DB_ROLL_PTR** field called the roll pointer. The roll pointer points to an undo log record written to the rollback segment. If the row was updated, the undo log record contains the information necessary to rebuild the content of the row before it was updated.
+
+- A 6-byte **DB_ROW_ID** field contains a row ID that increases monotonically as new rows are inserted. If `InnoDB` generates a clustered index automatically, the index contains row ID values. Otherwise, the `DB_ROW_ID` column does not appear in any index.
+
+
+
+![undo-log](mvcc-undo-log.jpg)
+
+
+
+**ReadView**
+
+三个全局属性：
+
+trx_list：一个数值列表，用来维护Reav View生成时刻系统正在活跃的事务ID
+
+up_limit_id：记录trx_list列表中事务最小的ID
+
+low_limit_id：Read View生成时刻系统尚未分配的下一个事务ID
+
+在当前事务生成Read View时，所有事务结果可见性的具体比较规则如下：
+
+1、首先比较记录的DB_TRX_ID < up_limit_id，如果小于，则当前事务能看到DB_TRX_ID所在的记录，如果大于等于进入下一个判断。
+
+2、接下来判断记录的DB_TRX_ID >= low_limit_id，如果大于等于则表示DB_TRX_ID所在的记录在Read View生成之后才出现，那么对于当前事务肯定不可见，如果小于，则进入下一个判断。
+
+3、判断记录的DB_TRX_ID(事务A)是否在活跃事务中，如果在，则表示在Read View生成时刻，这个事务A还是活跃状态，还没有commit修改的数据，当前事务也是看不到的，如果不在，说明这个事务A在Read View生成之前就已经commit，那么修改的结果也是可见的。
+
+
+
+例子：
+
+```shell
+1, 2, 3), (4, 5, 6, 7), (8, ...
+trx_list = [4, 6]
+up_limit_id = 4
+low_limit_id = 8
+已经提交的事务有1,2,3,5,7
+```
+
+已提交读和可重复读的区别就在于它们生成ReadView的策略不同。
+
+已提交读(RC)：每次快照读都会生成一次Read View，所以在RC事务级别中可以看到别的事务提交的更新。
+
+可重复读(RR)：对某条记录的第一次快照读会创建一个快照Read View，此后在调用快照读时，还是使用同一个Read View。
+
+
 
 [MySQL MVCC机制 · Issue #68 · zhangyachen/zhangyachen.github.io · GitHub](https://github.com/zhangyachen/zhangyachen.github.io/issues/68)
+
+[MySQL :: MySQL 8.0 Reference Manual :: 15.3 InnoDB Multi-Versioning](https://dev.mysql.com/doc/refman/8.0/en/innodb-multi-versioning.html)

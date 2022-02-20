@@ -45,8 +45,6 @@ GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP ON bankaccount.* to 'monty'@'10.%'
 
 flush privileges;
 
-
-
 # Ubuntu开放端口
 
 ```shell
@@ -61,8 +59,6 @@ sudo /etc/init.d/mysql restart
 grant all privileges on *.* to 'root'@'%' identified by '123456';
 flush privileges;
 ```
-
-
 
 # 导出导入数据
 
