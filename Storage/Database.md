@@ -30,8 +30,7 @@
 
 ### 可重复读（Repeatable read）
 
-Allows **only committed data to be read** and further requires that, **between two reads of a data item by a transaction, no other transaction is allowed to update it**. However, the transaction may not be serializable
-with respect to other transactions. For instance, when it is searching for data satisfying some conditions, a transaction may find some of the data inserted by a committed transaction, but may not find other data inserted by the same
+Allows **only committed data to be read** and further requires that, **between two reads of a data item by a transaction, no other transaction is allowed to update it**. However, the transaction may not be serializable with respect to other transactions. For instance, when it is searching for data satisfying some conditions, a transaction may find some of the data inserted by a committed transaction, but may not find other data inserted by the same
 transaction. 会出现幻读现象。
 
 ### 可串行化（Serializable）
@@ -41,6 +40,8 @@ transaction. 会出现幻读现象。
 **Mysql的默认隔离级别就是Repeatable read。**
 
 ## 事务隔离级别的实现
+
+详见MySqlPrinciple.md的MVCC介绍。
 
 ### Locking
 
@@ -126,7 +127,7 @@ In the SERIALIZABLE isolation mode, Query 1 would result in all records with age
 
 (1) 不可重复读是读取了其他事务更改的数据，**针对update操作**
 
-解决：使用行级锁，锁定该行，事务A多次读取操作完成后才释放该锁，这个时候才允许其他事务更改刚才的数据。
+解决：使用**行级锁**，锁定该行，事务A多次读取操作完成后才释放该锁，这个时候才允许其他事务更改刚才的数据。
 
 (2) 幻读是一个事务两次读取范围查询，第二次读取了其他事务新增的数据，也就是第一次读和第二次读的结果不一样，**针对insert和delete操作**
 

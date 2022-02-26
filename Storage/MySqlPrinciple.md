@@ -177,6 +177,124 @@ mysql> deallocate prepare stmt1;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
+## 事务
+
+MySQL默认采用自动提交（AUTOCOMMIT）模式。也就是说，如果不是显式地开始一个事务，则每个查询都被当作一个事务执行提交操作。当然这个模式对非事务性的表不会有影响。
+
+```sql
+show variables like 'AUTOCOMMIT';
+# 0 禁用， 1：开启
+set AUTOCOMMIT= 1;
+```
+
+可以用SET TRANSACTION ISOLATION LEVEL命令来设置隔离级别。可以在配置文件中设置整个数据库的隔离级别，也可以只改变当前会话的隔离级别：
+
+```sql
+# 语法： set  [ global | session ] transaction isolation level read uncommitted;
+   set global TRANSACTION ISOLATION level read COMMITTED;
+   show global variables like 'transaction_isolation';
+
+   level: {
+     REPEATABLE READ
+   | READ COMMITTED
+   | READ UNCOMMITTED
+   | SERIALIZABLE
+}
+```
+
+### 隐式和显式锁定
+
+InnoDB采用的是两阶段锁定协议（two-phase locking protocol）。事务执行过程中，随时都可以执行锁定，只有在执行COMMIT或ROLLBACK时才会释放。前面描述的都是隐式锁定，InnoDB会根据隔离级别在需要的时候自动加锁。
+
+InnoDB也支持特定语句进行显示锁定，这些语句不属于SQL规范。
+
+```sql
+SELECT ... LOCK IN SHARE MODE
+SELECT ... FOR UPDATE
+```
+
+### 两阶段锁定协议（two-phase locking protocol）
+
+数据库遵循的是两段锁协议，将事务分成两个阶段，加锁阶段和解锁阶段（所以叫两段锁）
+
+- 加锁阶段：在该阶段可以进行加锁操作。在对任何数据进行读操作之前要申请并获得S锁（**共享锁，其它事务可以继续加共享锁，但不能加排它锁**），在进行写操作之前要申请并获得X锁（**排它锁，其它事务不能再获得任何锁**）。加锁不成功，则事务进入等待状态，直到加锁成功才继续执行。
+- 解锁阶段：当事务释放了一个封锁以后，事务进入解锁阶段，在该阶段只能进行解锁操作不能再进行加锁操作。
+
+| 事务                 | 加锁/解锁处理                            |
+| ------------------ | ---------------------------------- |
+| begin;             |                                    |
+| insert into t_test | 加insert对应的锁                        |
+| update t_test set  | 加update对应的锁                        |
+| delete from t_test | 加delete对应的锁                        |
+| commit;            | 事务提交时，同时释放insert，update，delete对应的锁 |
+
+### 事务隔离级别
+
+| 隔离级别                   | 脏读（Dirty Read） | 不可重复读（NonRepeatable Read） | 幻读（Phantom Read） |
+| ---------------------- | -------------- | ------------------------- | ---------------- |
+| 未提交读（Read uncommitted） | 可能             | 可能                        | 可能               |
+| 已提交读（Read committed）   | 不可能            | 可能                        | 可能               |
+| 可重复读（Repeatable read）  | 不可能            | 不可能                       | 可能               |
+| 可串行化（Serializable ）    | 不可能            | 不可能                       | 不可能              |
+
+- 未提交读(Read Uncommitted)：允许脏读，也就是可能读取到其他会话中未提交事务修改的数据
+- 提交读(Read Committed)：只能读取到已经提交的数据。Oracle等多数数据库默认都是该级别 (不重复读)
+- 可重复读(Repeated Read)：可重复读。在同一个事务内的查询都是事务开始时刻一致的，InnoDB默认级别。在SQL标准中，该隔离级别消除了不可重复读，但是还存在幻象读
+- 串行读(Serializable)：完全串行化的读，**每次读都需要获得表级共享锁，读写相互都会阻塞**
+
+### MySQL各事务级别加锁情况（MySQL 8版本）
+
+对于全部事务隔离级别，select ** for update具有排他性。select ** lock in share mode具有共享锁特性。
+
+如果是SQL语句使用到索引，那么对涉及的范围行进行加行锁，否则进行表锁。
+
+#### 未提交读，已提交读
+
+加行锁。
+
+update，delete加排它锁。如果是SQL有范围语句则加入间隙锁（具有排他性）。
+
+select语句没有加锁。
+
+#### 可重复读
+
+update，delete，insert加排它锁，如果是SQL有范围语句则加入间隙锁（具有排他性）。
+
+select语句没有加锁。
+
+##### 注意：
+
+在MySQL中，Innodb 的 RR 隔离界别对范围会加上 GAP，理论上不会存在幻读，但是是否有例外呢，这个还需要进一步求证。
+
+在MySQL 8上，验证了不会出现幻读，与教科书理论的不同。
+
+| 时间  | 事务1                                    | 事务2                                               |
+| --- | -------------------------------------- | ------------------------------------------------- |
+| 1   | begin;                                 | begin;                                            |
+| 2   | select * from user; #此时出现5条记录          |                                                   |
+| 3   |                                        | insert into user(name, age) values("Thomas", 30); |
+| 4   |                                        | commit;                                           |
+| 5   | select * from user; #此时还是出现时间点为2的5条记录。 |                                                   |
+| 6   | commit;                                |                                                   |
+
+#### 可串行化
+
+update，delete，insert加排它锁。
+
+select加共享锁。
+
+### 不可重复读和幻读的区别
+
+很多人容易搞混不可重复读和幻读，确实这两者有些相似。但不可重复读重点在于update和delete，而幻读的重点在于insert。
+
+如果使用锁机制来实现这两种隔离级别，在**可重复读中，该sql第一次读取到数据后，就将这些数据加锁**，其它事务无法修改这些数据，就可以实现可重复读了。但这种方法却无法锁住insert的数据，所以当事务A先前读取了数据，或者修改了全部数据，事务B还是可以insert数据提交，这时事务A就会发现莫名其妙多了一条之前没有的数据，这就是幻读，不能通过行锁来避免。需要Serializable隔离级别 ，读用读锁，写用写锁，读锁和写锁互斥，这么做可以有效的避免幻读、不可重复读、脏读等问题，但会极大的降低数据库的并发能力。
+
+所以说不可重复读和幻读最大的区别，就在于如何通过锁机制来解决他们产生的问题。
+
+上文说的，是使用悲观锁机制来处理这两种问题，但是MySQL、ORACLE、PostgreSQL等成熟的数据库，出于性能考虑，都是使用了以乐观锁为理论基础的MVCC（多版本并发控制）来避免这两种问题。
+
+参考：[Innodb中的事务隔离级别和锁的关系 - 美团技术团队](https://tech.meituan.com/2014/08/20/innodb-lock.html)
+
 ## MVCC原理
 
 MVCC的实现是通过保存数据在某个时间点的快照来实现的。
@@ -207,9 +325,26 @@ InnoDB为删除的每一行保存当前系统版本号作为行删除标记。
 
 InnoDB为插入一行新记录，保存当前系统版本号作为行版本号，同时保存当前系统版本号到原来的行作为行删除标识。
 
-上述事务版本号和行版本号，使大多数读操作都可以不用加锁。这样做使读性能高，并且符合事务标准。不足之处是每行记录都需要额外的存储空间，做更多检查和维护工作。
+上述事务版本号和行版本号，**使大多数读操作都可以不用加锁**。这样做使读性能高，并且符合事务标准。不足之处是每行记录都需要额外的存储空间，做更多检查和维护工作。
 
 MVCC只能在Repeatable Read和Read Committed两个隔离级别下工作。起来隔离级别和MVCC不兼容，因为Read Uncommited总是读取最新的数据行，而不是符合当前事务版本的数据行。而Serializable则会对所有读取的行都加锁。
+
+REPEATABLE READ可以理解为读写锁互斥，读锁可共享域。
+
+Serializable简言之，它是在每个读的数据行上加上共享锁。
+
+而在MVCC里，每一个事务都有对应的数据版本，事务A开启后，即使数据被事务B修改，也不影响事务A那个版本的数据，事务A依然可以无阻塞的读取该数据，当然，只是读取不阻塞，写入还是阻塞的，如果事务A也想修改该数据，则必须要等事务B提交释放所有锁后，事务A才可以修改。所以MVCC解决的只是读-写的阻塞问题，写-写依然还是阻塞的。
+
+参考：[聊一聊MySQL里的锁和MVCC_IT部落格-CSDN博客]([聊一聊MySQL里的锁和MVCC_IT部落格-CSDN博客](https://blog.csdn.net/ljfrocky/article/details/80379328)
+
+1. READ UNCOMMITTED (未提交读) ：隔离级别：0. 可以读取未提交的记录。会出现脏读。
+2. READ COMMITTED (提交读) ：隔离级别：1. 事务中只能看到已提交的修改。不可重复读，会出现幻读。（**在InnoDB中，会加行所，但是不会加间隙锁**）该隔离级别是大多数数据库系统的默认隔离级别，但是MySQL的则是RR。
+3. REPEATABLE READ (可重复读) ：隔离级别：2. 在InnoDB中是这样的：RR隔离级别保证**对读取到的记录加锁 (记录锁)**，同时保证对读取的范围加锁，新的满足查询条件的记录不能够插入 (间隙锁)，因此不存在幻读现象。但是标准的RR只能保证在同一事务中多次读取同样记录的结果是一致的，而无法解决幻读问题。InnoDB的幻读解决是依靠MVCC的实现机制做到的。
+4. SERIALIZABLE （可串行化）：隔离级别：3. **该隔离级别会在读取的每一行数据上都加上锁，退化为基于锁的并发控制**，即LBCC(Lock-Based Concurrent Control)。
+
+参考：[MySQL的并发控制与加锁分析（MVCC/LBCC）_W.J.H.-CSDN博客_mysql的mvcc和锁](https://blog.csdn.net/m0_37730732/article/details/79325397)
+
+[Innodb中的事务隔离级别和锁的关系 - 美团技术团队](https://tech.meituan.com/2014/08/20/innodb-lock.html)
 
 ## bin log
 
@@ -233,11 +368,7 @@ Internally, `InnoDB` adds three fields to each row stored in the database:
 
 - A 6-byte **DB_ROW_ID** field contains a row ID that increases monotonically as new rows are inserted. If `InnoDB` generates a clustered index automatically, the index contains row ID values. Otherwise, the `DB_ROW_ID` column does not appear in any index.
 
-
-
 ![undo-log](mvcc-undo-log.jpg)
-
-
 
 **ReadView**
 
@@ -257,8 +388,6 @@ low_limit_id：Read View生成时刻系统尚未分配的下一个事务ID
 
 3、判断记录的DB_TRX_ID(事务A)是否在活跃事务中，如果在，则表示在Read View生成时刻，这个事务A还是活跃状态，还没有commit修改的数据，当前事务也是看不到的，如果不在，说明这个事务A在Read View生成之前就已经commit，那么修改的结果也是可见的。
 
-
-
 例子：
 
 ```shell
@@ -275,8 +404,34 @@ low_limit_id = 8
 
 可重复读(RR)：对某条记录的第一次快照读会创建一个快照Read View，此后在调用快照读时，还是使用同一个Read View。
 
-
-
 [MySQL MVCC机制 · Issue #68 · zhangyachen/zhangyachen.github.io · GitHub](https://github.com/zhangyachen/zhangyachen.github.io/issues/68)
 
 [MySQL :: MySQL 8.0 Reference Manual :: 15.3 InnoDB Multi-Versioning](https://dev.mysql.com/doc/refman/8.0/en/innodb-multi-versioning.html)
+
+## 行级锁和表级锁
+
+MySQL常用引擎有MyISAM和InnoDB，而InnoDB是mysql默认的引擎。MyISAM不支持行锁，而InnoDB支持行锁和表锁。
+
+**如何加锁？**
+
+MyISAM在执行查询语句（SELECT）前，会自动给涉及的所有表加读锁，在执行更新操作（UPDATE、DELETE、INSERT等）前，会自动给涉及的表加写锁，这个过程并不需要用户干预，因此用户一般不需要直接用LOCK TABLE命令给MyISAM表显式加锁。
+
+**显式加锁：**
+
+上共享锁（读锁）的写法：`lock in share mode`，例如：
+
+select  math from zje where math>60 lock in share mode；
+
+上排它锁（写锁）的写法：`for update`，例如：
+
+select math from zje where math >60 for update；
+
+### 行锁
+
+**会出现死锁，发生锁冲突几率低，并发高。**
+
+在MySQL的InnoDB引擎支持行锁，与Oracle不同，MySQL的行锁是通过索引加载的，也就是说，行锁是加在索引响应的行上的，要是对应的SQL语句没有走索引，则会全表扫描，行锁则无法实现，取而代之的是表锁，此时其它事务无法对当前表进行更新或插入操作。
+
+https://segmentfault.com/a/1190000023662810
+
+[事务和锁机制是什么关系？ 开启事务就自动加锁了吗？ - 南哥的天下 - 博客园](https://www.cnblogs.com/leijiangtao/p/11911644.html)
