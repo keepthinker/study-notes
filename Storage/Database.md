@@ -137,6 +137,86 @@ In the SERIALIZABLE isolation mode, Query 1 would result in all records with age
 
 [快速理解脏读、不可重复读、幻读和MVCC](https://cloud.tencent.com/developer/article/1450773)
 
+## 两段锁协议(Two-phase locking)
+
+By the 2PL protocol, locks are applied and removed in two phases:
+
+1. **Expanding phase** (aka Growing phase): locks are acquired and no locks are released (the number of locks can only increase).
+2. **Shrinking phase** (aka Contracting phase): locks are released and no locks are acquired.
+
+Two major types of locks are used:
+
+- **Write-lock** (**exclusive lock**) is associated with a database object by a transaction (Terminology: "the transaction locks the object," or "acquires lock for it") before ***writing* (inserting/modifying/deleting)** this object.
+- **Read-lock** (**shared lock**) is associated with a database object by a transaction before ***reading*** (retrieving the state of) this object.
+
+The common interactions between these lock types are defined by blocking behavior as follows:
+
+- An existing ***write-lock*** on a database object **blocks an intended *write*** upon the same object (already requested/issued) by another transaction by blocking a respective *write-lock* from being acquired by the other transaction. The second write-lock will be acquired and the requested write of the object will take place (materialize) after the existing write-lock is released.
+- A ***write-lock* blocks an intended (already requested/issued) *read*** by another transaction by blocking the respective *read-lock* .
+- A ***read-lock* blocks an intended *write*** by another transaction by blocking the respective *write-lock*.
+- A ***read-lock* does not block an intended *read*** by another transaction. The respective *read-lock* for the intended read is acquired (shared with the previous read) immediately after the intended read is requested, and then the intended read itself takes place.
+
+| Lock type  | read-lock | write-lock |
+| ---------- | --------- | ---------- |
+| read-lock  | **✔**     | **X**      |
+| write-lock | **X**     | **X**      |
+
+[Two-phase locking - Wikipedia](https://en.wikipedia.org/wiki/Two-phase_locking)
+
+
+
+## 死锁
+
+### MySQL 8死锁范例
+
+#### 共享锁和排它锁死锁场景
+
+| 时间序列 | 事务1                                                        | 事务2                                                                                                              |
+| ---- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+|      | begin;                                                     | begin;                                                                                                           |
+| 1    | select * from user where id = 2 lock in share mode;(获取共享锁) |                                                                                                                  |
+| 2    |                                                            | select * from user where id = 2 lock in share mode;(获取共享锁)                                                       |
+| 3    | update user set age = age+1 where id = 2;                  |                                                                                                                  |
+| 4    | 获取排他锁失败，于是等待。                                              |                                                                                                                  |
+| 5    |                                                            | update user set age = age+1 where id = 2;                                                                        |
+| 6    |                                                            | ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction。获取排他锁失败，MySQL检测到死锁，放弃该事务。 |
+| 7    | 因为事务2检测到死锁而放弃锁，故此时事务1获取了排它锁，唤醒并继续走一步流程。                    |                                                                                                                  |
+
+#### 排它锁死锁场景
+
+| 时间序列 | 事务1                                                       | 事务2                                                                                                                       |
+| ---- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+|      | begin;                                                    | begin;                                                                                                                    |
+| 1    | update user set age = age + 1 where id = 1;(获取id=1记录的排他锁) |                                                                                                                           |
+| 2    |                                                           | update user update age = age + 1 where id = 2;(获取id=2记录的排他锁)                                                              |
+| 3    | update user set age = age + 1 where id = 2;               |                                                                                                                           |
+| 4    | 获取id=2记录的排他锁失败，于是等待。                                      |                                                                                                                           |
+| 5    |                                                           | update user set age = age + 1 where id = 1;                                                                               |
+| 6    |                                                           | ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction。获取id = 1记录的排他锁失败，MySQL检测到死锁，放弃该事务。 |
+| 7    | 因为事务2检测到死锁而放弃锁，故此时事务1获取了id = 2记录的排它锁，唤醒并继续走一步流程。          |                                                                                                                           |
+
+### 死锁解决方法
+
+### 如何尽可能避免死锁
+
+1. 合理的设计索引，区分度高的列放到组合索引前面，使业务 SQL 尽可能通过索引`定位更少的行，减少锁竞争`。
+
+2. 调整业务逻辑 SQL 执行顺序， 避免 update/delete 长时间持有锁的 SQL 在事务前面。
+
+3. 避免`大事务`，尽量将大事务拆成多个小事务来处理，小事务发生锁冲突的几率也更小。
+
+4. 以`固定的顺序`访问表和行。比如两个更新数据的事务，事务 A 更新数据的顺序为 1，2;事务 B 更新数据的顺序为 2，1。这样更可能会造成死锁。
+
+5. 在并发比较高的系统中，不要显式加锁，特别是是在事务里显式加锁。如 select … for update 语句，如果是在事务里`（运行了 start transaction 或设置了autocommit 等于0）`,那么就会锁定所查找到的记录。
+
+6. 尽量按`主键/索引`去查找记录，范围查找增加了锁冲突的可能性，也不要利用数据库做一些额外额度计算工作。比如有的程序会用到 “select … where … order by rand();”这样的语句，由于类似这样的语句用不到索引，因此将导致整个表的数据都被锁住。
+
+7. 优化 SQL 和表设计，减少同时占用太多资源的情况。比如说，`减少连接的表`，将复杂 SQL `分解`为多个简单的 SQL。
+
+##### 参考：
+
+[阿里二面：怎么解决MySQL死锁问题的？](https://xie.infoq.cn/article/41285fabb8c4ca612d150b415)
+
 ## 为什么推荐InnoDB存储引擎使用自增主键
 
 InnoDB使用聚集索引，数据记录本身被存于主索引（一颗B+Tree）的叶子节点上。这就要求同一个叶子节点内（大小为一个内存页或磁盘页）的各条数据记录按主键顺序存放，因此每当有一条新的记录插入时，MySQL会根据其主键将其插入适当的节点和位置，如果页面达到装载因子（InnoDB默认为15/16），则开辟一个新的页（节点）。

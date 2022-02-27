@@ -268,6 +268,13 @@ select语句没有加锁。
 
 在MySQL 8上，验证了不会出现幻读，与教科书理论的不同。
 
+MySQL解决RR级别幻读的方法：行锁防止别的事务修改或删除，GAP锁防止别的事务新增，行锁和GAP锁结合形成的的Next-Key锁共同解决了RR级别在写数据时的幻读问题。
+
+```sql
+# 这种情况也会对id=1的user加行锁
+update account set balance = (select age from user where id = 1 limit 1) where id = 1;
+```
+
 | 时间  | 事务1                                    | 事务2                                               |
 | --- | -------------------------------------- | ------------------------------------------------- |
 | 1   | begin;                                 | begin;                                            |
@@ -408,7 +415,9 @@ low_limit_id = 8
 
 [MySQL :: MySQL 8.0 Reference Manual :: 15.3 InnoDB Multi-Versioning](https://dev.mysql.com/doc/refman/8.0/en/innodb-multi-versioning.html)
 
-## 行级锁和表级锁
+## MySQL锁类型
+
+### 行级锁和表级锁
 
 MySQL常用引擎有MyISAM和InnoDB，而InnoDB是mysql默认的引擎。MyISAM不支持行锁，而InnoDB支持行锁和表锁。
 
@@ -435,3 +444,23 @@ select math from zje where math >60 for update；
 https://segmentfault.com/a/1190000023662810
 
 [事务和锁机制是什么关系？ 开启事务就自动加锁了吗？ - 南哥的天下 - 博客园](https://www.cnblogs.com/leijiangtao/p/11911644.html)
+
+
+
+### 间隙锁(Gap Lock)
+
+只锁间隙，前开后开区间(a,b)，对索引的间隙加锁，防止其他事务插入数据。
+
+### 记录锁(Record Lock)
+
+只锁记录，特定几行记录。
+
+### 临键锁(Next-Key Lock)
+
+同时锁住记录和间隙，前开后闭区间(a,b]。
+
+### 插入意图锁(Insert Intention Lock)
+
+插入时使用的锁。在代码中，插入意图锁，实际上是GAP锁上加了一个LOCK_INSERT_INTENTION的标记。### 
+
+[# [你应该了解的MySQL锁分类](https://segmentfault.com/a/1190000023869573)](https://segmentfault.com/a/1190000023869573)
