@@ -500,3 +500,167 @@ Spring 的模型-视图-控制器（MVC）框架是围绕一个 DispatcherServle
 - **PROPAGATION_SUPPORTS**：支持当前事务，如果当前存在事务，就加入该事务，如果当前不存在事务，就以非事务执行。
 
 参考：https://zhuanlan.zhihu.com/p/368769721 
+
+
+
+
+
+## ApplicationContext
+
+```java
+ClassPathXmlApplicationContext extends AbstractXmlApplicationContext 
+extends AbstractRefreshableConfigApplicationContext 
+extends AbstractRefreshableApplicationContext 
+extends AbstractApplicationContext extends DefaultResourceLoader
+
+/** 
+管理spring上下文信息和整个生命周期。其中refresh方法完成spring上下文的初始化，bean的初始化等。
+*/
+AbstractXmlApplicationContext
+	/** Unique id for this context, if any */
+	id String
+	beanFactoryPostProcessors List<BeanFactoryPostProcessor> 
+	applicationListeners Set<ApplicationListener<?>>
+	resourcePatternResolver ResourcePatternResolver using PathMatchingResourcePatternResolver
+	environment StandardEnvironment 
+	beanFactory DefaultListableBeanFactory
+	loadBeanDefinitions(DefaultListableBeanFactory beanFactory)
+
+	public void refresh() throws BeansException, IllegalStateException {
+		synchronized (this.startupShutdownMonitor) {
+			//也包含执行initPropertySources，比如web程序获取web.xml配置进行处理。
+			// Prepare this context for refreshing. 如果执行了environment.setRequiredProperties("my-required-config"); setRequiredProperties要求需要在jvm启动参数设置（java -Dmy-required-config=my-required-value）或者操作系统环境变量设置export my-required-config=my-required-value
+			prepareRefresh();
+
+			// Tell the subclass to refresh the internal bean factory. 解析xml配置文件，然后将bean definition放入一个map对象中。
+			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+
+			// Prepare the bean factory for use in this context.
+			prepareBeanFactory(beanFactory);
+
+			try {
+				// Allows post-processing of the bean factory in context subclasses. 是一个protected方法，如果子类实现该方法将调用。
+				postProcessBeanFactory(beanFactory);
+
+				// Invoke factory processors registered as beans in the context. 比如某个Bean实现了BeanFactoryPostProcessor
+				invokeBeanFactoryPostProcessors(beanFactory);
+
+				// Register bean processors that intercept bean creation.
+				registerBeanPostProcessors(beanFactory);
+
+				// Initialize message source for this context.
+				initMessageSource();
+
+				// Initialize event multicaster for this context.
+				initApplicationEventMulticaster();
+
+				// Initialize other special beans in specific context subclasses.
+				onRefresh();
+
+				// Check for listener beans and register them.
+				registerListeners();
+
+				// Instantiate all remaining (non-lazy-init) singletons. 开始执行BeanPostProcessor的方法。
+				finishBeanFactoryInitialization(beanFactory);
+
+				// Last step: publish corresponding event.
+				finishRefresh();
+			}
+
+			catch (BeansException ex) {
+				if (logger.isWarnEnabled()) {
+					logger.warn("Exception encountered during context initialization - " +
+							"cancelling refresh attempt: " + ex);
+				}
+
+				// Destroy already created singletons to avoid dangling resources.
+				destroyBeans();
+
+				// Reset 'active' flag.
+				cancelRefresh(ex);
+
+				// Propagate exception to caller.
+				throw ex;
+			}
+
+			finally {
+				// Reset common introspection caches in Spring's core, since we
+				// might not ever need metadata for singleton beans anymore...
+				resetCommonCaches();
+			}
+		}
+	}
+```
+
+
+
+## BeanFactory
+
+```java
+/**
+  保存bean定义，bean对象等数据。管理Bean对象生命周期。
+*/
+DefaultListableBeanFactory extends AbstractAutowireCapableBeanFactory 
+extends AbstractBeanFactory extends FactoryBeanRegistrySupport 
+extends DefaultSingletonBeanRegistry
+	/** Cache of singleton objects: bean name --> bean instance 保存实际Bean对象映射*/
+	singletonObjects Map<String, Object>
+	/** Cache of early singleton objects: bean name --> bean instance */
+	earlySingletonObjects Map<String, Object>
+	/** Custom PropertyEditors to apply to the beans of this factory */
+	customEditors Map<Class<?>, Class<? extends PropertyEditor>>
+	/** ClassLoader to resolve bean class names with, if necessary */
+ 	beanClassLoader ClassLoade
+	/** BeanPostProcessors to apply in createBean */
+ 	beanPostProcessorsr List<BeanPostProcessor>
+	/** Strategy for creating bean instances CglibSubclassingInstantiationStrategy*/
+ 	instantiationStrategy 
+	/** Cache of unfinished FactoryBean instances: FactoryBean name --> BeanWrapper */
+ 	factoryBeanInstanceCache ConcurrentMap<String, BeanWrapper>
+	/** Map of bean definition objects, keyed by bean name */
+ 	beanDefinitionMap Map<String, BeanDefinition>
+ 	beanDefinitionNames List<String>
+ 	/** Add the given singleton object to the singleton cache of this factory.*/
+ 	addSingleton(String beanName, Object singletonObject)
+	/**
+	 * Add the given bean to the list of disposable beans in this factory,
+	 * registering its DisposableBean interface and/or the given destroy method
+	 * to be called on factory shutdown (if applicable). Only applies to singletons.
+	 */
+ 	registerDisposableBeanIfNecessary(String beanName, Object bean, RootBeanDefinition mbd)
+
+ 	Object createBean(final String beanName, final RootBeanDefinition mbd, final Object[] args)
+ 		resolveBeforeInstantiation(beanName, mbd);
+ 		/**	 Actually create the specified bean. Pre-creation processing has already happened
+		 * at this point, e.g. checking {@code postProcessBeforeInstantiation} callbacks.
+		 */
+ 		doCreateBean(beanName, mbd, args);
+ 			populateBean(beanName, mbd, instanceWrapper);
+			/**	Initialize the given bean instance, applying factory callbacks
+			 * as well as init methods and bean post processors. **/
+ 			initializeBean(final String beanName, final Object bean, RootBeanDefinition mbd)
+ 				invokeAwareMethods(beanName, bean);
+ 				applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+ 	populateBean(String beanName, RootBeanDefinition mbd, BeanWrapper bw)
+		postProcessAfterInstantiation(bw.getWrappedInstance(), beanName))
+
+
+	private void invokeAwareMethods(final String beanName, final Object bean) {
+		if (bean instanceof Aware) {
+			if (bean instanceof BeanNameAware) {
+				((BeanNameAware) bean).setBeanName(beanName);
+			}
+			if (bean instanceof BeanClassLoaderAware) {
+				((BeanClassLoaderAware) bean).setBeanClassLoader(getBeanClassLoader());
+			}
+			if (bean instanceof BeanFactoryAware) {
+				((BeanFactoryAware) bean).setBeanFactory(AbstractAutowireCapableBeanFactory.this);
+			}
+		}
+	}
+
+	public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName)
+		processor.postProcessBeforeInitialization(result, beanName);
+
+
+```

@@ -76,6 +76,57 @@ b有序的前提是a是确定的值，那么现在a的值是取大于1的，可�
 
 [[MySQL索引原理及慢查询优化](https://tech.meituan.com/2014/06/30/mysql-index.html)](https://tech.meituan.com/2014/06/30/mysql-index.html)
 
+## 哈希索引
+
+基于哈希表实现。
+
+优点：速度快，除非有很多哈希冲突的情况。
+
+缺点：
+
+1. 不是按索引值顺序存储，故无法排序。
+
+2. 不支持部分索引查找，比如建立(A,B)索引，如果查询语句只有A，那么无法使用索引。
+
+3. 只支持等值比较查询，包括=、in()、!=、<=>、不支持任何范围查询。
+
+### 使用场景
+
+```sql
+# 对url_crc使用哈希索引使得对"http://www.mysql.com"的等值查询非常快
+# 比对url建立B-Tree索引的等值查询快，尤其是在url很大的情况下，不仅速度快而且节省空间。
+select id from url where url="http://www.mysql.com" 
+and url_crc = crc32("http://www.mysql.com");
+```
+
+### 索引合并
+
+MySQL 5.0和更新的版本中，查询能够同时使用两个单列索引进行扫描，并将结果进行合并。
+
+索引合并策略是一种优化的结果，但实际上更多时候说明了表上的索引建得很糟糕。如果需要多个索引进行合并，那么会消耗大量CPU和内存资源。有时候不如采用传统的union语句进行改造。
+
+可以通过参数optimizer_switch来关掉索引合并功能。也可以使用IGNORE INDEX提示让优化器忽略掉某些索引。
+
+```sql
+ explain select id from user where age = 57 or name like "name15%" \G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: user
+   partitions: NULL
+         type: index_merge
+possible_keys: age,name
+          key: age,name
+      key_len: 4,20
+          ref: NULL
+         rows: 105
+     filtered: 100.00
+        Extra: Using sort_union(age,name); Using where---+
+
+```
+
+
+
 ### InnoDB和MyISAM
 
 1. InnoDB 支持事务，MyISAM 不支持事务。这是 MySQL 将默认存储引擎从 MyISAM 变成 InnoDB 的重要原因之一；
@@ -444,8 +495,6 @@ select math from zje where math >60 for update；
 https://segmentfault.com/a/1190000023662810
 
 [事务和锁机制是什么关系？ 开启事务就自动加锁了吗？ - 南哥的天下 - 博客园](https://www.cnblogs.com/leijiangtao/p/11911644.html)
-
-
 
 ### 间隙锁(Gap Lock)
 
