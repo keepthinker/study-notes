@@ -18,7 +18,7 @@
 
 ![image-20210418203330233](image-20210418203330233.png)
 
-​                                                                                                                            B树
+​   聚簇                                                                                                                         B树
 
 ### 一、B+树做索引而不用B树
 
@@ -125,7 +125,11 @@ possible_keys: age,name
 
 ```
 
+## InnoDB二级索引
 
+为非聚簇索引。
+
+二级索引访问需要两次B-Tree查找。第一次找到二级索引对应的主键值，然后通过这个值去查找对应行。
 
 ### InnoDB和MyISAM
 
@@ -152,6 +156,52 @@ possible_keys: age,name
 [MySQL聚集索引和非聚集索引](https://zhuanlan.zhihu.com/p/39293940)
 
 [Mysql 中 MyISAM 和 InnoDB 的区别有哪些？](https://www.zhihu.com/question/20596402)
+
+//todo InnoDB的聚簇索引和MyISAM的非聚簇索引的区别
+
+//todo 索引覆盖
+
+### 覆盖索引
+
+如果一个索引包含了所有需要查询的字段值，我们称之为覆盖索引。比如说对于InnoDB可以避免对主键索引的二次查询。覆盖索引必须要存储索引列的值，而哈希索引、空间索引和全文索引等都不存储索引列的值，所以MySQL只能使用B-Tree索引做覆盖索引。
+
+```sql
+# 覆盖索引优化的例子, id是主键
+select * from user inner join (select id from user u order by age asc 
+limit 10000000,10) as user_order on user.id = user_order.id;
+
+# 该语句需要找到所有的按age索引从大到小的排序的user行记录，然后
+# 从1000000处开始找10个出来，等于之前已经取了1000000个无效行。
+select name from user order by age desc limit 1000000, 10;
+# result: ...
+# 10 rows in set (0.62 sec)
+
+# 该语句需要找到所有的按age索引从大到小的排序的主键id然后从1000000处取10个
+# 主键，然后通过主键id找到行记录，也就是不需要取大量行记录，只需要提前过滤大量
+# 无效主键ID。所以比上一条语句优化很多时间。
+select name from user join (select id from user order by age desc
+ limit 1000000, 10) as user_id on user.id = user_id.id;
+# result: ...
+# 10 rows in set (0.32 sec)
+
+
+```
+
+
+
+### 索引在排序中的原理
+
+只有当索引的列顺序和ORDER BY字句的顺序完全一致，并且所有列的排序方向（倒序或正序）都一样时，MySQL才能够使用索引来对结果做排序。ORDER BY需要满足最左前缀要求，要么前面列为常量。等等，详情见《高性能MySQL》
+
+### 索引和锁
+
+索引有一定可能性让查询锁定的行更少。如果你的查询不访问那些不需要的行，那么就会锁定更少的行。
+
+1. 虽然InnoDB的行锁效率很高，内存使用也很少，但是锁定行时仍然会带来额外的开销
+
+2. 锁定超过需要的行会增加锁竞争而减少并发性。
+
+
 
 ## MySQL同步原理
 
