@@ -166,7 +166,7 @@ possible_keys: age,name
 如果一个索引包含了所有需要查询的字段值，我们称之为覆盖索引。比如说对于InnoDB可以避免对主键索引的二次查询。覆盖索引必须要存储索引列的值，而哈希索引、空间索引和全文索引等都不存储索引列的值，所以MySQL只能使用B-Tree索引做覆盖索引。
 
 ```sql
-# 覆盖索引优化的例子, id是主键
+# 对于limit大量值时，覆盖索引优化的例子, id是主键
 select * from user inner join (select id from user u order by age asc 
 limit 10000000,10) as user_order on user.id = user_order.id;
 
@@ -560,6 +560,6 @@ https://segmentfault.com/a/1190000023662810
 
 ### 插入意图锁(Insert Intention Lock)
 
-插入时使用的锁。在代码中，插入意图锁，实际上是GAP锁上加了一个LOCK_INSERT_INTENTION的标记。### 
+插入时使用的锁。在代码中，插入意图锁，实际上是GAP锁上加了一个LOCK_INSERT_INTENTION的标记。
 
-[# [你应该了解的MySQL锁分类](https://segmentfault.com/a/1190000023869573)](https://segmentfault.com/a/1190000023869573)
+[你应该了解的MySQL锁分类](https://segmentfault.com/a/1190000023869573)
