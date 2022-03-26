@@ -163,8 +163,6 @@ The common interactions between these lock types are defined by blocking behavio
 
 [Two-phase locking - Wikipedia](https://en.wikipedia.org/wiki/Two-phase_locking)
 
-
-
 ## 死锁
 
 ### MySQL 8死锁范例
@@ -235,7 +233,7 @@ InnoDB使用聚集索引，数据记录本身被存于主索引（一颗B+Tree�
 
 **非聚集索引**索引项顺序存储，但索引项对应的内容却是随机存储的。
 
-**聚集索引**一般是表中的主键索引，如果表中没有显示指定主键，则会选择表中的第一个不允许为NULL的唯一索引，如果还是没有的话，就采用Innodb存储引擎为每行数据内置的6字节ROWID作为聚集索引。
+**聚集索引**：索引键值的逻辑顺序与索引所服务的表中相应行的物理顺序相同的索引，被称为**聚集索引**，反之为**非聚集索引**。聚集索引因为与表的元组物理顺序一一对应，所以只有一种排序，即一个数据表只有一个聚集索引。一般是表中的主键索引，如果表中没有显示指定主键，则会选择表中的第一个不允许为NULL的唯一索引，如果还是没有的话，就采用Innodb存储引擎为每行数据内置的6字节ROWID作为聚集索引。
 
 ---
 

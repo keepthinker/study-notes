@@ -331,7 +331,7 @@ public interface BeanFactoryPostProcessor {
 
 实现该接口，可以在 Spring 创建 bean 之前修改 bean 的定义属性。也就是说，Spring 允许 BeanFactoryPostProcessor 在容器实例化 bean 之前读取配置元数据，并可以根据需要进行修改。例如可以把 bean 的 Scope 从 singleton 改为 prototype ，也可以把 **property 的值给修改掉**。另外可以同时配置多个 BeanFactoryPostProcessor，并通过 order 属性来控制 BeanFactoryPostProcessor 的执行顺序 （ 在实现 BeanFactoryPostProcessor 时应该考虑实现 Ordered 接口 ）。比如PropertyPlaceholderConfigurer就是在postProcessBeanFactory方法里实现property值的替换。
 
-BeanFactoryPostProcessor 是在 Spring 容器加载了定义 bean 的 XML 文件之后，在 bean 实例化之前执行的，**也就是一定会在BeanNameAware.SetBeanName之前执行**。接口方法的入参是 ConfigurrableListableBeanFactory 类型，使用该参数可以获取到相关的 bean 的定义信息。
+BeanFactoryPostProcessor 是在 Spring 容器加载了定义 bean 的 XML 文件之后，在 bean 实例化之前执行的，**也就是一定会在postProcessBeforeInstantiation之前执行**。接口方法的入参是 ConfigurrableListableBeanFactory 类型，使用该参数可以获取到相关的 bean 的定义信息。
 
 使用BeanFactoryPostProcessor可以修改Spring Bean的全限定类名，scope，是否懒加载，所依赖的类名等。
 
@@ -457,6 +457,7 @@ public class StringService {
     private String str = "string";
 
     public String getStr(String suffix) {
+
         return str + ":" + suffix;
     }
     public void setStr(String str) {
@@ -481,6 +482,7 @@ public class Main {
 输出如下：
 beforeAdvice
 get into via String com.keepthinker.example.spring.aop.aspectj.StringService.getStr(String) with args: suffix:java.lang.String  
+execute getStr method with arg:suffix
 afterAdvice
 afterReturningAdvice : Returning:string:suffix
 main string:string:suffix
