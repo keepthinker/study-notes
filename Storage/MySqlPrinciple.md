@@ -215,15 +215,15 @@ MySQL主从复制涉及到三个线程，一个运行在主节点（log dump thr
 ![preview](v2-1b0c3f31bd398c39b9e0930059b0ca24_r.jpg)
 
 **l 主节点 binary log dump 线程**
-当从节点连接主节点时，主节点会创建一个log dump 线程，用于发送bin-log的内容。在读取bin-log中的操作时，此线程会对主节点上的bin-log加锁，当读取完成，甚至在发动给从节点之前，锁会被释放。
+当从节点连接主节点时，主节点会创建一个log dump 线程，用于给从节点发送bin-log的内容。在读取bin-log中的操作时，此线程会对主节点上的bin-log加锁，当读取完成，甚至在发动给从节点之前，锁会被释放。
 
 **l 从节点I/O线程**
-当从节点上执行`start slave`命令之后，从节点会创建一个I/O线程用来连接主节点，请求主库中更新的bin-log。I/O线程接收到主节点binlog dump 进程发来的更新之后，保存在本地relay-log中。
+当从节点上执行`start slave`命令之后，从节点会创建一个I/O线程用来连接主节点，请求主库中更新的bin-log。I/O线程接收到主节点binlog dump 进程发来的更新之后，保存更新记录到本地relay-log中。
 
 **l 从节点SQL线程**
-SQL线程负责读取relay log中的内容，解析成具体的操作并执行，最终保证主从数据的一致性。
+SQL线程负责读取relay-log中的内容，解析成具体的操作并执行，最终保证主从数据的一致性。
 
-对于每一个主从连接，都需要三个进程来完成。当主节点有多个从节点时，主节点会为每一个当前连接的从节点建一个binary log dump 进程，而每个从节点都有自己的I/O进程，SQL进程。**从节点用两个线程将从主库拉取更新和执行分成独立的任务，这样在执行同步数据任务的时候，不会降低读操作的性能。**比如，如果从节点没有运行SQL进程，此时I/O进程可以很快从主节点获取更新，尽管SQL进程还没有执行。如果在SQL进程执行之前从节点服务停止，至少I/O进程已经从主节点拉取到了最新的变更并且保存在本地relay日志中，当服务再次起来之后，就可以完成数据的同步。
+对于每一个主从连接，都需要三个进程来完成。当主节点有多个从节点时，主节点会为每一个当前连接的从节点建一个binary log dump 进程，而每个从节点都有自己的I/O进程，SQL进程。**从节点用两个线程将从主库拉取更新和执行分成独立的任务，这样在执行同步数据任务的时候，不会降低读操作的性能**。比如，如果从节点没有运行SQL进程，此时I/O进程可以很快从主节点获取更新，尽管SQL进程还没有执行。如果在SQL进程执行之前从节点服务停止，至少I/O进程已经从主节点拉取到了最新的变更并且保存在本地relay-log日志中，当服务再次起来之后，就可以完成数据的同步。
 
 要实施复制，首先必须打开Master 端的binary log（bin-log）功能，否则无法实现。
 因为整个复制过程实际上就是Slave 从Master 端获取该日志然后再在自己身上完全顺序的执行日志中所记录的各种操作。如下图所示：
@@ -233,7 +233,7 @@ SQL线程负责读取relay log中的内容，解析成具体的操作并执行�
 复制的基本过程如下：
 
 - 从节点上的I/O 进程连接主节点，并请求从指定日志文件的指定位置（或者从最开始的日志）之后的日志内容；
-- 主节点接收到来自从节点的I/O请求后，通过负责复制的I/O进程根据请求信息读取指定日志指定位置之后的日志信息，返回给从节点。返回信息中除了日志所包含的信息之外，还包括本次返回的信息的bin-log file 的以及bin-log position；从节点的I/O进程接收到内容后，将接收到的日志内容更新到本机的relay log中，并将读取到的binary log文件名和位置保存到master-info 文件中，以便在下一次读取的时候能够清楚的告诉Master“我需要从某个bin-log 的哪个位置开始往后的日志内容，请发给我”；
+- 主节点接收到来自从节点的I/O请求后，通过负责复制的I/O进程根据请求信息读取指定日志指定位置之后的日志信息，返回给从节点。返回信息中除了日志所包含的信息之外，还包括本次返回的信息的bin-log file 的以及bin-log position；从节点的I/O进程接收到内容后，将接收到的日志内容更新到本机的relay-log中，并将读取到的binary log文件名和位置保存到master-info 文件中，以便在下一次读取的时候能够清楚的告诉Master“我需要从某个bin-log 的哪个位置开始往后的日志内容，请发给我”；
 - Slave 的 SQL线程检测到relay-log 中新增加了内容后，会将relay-log的内容解析成在主节点上实际执行过的操作，并在本数据库中执行。
 
 [MySQL 主从复制原理不再难](https://www.cnblogs.com/rickiyang/p/13856388.html)
@@ -367,7 +367,18 @@ show processlist;
 | 708 | root            | localhost           | learning | Query   |       5 | updating               | update account set balance = 100 where id = 31 |
 
 
+SELECT trx_id, trx_state, trx_started, trx_mysql_thread_id, trx_isolation_level FROM information_schema.innodb_trx
++--------+-----------+---------------------+---------------------+---------------------+
+| trx_id | trx_state | trx_started         | trx_mysql_thread_id | trx_isolation_level |
++--------+-----------+---------------------+---------------------+---------------------+
+|  18448 | LOCK WAIT | 2022-03-31 01:13:39 |                 763 | READ COMMITTED      |
+|  18445 | RUNNING   | 2022-03-31 01:12:51 |                 764 | READ COMMITTED      |
++--------+-----------+---------------------+---------------------+---------------------+
+# kill transaction trx_mysql_thread_id 
+kill 763
 ```
+
+参考：[ORACLE-BASE - MySQL : Identify Locked Tables](https://oracle-base.com/articles/mysql/mysql-identify-locked-tables)
 
 #### 未提交读，已提交读，可重复读
 
@@ -500,7 +511,7 @@ Serializable简言之，它是在每个读的数据行上加上共享锁。
 
 而在MVCC里，每一个事务都有对应的数据版本，事务A开启后，即使数据被事务B修改，也不影响事务A那个版本的数据，事务A依然可以无阻塞的读取该数据，当然，只是读取不阻塞，写入还是阻塞的，如果事务A也想修改该数据，则必须要等事务B提交释放所有锁后，事务A才可以修改。所以MVCC解决的只是读-写的阻塞问题，写-写依然还是阻塞的。
 
-参考：[聊一聊MySQL里的锁和MVCC_IT部落格-CSDN博客]([聊一聊MySQL里的锁和MVCC_IT部落格-CSDN博客](https://blog.csdn.net/ljfrocky/article/details/80379328)
+参考：[聊一聊MySQL里的锁和MVCC_IT部落格-CSDN博客](https://blog.csdn.net/ljfrocky/article/details/80379328)
 
 1. READ UNCOMMITTED (未提交读) ：隔离级别：0. 可以读取未提交的记录。会出现脏读。
 2. READ COMMITTED (提交读) ：隔离级别：1. 事务中只能看到已提交的修改。不可重复读，会出现幻读。（**在InnoDB中，会加行所，但是不会加间隙锁**）该隔离级别是大多数数据库系统的默认隔离级别，但是MySQL的则是RR。
@@ -539,11 +550,11 @@ Internally, `InnoDB` adds three fields to each row stored in the database:
 
 三个全局属性：
 
-trx_list：一个数值列表，用来维护Reav View生成时刻系统正在活跃的事务ID
+**trx_list**：一个数值列表，用来维护Reav View生成时刻系统正在活跃的事务ID
 
-up_limit_id：记录trx_list列表中事务最小的ID
+**up_limit_id**：记录trx_list列表中事务最小的ID
 
-low_limit_id：Read View生成时刻系统尚未分配的下一个事务ID
+**low_limit_id**：Read View生成时刻系统尚未分配的下一个事务ID
 
 在当前事务生成Read View时，所有事务结果可见性的具体比较规则如下：
 
@@ -562,6 +573,8 @@ up_limit_id = 4
 low_limit_id = 8
 已经提交的事务有1,2,3,5,7
 ```
+
+假如读取的某行记录不满足上述事务可见性要求，那么会通过DB_ROLL_PTR找到低版本的记录继续进行上述条件判断。
 
 已提交读和可重复读的区别就在于它们生成ReadView的策略不同。
 

@@ -148,6 +148,11 @@ public class BeanLifeCircleObserver implements BeanNameAware, BeanFactoryAware, 
         return bean;
     }
 
+    @PreDestroy
+    public void preDestroyMethod() throws Exception {
+        logger.info("-------@PreDestroyMethod");
+    }
+
     /**
      * Destroy 过期自动清理阶段
      * 当 Bean 不再需要时，会经过清理阶段，如果 Bean 实现了 DisposableBean 这个接口，会调
@@ -321,7 +326,9 @@ public class BeanLifeCircleObserver implements BeanNameAware, BeanFactoryAware, 
 2022-03-12 23:20:06,299 [main] DEBUG [org.springframework.beans.factory.support.DefaultListableBeanFactory]: Returning cached instance of singleton bean 'zookeeper'
 ```
 
-## BeanFactoryPostProcessor
+## PostProcessor
+
+### BeanFactoryPostProcessor
 
 ```java
 public interface BeanFactoryPostProcessor {
@@ -337,11 +344,11 @@ BeanFactoryPostProcessor 是在 Spring 容器加载了定义 bean 的 XML 文件
 
 [Spring扩展点之BeanFactoryPostProcessor：彻底搞懂原理以及使用场景【源码分析】_CoderOu-CSDN博客_beanfactorypostprocessor使用场景](https://blog.csdn.net/qq_42154259/article/details/108305938)
 
-## PostProcessor
+## 
 
 ### Bean post processors
 
-Spring 框架提供了几种 PostProcessor接口用于建模对容器或者bean的后置处理器，它们定义了一些方法，这些方法在特定的时机会被调用。通过这种机制，框架自身或者应用开发人员有机会在不侵入容器或者bean核心逻辑的情况下为容器或者bean做针对某些特定方面的定制或者扩展：能力增强，属性设置，内容修改，对象代理，甚至直接替换整个bean。Spring 提供的 PostProcessor 接口有如下几种 ：
+Spring 框架提供了几种 PostProcessor接口，用于对容器或者bean进行后置处理，它们定义了一些方法，这些方法在特定的时机会被调用。通过这种机制，框架自身或者应用开发人员有机会在不侵入容器或者bean核心逻辑的情况下为容器或者bean做针对某些特定方面的定制或者扩展：能力增强，属性设置，内容修改，对象代理，甚至直接替换整个bean。Spring 提供的 PostProcessor 接口有如下几种 ：
 
 1. BeanDefinitionRegistryPostProcessor– BeanDefinitionRegistry后置处理器 – 容器级别
 
