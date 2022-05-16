@@ -23,9 +23,7 @@ This window structure is kept at both the sender and the receiver. At the sender
 To handle the problem that arises when a receiver is too slow relative to a sender,
 we introduce a way to force the sender to slow down when the receiver cannot keep up.
 
-Window-based flow control and is the most popular approach when sliding windows are being used. In this approach, the window size is not fixed but is instead allowed to vary over time. To achieve flow control using this technique, there must be a method for the
-receiver to signal the sender how large a window to use. This is typically called a window advertisement, or simply a window update. The window update and ACK are carried in a single packet, meaning that the sender tends to adjust the size of its window at the same time it slides it
-to the right.
+Window-based flow control and is the most popular approach when sliding windows are being used. In this approach, the window size is not fixed but is instead allowed to vary over time. To achieve flow control using this technique, there must be a method for the receiver to signal the sender how large a window to use. This is typically called a window advertisement, or simply a window update. The window update and ACK are carried in a single packet, meaning that the sender tends to adjust the size of its window at the same time it slides it to the right.
 
 ### 拥塞控制
 
@@ -290,6 +288,35 @@ It is the maximum amount of time any segment can exist in the network before bei
 #### time_wait状态如何避免
 
 首先服务器可以设置SO_REUSEADDR套接字选项来通知内核，如果端口忙，但TCP连接位于TIME_WAIT状态时可以重用端口。在一个非常有用的场景就是，如果你的服务器程序停止后想立即重启，而新的套接字依旧希望使用同一端口，此时SO_REUSEADDR选项就可以避免TIME_WAIT状态。
+
+**增加或修改net.ipv4.tcp_tw值：**
+
+```shell
+[root@aaa1 ~]#vim /etc/sysctl.conf
+#表示开启SYN Cookies。当出现SYN等待队列溢出时，启用cookies来处理，可防范少量SYN攻击，默认为0，表示关闭
+net.ipv4.tcp_syncookies = 1
+
+#表示开启重用。允许将TIME-WAIT sockets重新用于新的TCP连接，默认为0，表示关闭；
+net.ipv4.tcp_tw_reuse = 1
+
+#表示开启TCP连接中TIME-WAIT sockets的快速回收，默认为0，表示关闭。
+net.ipv4.tcp_tw_recycle = 1
+
+#表示如果套接字由本端要求关闭，这个参数决定了它保持在FIN-WAIT-2状态的时间。
+net.ipv4.tcp_fin_timeout = 30
+
+#表示当keepalive起用的时候，TCP发送keepalive消息的频度。缺省是2小时，改为20分钟。
+net.ipv4.tcp_keepalive_time = 1200
+
+#表示用于向外连接的端口范围。缺省情况下很小：32768到61000，改为1024到65000。
+net.ipv4.ip_local_port_range = 1024    65000
+
+#表示系统同时保持TIME_WAIT套接字的最大数量，如果超过这个数字，
+#TIME_WAIT套接字将立刻被清除并打印警告信息。默认为180000，改为5000
+net.ipv4.tcp_max_tw_buckets = 5000
+```
+
+参考：[Linux减少time_wait方法_xlxxcc的博客-CSDN博客](https://blog.csdn.net/xlxxcc/article/details/57078080)
 
 ## 正在进来的连接队列
 

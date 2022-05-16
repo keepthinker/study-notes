@@ -1,26 +1,33 @@
-
 # AbstractQueueSynchronizer
+
 ## 队列
+
 ### Sync Queue
+
 锁实现的数据结构。没有获取锁的线程被设置到一个Node对象，Node对象将通过CAS方式放入到同步队列，该队列是个双向链表结构。。
 
 #### 获取锁
+
 通过acquire方法尝试获取锁，先进行tryAcquire，比如在ReentrantLock中，假如state=0，那么会尝试用cas方法设置state为1，设置成功后进行setExclusiveOwnerThread操作把当前线程记录到aqs结构中，也就是重入锁逻辑的一部分内容。假如tryAcquire失败，会先把当前节点加入到sync queue中，然后进入acquireQueued中，又如果此时当前node的前置node是head节点，那么在此尝试tryAcquire操作，如果不是则进行休眠。
 
 #### 释放锁
+
 release方法中，先进行tryRelease操作，比如在ReentrantLock中，先将state减去1，如果state=0那么再进行setExclusiveOwnerThread(null)操作。然后再唤醒当前节点的后置节点。
 
 ### Condition Queue
+
 实现条件队列await与signal的数据结构。
 
 ![img](D:\git\study-notes\源码分析\aqs.png)
 
 #### Condition对象的await/signal/signalAll解析
+
 - await过程：先进行加锁操作，然后把当前线程对应的waitStatus为CONDITION类型的node加入到condition queue，然后通过fullyRelease方法释放锁，最后通过park睡眠。
 - signal过程：先进行加锁操作，取出condition queue的第一个元素，修改node的waitStatus状态为0，然后加入到sync queue，接着设置前置节点waitStatus为-1，最后进行释放锁的操作，也就是刚刚加入到sync queue的元素将有可能被唤醒。
 - signalAll过程：与signal不同的是，遍历condition queue里每个元素，然后执行signal同样的操作。
 
-####  Why Lock condition await must hold the lock
+#### Why Lock condition await must hold the lock
+
 So await must hold the lock because otherwise there would be no way to ensure you weren't waiting for something that already happened. You must hold the lock to prevent another thread from racing with your wait.
 
 ## 与Synchronized的区别
@@ -55,7 +62,7 @@ public abstract class AbstractOwnableSynchronizer
 
 public class AbstractQueuedSynchronizer extends AbstractOwnableSynchronizer
     implements java.io.Serializable {
-    
+
     private transient volatile Node head;
 
     /**
@@ -68,7 +75,7 @@ public class AbstractQueuedSynchronizer extends AbstractOwnableSynchronizer
      * The synchronization state. 使用volatile因为多线程访问该值时，需要立马知道该值状态，便于后续加锁操作。
      */
     private volatile int state;
-    
+
 }
 
 
@@ -183,8 +190,8 @@ static final class Node {
             this.thread = thread;
         }
     }
-    
-    
+
+
 public final void acquire(int arg) {
 //try acquire子类实现尝试获取锁操作
     if (!tryAcquire(arg) &&  
@@ -402,7 +409,7 @@ public class ConditionObject implements Condition, java.io.Serializable {
      * Creates a new {@code ConditionObject} instance.
      */
     public ConditionObject() { }
-    
+
     /**
     * Adds a new waiter to wait queue.
     * @return its new wait node
@@ -444,7 +451,7 @@ public class ConditionObject implements Condition, java.io.Serializable {
         if (interruptMode != 0)
             reportInterruptAfterWait(interruptMode);
     }
-    
+
     public final void signal() {
         if (!isHeldExclusively())
             throw new IllegalMonitorStateException();
@@ -453,7 +460,7 @@ public class ConditionObject implements Condition, java.io.Serializable {
         //发起信号给第一个节点
             doSignal(first);
     }
-    
+
     private void doSignal(Node first) {
         do {
             if ( (firstWaiter = first.nextWaiter) == null)
@@ -500,8 +507,6 @@ final boolean transferForSignal(Node node) {
         LockSupport.unpark(node.thread);
     return true;
 }
-
-
 ```
 
 ## 例子
@@ -623,4 +628,19 @@ public class ConditionMain {
     }
 }
 ```
+
+
+
+## 介绍
+
+模板方法、同步队列、同步状态。
+
+AQS（AbstractQueuedSynchronizer）是队列同步器，是用来构建锁的基础框架，Lock实现类都是基于AQS实现的。AQS是基于模板方法模式进行设计的，所以锁的实现需要继承AQS并重写它指定的方法。AQS内部定义了一个FIFO的队列来实现线程的同步，同时还定义了同步状态来记录锁的信息，用CAS方式来保证线程节点并发加入队列的原子性。 AQS的模板方法，将管理同步状态的逻辑提炼出来形成标准流程，这些方法主要包括：独占式获取同步状态、独占式释放同步状态、共享式获取同步状态、共享式释放同步状态。以独占式获取同步状态为例，它的大致流程是：
+
+1. 尝试以独占方式获取同步状态。
+
+2. 如果状态获取失败，则将当前线程加入同步队列。
+
+3. 自旋处理同步状态，如果当前线程位于队头，则唤醒它并让它出队，否则使其进入阻塞状态。 其中，有些步骤无法在父类确定，则提炼成空方法留待子类实现。例如，第一步的尝试操作，对于公平锁和非公平锁来说就不一样，所以子类在实现时需要按照场景各自实现这个方法。 AQS的同步队列，是一个双向链表，AQS则持有链表的头尾节点。对于尾节点的设置，是存在多线程竞争的，所以采用CAS的方式进行修改。对于头节点设置，则一定是拿到了同步状态的线程（设置同步状态一般需要CAS操作）才能处理，所以修改头节点不需要采用CAS的方式。 AQS的同步状态，是一个int类型的整数，它在表示状态的同时还能表示数量。通常情况下，状态为0时表示无锁，状态大于0时表示锁的重入次数。另外，在读写锁的场景中，这个状态标志既要记录读锁又要记录写锁。于是，锁的实现者就将状态表示拆成高低两部分，高位存读锁、低位存写锁。同步状态需要在并发环境下修改，所以需要保证其线程安全。由于AQS本身就是锁的实现工具，所以不适合用锁来保证其线程安全，因为如果你用一个锁来定义另一个锁的话，那干脆直接用synchronized算了。实际上，同步状态是被volatile修饰的，该关键字可以保证状态变量的内存可见性，从而解决了线程安全问题。 同步状态需要在并发环境下修改，所以需要保证其线程安全。由于AQS本身就是锁的实现工具，所以不适合用锁来保证其线程安全，因为如果你用一个锁来定义另一个锁的话，那干脆直接用synchronized算了。实际上，同步状态是被volatile修饰的，该关键字可以保证状态变量的内存可见性，从而解决了线程安全问题。
+
 

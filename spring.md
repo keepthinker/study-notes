@@ -25,7 +25,7 @@ Bean实例生命周期的执行过程如下：
 5. 调用postProcessPropertyValues方法。可以对Bean的设置的property进行修改，比如可以对<property name="lifetime" value="#{3600*24}"/>这个标签的值进行修改。
 6. Spring对bean进行依赖注入。比如使用了Autowired，那么会将Autowired的对象注入到注解对应的地方。
 7. 如果bean实现了BeanNameAware接口，Spring将bean的名称传给setBeanName()方法。
-8. 如果bean实现了BeanClassLoaderAware接口，Spring将调用etBeanClassLoader()方法，把Classloader传递进来。
+8. 如果bean实现了BeanClassLoaderAware接口，Spring将调用setBeanClassLoader()方法，把Classloader传递进来。
 9. 如果bean实现了BeanFactoryAware接口，Spring将调用setBeanFactory()方法，把BeanFactory实例传进来。
 10. 如果Bean实现了EnvironmentAware接口，Spring将调用setEnvironment()方法，把Environment实例传进来。
 11. 如果bean实现了ApplicationContextAware接口，它的setApplicationContext()方法将被调用，将应用上下文的引用传入到bean中。
@@ -615,13 +615,17 @@ Spring 的模型-视图-控制器（MVC）框架是围绕一个 DispatcherServle
 
 - **PROPAGATION_REQUIRED**：如果当前没有事务，就创建一个新事务，如果当前存在事务，就加入该事务，这也是通常我们的默认选择。
 - **PROPAGATION_REQUIRES_NEW**：创建新事务，无论当前存不存在事务，都创建新事务。
-- **PROPAGATION_NESTED**：如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则按REQUIRED属性执行。
+- **PROPAGATION_NESTED**：如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则按REQUIRED属性执行，即开启一个事务。
 - **PROPAGATION_NOT_SUPPORTED**：以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。
 - **PROPAGATION_NEVER**：以非事务方式执行，如果当前存在事务，则抛出异常。
 - **PROPAGATION_MANDATORY**：支持当前事务，如果当前存在事务，就加入该事务，如果当前不存在事务，就抛出异常。
 - **PROPAGATION_SUPPORTS**：支持当前事务，如果当前存在事务，就加入该事务，如果当前不存在事务，就以非事务执行。
 
-参考：https://zhuanlan.zhihu.com/p/368769721 
+参考：
+
+https://zhuanlan.zhihu.com/p/368769721 
+
+https://zhuanlan.zhihu.com/p/148504094
 
 ## ApplicationContext
 

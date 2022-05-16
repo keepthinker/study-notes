@@ -17,7 +17,7 @@
 
 Topic 在逻辑上可以被认为是一个 queue，每条消费都必须指定它的 Topic，可以简单理解为必须指明把这条消息放进哪个 queue 里。为了使得 Kafka 的吞吐率可以线性提高，**物理上把 Topic 分成一个或多个 Partition，每个 Partition 在物理上对应一个文件夹，该文件夹下存储这个 Partition 的所有消息和索引文件。**
 
-# Producer 
+# Producer
 
 KafkaProducer类是线程安全的，可以在多个线程中共享单个KafkaProducer实例。
 
@@ -68,11 +68,11 @@ RecordAccumulator为每个分区都维护一个双端队列，队列元素是Pro
 ## 重要生产者参数
 
 1. acks：这个参数用来指定分区中必须有多少个副本收到这条消息，之后生产者才会认为这条消息是成功写入的。
-
-   ack=1：默认值即为1。此时只要Leader副本成功写入消息，那么他就会收到来自服务器的成功相应。
-
+   
+   ack=1：默认值即为1。此时只要Leader副本成功写入消息，那么他就会收到来自服务器的成功响应。
+   
    ack=0：生产者发送消息之后不需要等待任何服务器的响应。
-
+   
    ack=-1或ack=all： 生产者在消息发送之后，需要等待ISR中的所有副本都成功写入消息之后才能收到来自服务器的请求。
 
 2. retries和retry.backoff.ms：retries配置重试次数，默认值为0，既异常时不做任何重试。retry.backoff.ms默认值时为100用来设定重试之间的时间间隔。
@@ -134,15 +134,11 @@ KafkaConsumer会在poll()方法之前调用拦截器的onComsume()方法来对�
 
 KafkaProducer是线程安全的，但是KafkaComsumer是非线程安全的。多线程执行消费有多种方式，其中一种也是最常见的方式：线程封闭，既为每个线程实例化一个KafkaComsumer对象。一个消费线程可以消费一个或多个分区中的消息，所有的消费线程都隶属于同一个消费组。这种方式并发度受限于分区的实际个数，比如当消费线程的个数大于分区数时，就有部分消费线程一直处于空闲的状态。一般情况下一个poll()拉取消息的性能大于之后的处理消息的性能，所以可以在处理消息这里增加一个线程池进行多线程处理，此时需要注意位移提交需要进行加锁处理，防止出现并发问题。
 
-
-
 # 主题与分区
 
 主题与分区是提供给上层用户的抽象，而在副本层面或更加确切地说是Log层面才有实际物理上的存在。同一个分区的副本需要分布到不同的broker，这样才能提供有效的冗余。每个副本对应于系统的Log日志文件。Kafka从0.10.x版本开始支持指定broker的机架信息(机架的名称)。如果指定了机架信息，则在分区副本分配时尽可能将分区副本分布到不同的机架上。
 
 主题创建之后，依然允许对其做一定的修改，比如增加分区的个数、修改配置等。目前kafka只支持增加分区数而不支持减少分区数。
-
-
 
 ## 分区重分配
 
@@ -152,13 +148,11 @@ KafkaProducer是线程安全的，但是KafkaComsumer是非线程安全的。多
 
 kafka提供kafka-reassign-partitions.sh脚本来执行分区重分配的工作。
 
-
-
 # 日志存储
 
 不考虑多副本的情况，一个分区对应一个日志。为了防止日志过大，kafka又引入了日志分段（LogSegment）的概念，将大日志切割成多个LogSegment，便于消息的维护与清理。事实上，Log和LogSegment不是物理意义上的概念，Log在操作系统上以文件夹的形式存储，而每个LogSegment对应于磁盘上的一个日志文件和两个索引文件，以及可能的其他文件（比如以“.txnindex”为后缀的事务索引文件）。
 
-向Log中最佳消息时是顺序写入的，只有最后一个LogSegment才能执行写入操作，在此之前所有的LogSegment都不能写入数据。
+向Log中追加消息时是顺序写入的，只有最后一个LogSegment才能执行写入操作，在此之前所有的LogSegment都不能写入数据。
 
 ## 磁盘存储
 
@@ -207,8 +201,6 @@ sendfile系统调用，文件数据被copy至内核缓冲区
 ### 批量压缩
 
 Kafka使用了批量压缩，即将多个消息一起压缩而不是单个消息压缩。Kafka允许使用递归的消息集合，批量的消息可以通过压缩的形式传输并且在日志中也可以保持压缩格式，直到被消费者解压缩
-
-
 
 # Push vs. Pull
 
@@ -308,27 +300,35 @@ enable.auto.commit默认值为true，开启自动位移提交功能，虽然这�
 Kafka提供一个兜底的功能，即回溯消费，通过这个功能可以让我们能够有机会对漏掉的消息相应地进行回补，进一步提高可靠性。
 
 # Zookeeper在kafka中的作用
+
 ## 1、配置管理
+
 Topic的配置之所以能动态更新就是基于zookeeper做了一个动态全局配置管理。
 
 ## 2、负载均衡
+
 基于zookeeper的消费者，实现了该特性，动态的感知分区变动，将负载使用既定策略分不到消费者身上。
 
 ## 3、命名服务
+
 Broker将advertised.port和advertised.host.name，这两个配置发布到zookeeper上的zookeeper的节点上/brokers/ids/BrokerId(broker.id)，这个是供生产者，消费者，其它Broker跟其建立连接用的。
 
 ## 4、分布式通知
+
 比如分区增加，topic变动，Broker上线下线等均是基于zookeeper来实现的分布式通知。
 
 ## 5、集群管理和master选举
+
 我们可以在通过命令行，对kafka集群上的topic partition分布，进行迁移管理，也可以对partition leader选举进行干预。
 
 Master选举，要说有也是违反常规，常规的master选举，是基于临时顺序节点来实现的，序列号最小的作为master。而kafka的Controller的选举是基于临时节点来实现的，临时节点创建成功的成为Controller，更像一个独占锁服务。
 
 ## 6、分布式锁
+
 独占锁，用于Controller的选举。
 
 # Controller
+
 Controller 作为 Kafka Server 端一个重要的组件，它的角色类似于其他分布式系统 Master 的角色，跟其他系统不一样的是，Kafka 集群的任何一台 Broker 都可以作为 Controller，但是在一个集群中同时只会有一个 Controller 是 alive 状态。Controller 在集群中负责的事务很多，比如：集群 meta 信息的一致性保证、Partition leader 的选举、broker 上下线等都是由 Controller 来具体负责。
 
 # 参考文献
@@ -340,4 +340,3 @@ Controller 作为 Kafka Server 端一个重要的组件，它的角色类似于�
 [Kafka 源码解析之 Controller 选举及服务启动流程（十六）](https://matt33.com/2018/06/15/kafka-controller-start/)
 
 [Kafka高吞吐量必问](https://zhuanlan.zhihu.com/p/282993811)
-

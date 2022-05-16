@@ -40,10 +40,6 @@ Apache Dubbo 是一款微服务开发框架，它提供了 RPC通信 与 微服�
 - **redis://**
 - rest://
 
-### Dubbo热插拔机制
-
-#### SPI的应用及其原理
-
 ## Dubbo与Spring Cloud的区别
 
 SpringCloud 与 Dubbo 的区别
