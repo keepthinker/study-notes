@@ -57,7 +57,23 @@ redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 \
 b5f0ebb7dd4318f94de788d601cf20237bd024e4 127.0.0.1:7001@17001 master - 0 1652712705502 2 connected 5461-10922
 
 > cluster info
-> 
+> cluster_state:ok
+cluster_slots_assigned:16384
+cluster_slots_ok:16384
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:6
+cluster_size:3
+cluster_current_epoch:6
+cluster_my_epoch:3
+cluster_stats_messages_ping_sent:710
+cluster_stats_messages_pong_sent:721
+cluster_stats_messages_meet_sent:1
+cluster_stats_messages_sent:1432
+cluster_stats_messages_ping_received:721
+cluster_stats_messages_pong_received:711
+cluster_stats_messages_received:1432
+total_cluster_links_buffer_limit_exceeded:0
 ```
 
 

@@ -439,6 +439,8 @@ In essence, several ACK responses may be combined together into a single respons
 
 特点就数量少但体积大的包被使用，但是增加了时延。
 
+一般情况下，**Nagle算法和延迟确认不能一起使用**，Nagle算法意味着延迟发，**延迟确认**意味着延迟接收，就会造成更大的延迟，会产生性能问题。
+
 ### Selective Acknowledgement(SACK)
 
 A TCP learns that its peer is capable of advertising SACK information by receiving the SACK-Permitted option in a SYN (or SYN + ACK) segment. Once this has taken place, the TCP receiving out-of-sequence data may provide a SACK option that describes the out-of-sequence data to help its peer perform retransmissions more efficiently. SACK information contained in a SACK option consists of a range of sequence numbers representing data blocks the receiver has successfully received. 

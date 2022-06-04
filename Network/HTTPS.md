@@ -58,6 +58,66 @@ Figure 1. Overview of the SSL or TLS handshake
 ![img](https-handshake.gif)
 
 
+## Https演示
+```c
+root@keepthinker:/home/nginx# curl -v  --cacert ca-keepthinker.pem   https://www.springboot-example.keepthinker.com
+* Uses proxy env variable https_proxy == 'http://127.0.0.1:7890'
+*   Trying 127.0.0.1:7890...
+* TCP_NODELAY set
+* Connected to 127.0.0.1 (127.0.0.1) port 7890 (#0)
+* allocate connect buffer!
+* Establish HTTP proxy tunnel to www.springboot-example.keepthinker.com:443
+> CONNECT www.springboot-example.keepthinker.com:443 HTTP/1.1
+> Host: www.springboot-example.keepthinker.com:443
+> User-Agent: curl/7.68.0
+> Proxy-Connection: Keep-Alive
+> 
+< HTTP/1.1 200 Connection established
+< 
+* Proxy replied 200 to CONNECT request
+* CONNECT phase completed!
+* ALPN, offering h2
+* ALPN, offering http/1.1
+* successfully set certificate verify locations:
+*   CAfile: ca-keepthinker.pem
+  CApath: /etc/ssl/certs
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* CONNECT phase completed!
+* CONNECT phase completed!
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+* ALPN, server accepted to use http/1.1
+* Server certificate:
+*  subject: C=CN; ST=Shanghai; L=Shanghai; O=keepthinker; OU=spring; CN=www.springboot-example.keepthinker.com; emailAddress=keepthinker@gmail.com
+*  start date: Jun  3 15:05:38 2022 GMT
+*  expire date: Jun  3 15:05:38 2023 GMT
+*  common name: www.springboot-example.keepthinker.com (matched)
+*  issuer: C=CN; ST=Shanghai; L=Shanghai; O=keepthinker; OU=headquarter; CN=www.keepthinker.com; emailAddress=keepthinker@gmail.com
+*  SSL certificate verify ok.
+> GET / HTTP/1.1
+> Host: www.springboot-example.keepthinker.com
+> User-Agent: curl/7.68.0
+> Accept: */*
+> 
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* old SSL session ID is stale, removing
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 
+< Server: nginx/1.18.0 (Ubuntu)
+< Date: Fri, 03 Jun 2022 15:52:36 GMT
+< Content-Type: text/plain;charset=UTF-8
+< Content-Length: 20
+< Connection: keep-alive
+< 
+* Connection #0 to host 127.0.0.1 left intact
+```
 
 [An overview of the SSL or TLS handshake](https://www.ibm.com/docs/en/ibm-mq/7.5?topic=ssl-overview-tls-handshake)
 

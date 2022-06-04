@@ -202,12 +202,15 @@ vim -b temp.txt 那么此时将可以看到carriage return字符(\r)，显示为
 
 [Linux firewall-cmd 命令详解](https://blog.csdn.net/GMingZhou/article/details/78090963)
 
-
-
 ## 设置代理
 
 ```shell
 export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 all_proxy=socks5://127.0.0.1:7891
+```
 
+## 下载
 
+```shell
+# 设置代理下载时，不校验证书
+wget --no-check-certificate https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.30-linux-glibc2.12-x86_64.tar.gz
 ```
