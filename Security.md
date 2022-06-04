@@ -3,7 +3,7 @@
 ## CA证书
 ### CA证书验证原理
 
-![img](D:\git\study-notes\https-certificate.jpg)
+![img](https-certificate.jpg)
 
 ### CA 签发证书的过程
 
@@ -19,9 +19,9 @@
 
 ### 证书信用链
 
-![!certificate-trust-chain](D:\git\study-notes\certificate-trust-chain.jpg)
+![!certificate-trust-chain](certificate-trust-chain.jpg)
 
-![certificate-verify-chain](D:\git\study-notes\certificate-verifyt-chain.jpg)
+![certificate-verify-chain](certificate-verifyt-chain.jpg)
 
 ### 制作证书
 
