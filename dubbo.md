@@ -40,6 +40,55 @@ Apache Dubbo 是一款微服务开发框架，它提供了 RPC通信 与 微服�
 - **redis://**
 - rest://
 
+### DubbO
+
+Dubbo 缺省协议采用单一长连接和 NIO 异步通讯，适合于小数据量大并发的服务调用，以及服务消费者机器数远大于服务提供者机器数的情况。
+
+反之，Dubbo 缺省协议不适合传送大数据量的服务，比如传文件，传视频等，除非请求量很低。
+
+### Hessian
+
+Hessian 的服务，Hessian 底层采用 Http 通讯，采用 Servlet 暴露服务，Dubbo 缺省内嵌 Jetty 作为服务器实现。
+
+Dubbo 的 Hessian 协议可以和原生 Hessian 服务互操作，即：
+
+- 提供者用 Dubbo 的 Hessian 协议暴露服务，消费者直接用标准 Hessian 接口调用
+- 或者提供方用标准 Hessian 暴露服务，消费方用 Dubbo 的 Hessian 协议调用。
+
+#### 特性
+
+- 连接个数：多连接
+- 连接方式：短连接
+- 传输协议：HTTP
+- 传输方式：同步传输
+- 序列化：Hessian二进制序列化
+- 适用范围：传入传出参数数据包较大，提供者比消费者个数多，提供者压力较大，可传文件。
+- 适用场景：页面传输，文件传输，或与原生hessian服务互操作
+
+### Tripple
+
+基于 grpc 协议进行进一步扩展
+
+- Service-Version → “tri-service-version” {Dubbo service version}
+- Service-Group → “tri-service-group” {Dubbo service group}
+- Tracing-ID → “tri-trace-traceid” {tracing id}
+- Tracing-RPC-ID → “tri-trace-rpcid” {_span id _}
+- Cluster-Info → “tri-unit-info” {cluster infomation}
+
+#### Triple Streaming
+
+Triple协议相比传统的unary方式，多了目前提供的Streaming RPC的能力
+
+Streaming 用于一些大文件传输、直播等应用场景中。 consumer或provider需要跟对端进行大量数据的传输，由于这些情况下的数据量是非常大的，因此是没有办法可以在一个RPC的数据包中进行传输。因此对于这些数据包我们需要对数据包进行分片之后，通过多次RPC调用进行传输。
+
+在API领域，最重要的趋势是标准化技术的崛起。Triple 协议是 Dubbo3 推出的主力协议。它采用分层设计，其数据**交换格式基于Protobuf (Protocol Buffers) 协议**开发，具备优秀的序列化/反序列化效率，当然还支持多种序列化方式，也支持众多开发语言。在传输层协议，Triple 选择了 HTTP/2，相较于 HTTP/1.1，其传输效率有了很大提升。
+
+
+
+#### 参考
+
+[RPC 通信协议 | Apache Dubbo](https://dubbo.apache.org/zh/docs/concepts/rpc-protocol/)
+
 ## Dubbo与Spring Cloud的区别
 
 SpringCloud 与 Dubbo 的区别

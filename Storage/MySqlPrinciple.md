@@ -390,7 +390,7 @@ insert加锁例子：一个事务T1 insert一条记录，该记录生成一个�
 
 ##### 注意：
 
-在MySQL中，Innodb 的 RR 隔离界别对范围会加上 GAP，理论上不会存在幻读。
+在MySQL中，Innodb 的 RR 隔离级别对范围会加上 GAP，理论上不会存在幻读。
 
 在MySQL 8上，验证了不会出现幻读，与教科书理论的不同。
 
@@ -550,7 +550,7 @@ Internally, `InnoDB` adds three fields to each row stored in the database:
 
 三个全局属性：
 
-**trx_list**：一个数值列表，用来维护Reav View生成时刻系统正在活跃的事务ID
+**trx_list**：一个数值列表，用来维护Read View生成时刻系统正在活跃的事务ID
 
 **up_limit_id**：记录trx_list列表中事务最小的ID
 

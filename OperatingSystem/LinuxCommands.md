@@ -155,41 +155,69 @@ ifconfig eth0:1 down
 
 ## 开启或禁用
 
-systemctl start  firewalld # 启动
+```shell
+systemctl start firewalld # 启动
 
 systemctl status firewalld # 或者 firewall-cmd --state 查看状态
 
 systemctl disable firewalld # 停止
 
-systemctl stop firewalld  # 禁用
+systemctl stop firewalld # 禁用
 
-## 端口管理
+# ufw 为 ubuntu 命令
+ufw enable # 开启防火墙
 
-打开443/TCP端口
+ufw disable # 关闭防火墙
 
+ufw status # 查看防火墙状态
+
+sudo ufw allow 22                  //开放22端口
+sudo ufw delete allow 21           //关闭21端口
+sudo ufw allow 8001/tcp            //指定开放8001的tcp协议
+sudo ufw delete allow 8001/tcp     //关闭8001的tcp端口
+sudo ufw reload                    //重启ufw防火墙，使配置生效
+sudo ufw allow from 192.168.121.1         // 指定ip为192.168.121.1的计算机操作所有端口
+sudo ufw delete allow from 192.168.121.1  // 关闭指定ip为192.168.121.1的计算机操作所有端口
+sudo ufw allow from 192.168.121.2 to any port 3306  // 开放指定ip为192.168.121.2的计算机访问本机的3306端口
+sudo ufw delete allow from 192.168.121.2 to any port 3306   // 关闭指定ip为192.168.121.2的计算机对本机的3306端口的操作
+
+# 打开443/TCP端口
 firewall-cmd --add-port=443/tcp
 
-永久打开3690/TCP端口
-
+# 永久打开3690/TCP端口
 firewall-cmd --permanent --add-port=3690/tcp
 
-永久关闭端口
+# 永久关闭端口
+firewall-cmd --remove-port=80/tcp --permanent
 
-firewall-cmd --remove-port=80/tcp --permanent 
-
-永久打开端口好像需要reload一下，临时打开好像不用，如果用了reload临时打开的端口就失效了
-其它服务也可能是这样的，这个没有测试
-
+# 永久打开端口好像需要reload一下，临时打开好像不用，如果用了reload临时打开的端口就失效了其它服务也可能是这样的，这个没有测试
 firewall-cmd --reload
 
-查看防火墙，添加的端口也可以看到
-
+# 查看防火墙，添加的端口也可以看到
 firewall-cmd --list-all
+```
 
-## 网络进程和端口
+### 
+
+## 查看进程和端口
 
 ```shell
-lsof -i:8000
+lsof -i:8080 # 查看8080端口占用
+lsof abc.txt # 显示开启文件abc.txt的进程
+lsof -c abc # 显示abc进程现在打开的文件
+lsof -c -p 1234 # 列出进程号为1234的进程所打开的文件
+lsof -g gid # 显示归属gid的进程情况
+lsof +d /usr/local/ # 显示目录下被进程开启的文件
+lsof +D /usr/local/ # 同上，但是会搜索目录下的目录，时间较长
+lsof -d 4 # 显示使用fd为4的进程
+lsof -i -U # 显示所有打开的端口和UNIX domain文件
+lsof -u username # 查看被用户username打开的文件
+lsof -n # 不将ip转换成hostname
+lsof -P #此参数禁止将port number转换为service name,预设为转换   
+
+
+# 查看某进程网络端口例子
+lsof -i -n -P | grep mongod
 ```
 
 # vim命令
@@ -201,6 +229,8 @@ vim -b temp.txt 那么此时将可以看到carriage return字符(\r)，显示为
 ## 参考文献
 
 [Linux firewall-cmd 命令详解](https://blog.csdn.net/GMingZhou/article/details/78090963)
+
+[Ubuntu系统中防火墙的使用和开放端口_Aaron_Run的博客-CSDN博客_ufw开放端口](https://blog.csdn.net/qq_36938617/article/details/95234909)
 
 ## 设置代理
 
