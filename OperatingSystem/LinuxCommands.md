@@ -171,15 +171,16 @@ ufw disable # 关闭防火墙
 
 ufw status # 查看防火墙状态
 
-sudo ufw allow 22                  //开放22端口
-sudo ufw delete allow 21           //关闭21端口
-sudo ufw allow 8001/tcp            //指定开放8001的tcp协议
-sudo ufw delete allow 8001/tcp     //关闭8001的tcp端口
-sudo ufw reload                    //重启ufw防火墙，使配置生效
-sudo ufw allow from 192.168.121.1         // 指定ip为192.168.121.1的计算机操作所有端口
-sudo ufw delete allow from 192.168.121.1  // 关闭指定ip为192.168.121.1的计算机操作所有端口
-sudo ufw allow from 192.168.121.2 to any port 3306  // 开放指定ip为192.168.121.2的计算机访问本机的3306端口
-sudo ufw delete allow from 192.168.121.2 to any port 3306   // 关闭指定ip为192.168.121.2的计算机对本机的3306端口的操作
+sudo ufw allow 22                  # 开放22端口
+sudo ufw delete allow 21           # 关闭21端口
+sudo ufw allow 8001/tcp            # 指定开放8001的tcp协议
+sudo ufw delete allow 8001/tcp     # 关闭8001的tcp端口
+sudo ufw reload                    # 重启ufw防火墙，使配置生效
+sudo ufw allow from 192.168.121.1         # 指定ip为192.168.121.1的计算机操作所有端口
+sudo ufw delete allow from 192.168.121.1  # 关闭指定ip为192.168.121.1的计算机操作所有端口
+sudo ufw allow from 192.168.121.2 to any port 3306  # 开放指定ip为192.168.121.2的计算机访问本机的3306端口
+sudo ufw delete allow from 192.168.121.2 to any port 3306   # 关闭指定ip为192.168.121.2的计算机对本机的3306端口的操作
+sudo ufw allow from 192.168.1.1/24 to any port 3306 # 开放指定子网
 
 # 打开443/TCP端口
 firewall-cmd --add-port=443/tcp

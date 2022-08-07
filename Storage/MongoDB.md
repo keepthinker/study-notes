@@ -1,6 +1,6 @@
 # MongoDB
 
-## ## Database
+## Database
 
 Database is a physical container for collections. Each database gets its own set of files on the file system. A single MongoDB server typically has multiple databases.
 
@@ -87,7 +87,152 @@ db.stats()
     "fsTotalSize" : 0,
     "ok" : 1
 }
+
+show databases; # 也可以用show dbs
+db.dropDatabase() # drop a existing database.
+db.createCollection(name, options) //Options parameter is optional
+db.createCollection("mycol", 
+{ capped : true, autoIndexID : true, size : 6142800, max : 10000 } )
+{
+"ok" : 0,
+"errmsg" : "BSON field 'create.autoIndexID' is an unknown field.",
+"code" : 40415,
+"codeName" : "Location40415
+"
+}
+
+# drop a collection
+db.mycollection.drop()
+
+# add record
+> use test
+switched to db test
+> db.person.insert({"name":"john", "age": 21})
+WriteResult({ "nInserted" : 1 })
+> db.person.insert({"name":"john", "birthplace": "UK"})
+WriteResult({ "nInserted" : 1 })
+> show collections;
+person
+> db.person.find();
+{ "_id" : ObjectId("62ee8d47c493891f7bfdb4d2"), "name" : "john", "age" : 21 }
+{ "_id" : ObjectId("62ee8d67c493891f7bfdb4d3"), "name" : "john", "birthplace" : "UK" }
+
+> db.person.insertOne({"name": "ben"})
+{
+    "acknowledged" : true,
+    "insertedId" : ObjectId("62ef94e25bad651083bba2a0")
+}
+
+# remove one record
+> db.COLLECTION_NAME.remove(DELETION_CRITERIA,1)
+
+# Remove All Documents
+db.COLLECTION_NAME.remove({})
+
+# find records
+db.COLLECTION_NAME.find({},{KEY:1})
+
+db.mycol.findOne({title: "MongoDB Overview"})
+
+# Following is the basic syntax of AND
+db.mycol.find({ $and: [ {<key1>:<value1>}, { <key2>:<value2>} ] })
+
+> db.COLLECTION_NAME.update(SELECTION_CRITERIA, UPDATED_DATA)
+
+db.person.update({"_id": ObjectId("62ee8d67c493891f7bfdb4d3")}, {$set:{"name":"Mike"}})
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+# By default, MongoDB will update only a single document. To update multiple documents, you need to set a parameter 'multi' to true.
+>db.mycol.update({'title':'MongoDB Overview'},
+   {$set:{'title':'New MongoDB Tutorial'}},{multi:true}
+)
+
+# update or create a new record
+db.person.save({ "_id" : ObjectId("62ee8d67c493891f7bfdb4d3"), "name" : "Mike" })
+
+> db.empDetails.updateOne(
+    {First_Name: 'Radhika'},
+    { $set: { Age: '30',e_mail: 'radhika_newemail@gmail.com'}}
+)
+
+> db.empDetails.updateMany(
+    {Age:{ $gt: "25" }},
+    { $set: { Age: '20'}}
+)
+
+# projection
+db.person.find({}, {"name": 1, "_id": 0})
+{ "name" : "john" }
+{ "name" : "Mike" }
+{ "name" : "ben" }
+
+# limit
+> db.COLLECTION_NAME.find().limit(NUMBER).skip(NUMBER)
+db.mycol.find({},{"title":1,_id:0}).limit(1).skip(1)
+{"title":"NoSQL Overview"}
+
+# sort
+> db.COLLECTION_NAME.find().sort({KEY:1})
+> db.country.find({}, {"name": 1, "_id": 0, "population": 1}).sort({"name": 1, "population": 1})
+{ "name" : "china", "population" : 1390000000 }
+{ "name" : "global", "population" : NumberLong("10000000000") }
+{ "name" : "global", "population" : NumberLong("11000000000") }
+
+
+
+
 ```
+
+### insert, insertOne 和 insertMany区别
+
+ The insert() method is deprecated in major driver so you should use the the .insertOne() method whenever you want to insert a single document into your collection and the .insertMany when you want to insert multiple documents into your collection. Of course this is not mentioned in the documentation but the fact is that nobody really writes an application in the shell. The same thing applies to updateOne, updateMany, deleteOne, deleteMany, findOneAndDelete, findOneAndUpdate and findOneAndReplace.
+
+[mongodb - What&#39;s the difference between insert(), insertOne(), and insertMany() method? - Stack Overflow](https://stackoverflow.com/questions/36792649/whats-the-difference-between-insert-insertone-and-insertmany-method)
+
+
+
+## 索引
+
+```shell
+# create index, 1 is for ascending order, -1 is for descending order
+> db.COLLECTION_NAME.createIndex({KEY:1})
+> db.mycol.createIndex({"title":1,"description":-1})
+> db.country.createIndex({"name": 1}) 
+{
+	"createdCollectionAutomatically" : false,
+	"numIndexesBefore" : 1,
+	"numIndexesAfter" : 2,
+	"ok" : 1
+}
+
+
+# drop index
+> db.COLLECTION_NAME.dropIndex({KEY:1})
+
+# Instead of the index specification document (above syntax), you can also specify the name of the index directly as:
+dropIndex("name_of_the_index")
+db.test.dropIndex({"name": 1})
+{
+	"ok" : 0,
+	"errmsg" : "ns not found",
+	"code" : 26,
+	"codeName" : "NamespaceNotFound"
+}
+
+# drop multiple indexes
+db.mycol.dropIndexes({"title":1,"description":-1})
+{ "nIndexesWas" : 2, "ok" : 1 }
+
+# get indexes
+db.COLLECTION_NAME.getIndexes()
+
+```
+
+
+
+// todo 分析效果，删除索引的影响
+
+
 
 # Reference
 
