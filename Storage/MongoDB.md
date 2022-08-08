@@ -177,10 +177,6 @@ db.mycol.find({},{"title":1,_id:0}).limit(1).skip(1)
 { "name" : "china", "population" : 1390000000 }
 { "name" : "global", "population" : NumberLong("10000000000") }
 { "name" : "global", "population" : NumberLong("11000000000") }
-
-
-
-
 ```
 
 ### insert, insertOne 和 insertMany区别
@@ -188,8 +184,6 @@ db.mycol.find({},{"title":1,_id:0}).limit(1).skip(1)
  The insert() method is deprecated in major driver so you should use the the .insertOne() method whenever you want to insert a single document into your collection and the .insertMany when you want to insert multiple documents into your collection. Of course this is not mentioned in the documentation but the fact is that nobody really writes an application in the shell. The same thing applies to updateOne, updateMany, deleteOne, deleteMany, findOneAndDelete, findOneAndUpdate and findOneAndReplace.
 
 [mongodb - What&#39;s the difference between insert(), insertOne(), and insertMany() method? - Stack Overflow](https://stackoverflow.com/questions/36792649/whats-the-difference-between-insert-insertone-and-insertmany-method)
-
-
 
 ## 索引
 
@@ -199,10 +193,10 @@ db.mycol.find({},{"title":1,_id:0}).limit(1).skip(1)
 > db.mycol.createIndex({"title":1,"description":-1})
 > db.country.createIndex({"name": 1}) 
 {
-	"createdCollectionAutomatically" : false,
-	"numIndexesBefore" : 1,
-	"numIndexesAfter" : 2,
-	"ok" : 1
+    "createdCollectionAutomatically" : false,
+    "numIndexesBefore" : 1,
+    "numIndexesAfter" : 2,
+    "ok" : 1
 }
 
 
@@ -213,10 +207,10 @@ db.mycol.find({},{"title":1,_id:0}).limit(1).skip(1)
 dropIndex("name_of_the_index")
 db.test.dropIndex({"name": 1})
 {
-	"ok" : 0,
-	"errmsg" : "ns not found",
-	"code" : 26,
-	"codeName" : "NamespaceNotFound"
+    "ok" : 0,
+    "errmsg" : "ns not found",
+    "code" : 26,
+    "codeName" : "NamespaceNotFound"
 }
 
 # drop multiple indexes
@@ -225,12 +219,55 @@ db.mycol.dropIndexes({"title":1,"description":-1})
 
 # get indexes
 db.COLLECTION_NAME.getIndexes()
+```
 
+// todo 分析效果，删除索引的影响
+
+## Aggregation
+
+```shell
+# basic syntax
+db.COLLECTION_NAME.aggregate(AGGREGATE_OPERATION)
+
+# sum
+db.mycol.aggregate([{$group : {_id : "$by_user", num_tutorial : {$sum : "$likes"}}}])
+
+db.country.aggregate([{$group: {_id:"$name", population: {$sum:"$population"}}}])
+{ "_id" : "global", "population" : NumberLong("21000000000") }
+{ "_id" : "china", "population" : 1390000000 }
+
+
+# 要返回所有人口超过1000万的州，使用下列聚合操作:
+db.zipcodes.aggregate( { $group :
+                         { _id : "$state",
+                           totalPop : { $sum : "$pop" } } },
+                       { $match : {totalPop : { $gte : 10*1000*1000 } } } )
+
+
+# 要返回每个州的城市平均人口，请使用以下聚合操作:
+db.zipcodes.aggregate( { $group :
+                         { _id : { state : "$state", city : "$city" },
+                           pop : { $sum : "$pop" } } },
+                       { $group :
+                       { _id : "$_id.state",
+                         avgCityPop : { $avg : "$pop" } } } )
+
+db.country.aggregate([{$group: {_id:{continent: "$continent", name :"$name"}, population: {$sum:"$population"}}}])
+{ "_id" : { "continent" : "Asia", "name" : "India" }, "population" : NumberLong("10010000000") }
+{ "_id" : { "continent" : "Asia", "name" : "china" }, "population" : 1390000000 }
 ```
 
 
 
-// todo 分析效果，删除索引的影响
+## Monitor
+
+```shell
+# This command checks the status of all running mongod instances and return counters of database operations.
+mongostat -u learner  -p "study" --authenticationDatabase "admin"
+
+# This command tracks and reports the read and write activity of MongoDB instance on a collection basis. 
+mongotop -u learner  -p "study" --authenticationDatabase "admin"
+```
 
 
 
@@ -245,3 +282,5 @@ db.COLLECTION_NAME.getIndexes()
 [MongoDB配置用户名和密码进行认证登录 - 腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1799755)
 
 https://www.mongodb.com/docs/manual/reference/built-in-roles/
+
+[聚合示例 — MongoDB Manual](https://mongodb-documentation.readthedocs.io/en/latest/tutorial/aggregation-examples.html#gsc.tab=0)
