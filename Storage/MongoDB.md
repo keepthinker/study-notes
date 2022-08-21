@@ -147,6 +147,14 @@ WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
    {$set:{'title':'New MongoDB Tutorial'}},{multi:true}
 )
 
+# find use date comparation
+db.area.find({
+    "establishedDate":
+        {
+            $gt: ISODate("1776-07-03T15:54:17Z")
+        }
+})
+
 # update or create a new record
 db.person.save({ "_id" : ObjectId("62ee8d67c493891f7bfdb4d3"), "name" : "Mike" })
 
@@ -160,7 +168,7 @@ db.person.save({ "_id" : ObjectId("62ee8d67c493891f7bfdb4d3"), "name" : "Mike" }
     { $set: { Age: '20'}}
 )
 
-# projection
+# projection.
 db.person.find({}, {"name": 1, "_id": 0})
 { "name" : "john" }
 { "name" : "Mike" }
@@ -177,6 +185,29 @@ db.mycol.find({},{"title":1,_id:0}).limit(1).skip(1)
 { "name" : "china", "population" : 1390000000 }
 { "name" : "global", "population" : NumberLong("10000000000") }
 { "name" : "global", "population" : NumberLong("11000000000") }
+
+# update or insert. Atomic Operation
+# insert if Canada doesn't exsist or increase population with 1 if it exists
+db.country.findAndModify({
+    "query":{ "name": "Canada"},
+    "update": {"$inc" : {"population": 1}},
+    "upsert": true
+})
+
+
+db.country.findAndModify({
+    query: {name: "Canada"},
+    update: {
+        $set: {
+            continent: "North America",
+            name: "Canada",
+            population: 18000000,
+            establishedDate: ISODate("1867-06-30T16:00:00.186Z")
+        }
+    },
+    upsert: true
+})
+
 ```
 
 ### insert, insertOne 和 insertMany区别
@@ -255,9 +286,9 @@ db.zipcodes.aggregate( { $group :
 db.country.aggregate([{$group: {_id:{continent: "$continent", name :"$name"}, population: {$sum:"$population"}}}])
 { "_id" : { "continent" : "Asia", "name" : "India" }, "population" : NumberLong("10010000000") }
 { "_id" : { "continent" : "Asia", "name" : "china" }, "population" : 1390000000 }
+
+
 ```
-
-
 
 ## Monitor
 
@@ -269,7 +300,26 @@ mongostat -u learner  -p "study" --authenticationDatabase "admin"
 mongotop -u learner  -p "study" --authenticationDatabase "admin"
 ```
 
+## Java usage
 
+```java
+public class MongoApp {
+
+  private static final Log log = LogFactory.getLog(MongoApp.class);
+
+  public static void main(String[] args) throws Exception {
+
+    MongoOperations mongoOps = new MongoTemplate(MongoClients.create(), "database");
+    mongoOps.insert(new Person("Joe", 34));
+
+    log.info(mongoOps.findOne(new Query(where("name").is("Joe")), Person.class));
+
+    mongoOps.dropCollection("person");
+  }
+}
+```
+
+# 
 
 # Reference
 
@@ -283,4 +333,10 @@ mongotop -u learner  -p "study" --authenticationDatabase "admin"
 
 https://www.mongodb.com/docs/manual/reference/built-in-roles/
 
+https://www.mongodb.com/docs/manual/reference/method/db.collection.findAndModify/
+
 [聚合示例 — MongoDB Manual](https://mongodb-documentation.readthedocs.io/en/latest/tutorial/aggregation-examples.html#gsc.tab=0)
+
+https://docs.spring.io/spring-data/mongodb/docs/current/reference/html/
+
+[让 MongoDB 的 CRUD 有 JPA 的味道 - 腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1888798)

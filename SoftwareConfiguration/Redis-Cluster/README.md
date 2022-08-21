@@ -8,6 +8,12 @@ cluster-enabled yes
 cluster-config-file nodes.conf
 cluster-node-timeout 5000
 appendonly yes
+
+# 自测用配置，允许其他机器不用密码也可以登录
+bind 0.0.0.0
+protected-mode no
+
+
 ```
 
 ### 创建各主从节点目录
@@ -25,8 +31,6 @@ cd 7000
 redis-server ./redis.conf
 ```
 
-
-
 ### 初始化集群
 
 --cluster-replicas表明一个主节点的副本数量
@@ -42,8 +46,6 @@ redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 \
 ```shell
 [OK] All 16384 slots covered
 ```
-
-
 
 ## 集群一些命令
 
@@ -76,12 +78,6 @@ cluster_stats_messages_received:1432
 total_cluster_links_buffer_limit_exceeded:0
 ```
 
-
-
-
-
 ## 参考
 
 [Scaling with Redis Cluster | Redis](https://redis.io/docs/manual/scaling/#creating-and-using-a-redis-cluster)
-
-
