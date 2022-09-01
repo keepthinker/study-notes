@@ -1,10 +1,65 @@
 ## docker command
 
 ```shell
-## to kill a docker container process
+# 查看docker运行情况
+docker stats
+# pull a image
+docker pull ubuntu
+# 以交互式界面来创建和启动容器，如下可以在docker容器中输入命令行
+docker run -it ubuntu /bin/bash
+# 采用-d，那么会将容器放在后台执行，若要进入容器，则需要用docker exec
+docker run -i -t -d --name ubuntu-test ubuntu /bin/bash
+docker exec -i -t d8b0c82491a6 /bin/bash
+# -d:让容器在后台运行。
+# -P:将容器内部使用的网络端口随机映射到我们使用的主机上。
+docker run -d -P training/webapp python app.py
+# 查看进程映射的端口
+docker port bf08b7f2cd89
+# 查看进程日志，-f: 让 docker logs 像使用 tail -f 一样来输出容器内部的标准输出。
+docker logs -f bf08b7f2cd89
+# 查看正在活动的docker容器
+docker ps 
+# 查看容器内进程详情
+docker top wizardly_chandrasekhar
+# 使用 docker inspect 来查看 Docker 的底层信息，比如容器的配置和状态信息
+docker inspect bf08b7f2cd89
+
+# 关闭docker服务
+systemctl stop docker
+# 开启docker服务
+systemctl start docker
+
+
+# The docker stop commands issue the SIGTERM signal，其中非run启动命令，重启会消失。
+docker stop 61e5fddeed45
+docker start 61e5fddeed45
+doker restart 61e5fddeed45
+##  the docker kill commands sends the SIGKILL signal.
 docker kill 9f215ed0b0d3
+# The docker pause command suspends all processes in the specified containers.
+# On Linux, this uses the cgroups freezer. Traditionally, when suspending a process 
+# the SIGSTOP signal is used, which is observable by the process being suspended
+# 后续通过docker exec 执行的命令，假如还在运行那么会保留。
 docker pause 9f215ed0b0d3
 docker unpause 9f215ed0b0d3
+# 进入镜像，Use docker attach to attach your terminal's standard input, output, and 
+# error (or any combination of the three) to a running container using the container's ID or name.
+# 一般不适用该命令，用上述的docker exec来替换
+docker attach 61e5fddeed45
+
+# 导出容器
+docker export 1e560fca3906 > ubuntu.tar
+# 可以使用 docker import 从容器快照文件中再导入为镜像
+cat docker/ubuntu.tar | docker import - test/ubuntu:v1
+# 导入容器快照，可以通过指定 URL 或者某个目录来导入
+docker import http://example.com/exampleimage.tgz example/imagerepo
+# 删除容器
+docker rm -f 1e560fca3906
+# 下面的命令可以清理掉所有处于终止状态的容器。
+$ docker container prune
+
+
+
 docker stats 9f215ed0b0d3
 ## make a new image from a container's changes
 docker commit 70e5a5f241b8 centos-nginx-01
@@ -27,6 +82,7 @@ docker start 82e2e71d7d79
 docker attach 82e2e71d7d79
 docker rename bb1a263ad46b ubuntu-bash
 docker exec -i -t 0ce1dc54c68c sh
+docker logs 2b1b7a428627
 ```
 
 ## Minikube
@@ -78,3 +134,17 @@ VMs & Docker – each comes with benefits and demerits. Under a VM environment, 
 [docker容器与虚拟机有什么区别？](https://www.zhihu.com/question/48174633)
 
 [DOCKER VS. VIRTUAL MACHINE: WHERE ARE THE DIFFERENCES?](https://devopscon.io/blog/docker/docker-vs-virtual-machine-where-are-the-differences/[Docker vs. Virtual Machine: Where are the differences? - DevOps Conference](https://devopscon.io/blog/docker/docker-vs-virtual-machine-where-are-the-differences/))
+
+
+
+
+
+## 关于docker容器启动后修改或添加端口
+
+1. 方法一：删除原有容器，重新建新容器
+
+2. 方法二：利用docker commit新构镜像
+
+3. 方法三：修改文件端口，重启docker服务
+
+参考：[关于docker容器启动后修改或添加端口 - 腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1833131)

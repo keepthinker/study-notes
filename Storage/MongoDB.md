@@ -28,6 +28,8 @@ The following table shows the relationship of RDBMS terminology with MongoDB.
 
 ## Command
 
+### Initialization, Startup, Login, Account
+
 ```shell
 # 修改配置，否者内网其他机器无法访问
 vim /etc/mongod.conf 
@@ -69,7 +71,6 @@ mongo --host localhost --port 27017 -u learner -p study  --authenticationDatabas
 db.auth("username", "password")
 
 # 查看状态
-
 db.stats()
 {
     "db" : "test",
@@ -87,9 +88,18 @@ db.stats()
     "fsTotalSize" : 0,
     "ok" : 1
 }
+```
 
+## Database and Collection
+
+```shell
 show databases; # 也可以用show dbs
 db.dropDatabase() # drop a existing database.
+# If a database does not exist, MongoDB creates the database when 
+# you first store data for that database
+> use test
+switched to db test
+
 db.createCollection(name, options) //Options parameter is optional
 db.createCollection("mycol", 
 { capped : true, autoIndexID : true, size : 6142800, max : 10000 } )
@@ -100,13 +110,14 @@ db.createCollection("mycol",
 "codeName" : "Location40415
 "
 }
-
 # drop a collection
 db.mycollection.drop()
 
-# add record
-> use test
-switched to db test
+```
+
+# Create, Retrieve, Update, Delete
+
+```shell
 > db.person.insert({"name":"john", "age": 21})
 WriteResult({ "nInserted" : 1 })
 > db.person.insert({"name":"john", "birthplace": "UK"})
@@ -129,7 +140,7 @@ person
 # Remove All Documents
 db.COLLECTION_NAME.remove({})
 
-# find records
+# find records with specific fields
 db.COLLECTION_NAME.find({},{KEY:1})
 
 db.mycol.findOne({title: "MongoDB Overview"})
@@ -207,7 +218,6 @@ db.country.findAndModify({
     },
     upsert: true
 })
-
 ```
 
 ### insert, insertOne 和 insertMany区别
@@ -286,8 +296,6 @@ db.zipcodes.aggregate( { $group :
 db.country.aggregate([{$group: {_id:{continent: "$continent", name :"$name"}, population: {$sum:"$population"}}}])
 { "_id" : { "continent" : "Asia", "name" : "India" }, "population" : NumberLong("10010000000") }
 { "_id" : { "continent" : "Asia", "name" : "china" }, "population" : 1390000000 }
-
-
 ```
 
 ## Monitor

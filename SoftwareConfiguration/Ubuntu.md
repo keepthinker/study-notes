@@ -48,6 +48,29 @@ server {
 curl -k -H 'Host:www.springboot-example.keepthinker.com'  https://106.14.192.20
 ```
 
+## 软件源
+
+### 阿里源
+
+# 阿里源
+
+文件位置：/etc/apt/sources.list
+
+文件内容：
+
+deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+
+
+
 ### 参考
 
 [自签名 SSL 证书](https://www.xtplayer.cn/ssl/self-signed-ssl/#%E8%87%AA%E7%AD%BE%E5%90%8D%E7%B1%BB%E5%9E%8B)
