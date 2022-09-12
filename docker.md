@@ -1,29 +1,45 @@
-## docker command
+## Docker Command
 
-```shell
+### 一般操作
+
+```bash
 # 查看docker运行情况
 docker stats
+docker stats c6425e8f0695
 # pull a image
 docker pull ubuntu
 # 以交互式界面来创建和启动容器，如下可以在docker容器中输入命令行
 docker run -it ubuntu /bin/bash
-# 采用-d，那么会将容器放在后台执行，若要进入容器，则需要用docker exec
+# 采用-d，那么会将容器放在后台执行，若要进入容器，则需要用docker exec, --name设置容器名称
 docker run -i -t -d --name ubuntu-test ubuntu /bin/bash
+# 重命名容器
+docker rename CONTAINER NEW_NAME
+# 对已经启动的容器执行命令
 docker exec -i -t d8b0c82491a6 /bin/bash
 # -d:让容器在后台运行。
 # -P:将容器内部使用的网络端口随机映射到我们使用的主机上。
 docker run -d -P training/webapp python app.py
+# 映射容器外的端口20080到容器内的端口80
+docker run -d -p 127.0.0.1:20080:80 centos-nginx-01 /sbin/nginx -c /etc/nginx.conf
+# 默认都是绑定 tcp 端口，如果要绑定 UDP 端口，可以在端口后面加上 /udp。
+docker run -d -p 127.0.0.1:5000:5000/udp centos-nginx-01 python app.py
 # 查看进程映射的端口
 docker port bf08b7f2cd89
 # 查看进程日志，-f: 让 docker logs 像使用 tail -f 一样来输出容器内部的标准输出。
 docker logs -f bf08b7f2cd89
 # 查看正在活动的docker容器
 docker ps 
+# 显示容器所有信息
+docker ps -a --no-trunc
 # 查看容器内进程详情
 docker top wizardly_chandrasekhar
 # 使用 docker inspect 来查看 Docker 的底层信息，比如容器的配置和状态信息
 docker inspect bf08b7f2cd89
+```
 
+### 起停服务
+
+```bash
 # 关闭docker服务
 systemctl stop docker
 # 开启docker服务
@@ -57,9 +73,96 @@ docker import http://example.com/exampleimage.tgz example/imagerepo
 docker rm -f 1e560fca3906
 # 下面的命令可以清理掉所有处于终止状态的容器。
 $ docker container prune
+```
 
+### 容器备份、恢复和删除
 
+```bash
+# 导出容器
+docker export 1e560fca3906 > ubuntu.tar
+# 可以使用 docker import 从容器快照文件中再导入为镜像
+cat docker/ubuntu.tar | docker import - test/ubuntu:v1
+# 导入容器快照，可以通过指定 URL 或者某个目录来导入
+docker import http://example.com/exampleimage.tgz example/imagerepo
+# 删除容器
+docker rm -f 1e560fca3906
+# 下面的命令可以清理掉所有处于终止状态的容器。
+$ docker container prune
+```
 
+### 镜像管理
+
+```bash
+# 列出镜像列表, 
+# REPOSITORY：表示镜像的仓库源
+# TAG：镜像的标签
+# IMAGE ID：镜像ID
+# CREATED：镜像创建时间
+# SIZE：镜像大小
+docker image list
+docker image ls
+docker images
+
+root@keepthinker# docker image list
+REPOSITORY                    TAG              IMAGE ID       CREATED         SIZE
+gcr.io/k8s-minikube/kicbase   v0.0.26          b0c9ec980b3d   12 months ago   1.08GB
+ubuntu-nginx                  0.1              507ed75ca0a8   13 months ago   161MB
+centos-nginx-01               latest           206860dce7f1   13 months ago   455MB
+keepthinker/getting-started   latest           3792a77453fa   14 months ago   383MB
+getting-started               latest           3792a77453fa   14 months ago   383MB
+mysql                         5.7              09361feeb475   14 months ago   447MB
+ubuntu                        latest           9873176a8ff5   14 months ago   72.7MB
+docker/getting-started        latest           083d7564d904   14 months ago   28MB
+node                          12-alpine        deeae3752431   16 months ago   88.9MB
+grokzen/redis-cluster         5.0.12           004cbba7d676   17 months ago   549MB
+
+# 搜索镜像
+docker search httpd
+# 拉去镜像
+docker pull ubuntu
+# 删除镜像
+docker rmi hello-world
+docker image rm hello_world
+
+# 更新镜像
+docker run -t -i ubuntu:15.10 /bin/bash
+# 在运行的容器内使用 apt-get update 命令进行更新。
+# 接下来提交容器，语法：docker commit [OPTIONS] CONTAINER [REPOSITORY[:TAG]]
+# -m: 提交的描述信息
+# -a: 指定镜像作者
+# ubuntu-nginx-01: 指定要创建的目标镜像名
+docker commit -m "ubuntu nginx" -a "keepthinker" c6425e8f0695 ubuntu-nginx-01
+
+# 构建镜像
+vim Dockerfile
+# edit Dockerfile 
+
+# -t ：指定要创建的目标镜像名
+# . ：Dockerfile 文件所在目录，可以指定Dockerfile 的绝对路径
+docker build -t keepthinker/centos:6.7 .
+
+# 为镜像添加一个标签，":"后面就是标签
+docker tag 860c279d2fec runoob/centos:dev
+```
+
+### 网络管理
+
+```bash
+# 新建网络
+# -d：参数指定 Docker 网络类型，有 bridge、overlay。
+# 其中 overlay 网络类型用于 Swarm mode
+> docker network create -d bridge test-net
+> docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+a2617bd43c3e   bridge    bridge    local
+b284a3bb9507   host      host      local
+57f6d07cc2d2   none      null      local
+e8d26617b103   test-net   bridge    local
+```
+
+### 其他
+
+```bash
 docker stats 9f215ed0b0d3
 ## make a new image from a container's changes
 docker commit 70e5a5f241b8 centos-nginx-01
@@ -135,16 +238,30 @@ VMs & Docker – each comes with benefits and demerits. Under a VM environment, 
 
 [DOCKER VS. VIRTUAL MACHINE: WHERE ARE THE DIFFERENCES?](https://devopscon.io/blog/docker/docker-vs-virtual-machine-where-are-the-differences/[Docker vs. Virtual Machine: Where are the differences? - DevOps Conference](https://devopscon.io/blog/docker/docker-vs-virtual-machine-where-are-the-differences/))
 
-
-
-
-
 ## 关于docker容器启动后修改或添加端口
 
-1. 方法一：删除原有容器，重新建新容器
+### 方法一：删除原有容器，重新建新容器
 
-2. 方法二：利用docker commit新构镜像
+docker rm -f 1e560fca3906
 
-3. 方法三：修改文件端口，重启docker服务
+docker run -p 8080:80 --name hello -d hello-world
+
+### 方法二：利用docker commit新构镜像
+
+docker commit -m="has update" -a="runoob" e218edb10161 runoob/ubuntu:v2
+
+docker run -p 8080:80 --name hello -d ubuntu:v2
+
+### 方法三：修改文件端口，重启docker服务
+
+1. 首先停止docker服务，比如用systemctl stop docker。
+
+2. 然后修改位于/var/lib/docker/containers/{containerId}/hostconfig.json文件中的PortBindings，例子："PortBindings:":{"80/tcp":[{"HostIp":"0.0.0.0", "HostPort": "50080"}]}
+
+3. 然后再修改/var/lib/docker/containers/{containerId}/config.v2.json的ExposedPorts。例子："Ports":{"80/tcp":[{"HostIp":"0.0.0.0","HostPort":"50080"}]}
+
+4. 重新启动docker服务。systemctl restart docker。
+
+5. 最后启动容器docker start {containerId}
 
 参考：[关于docker容器启动后修改或添加端口 - 腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1833131)
