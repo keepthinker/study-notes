@@ -116,6 +116,9 @@ docker/getting-started        latest           083d7564d904   14 months ago   28
 node                          12-alpine        deeae3752431   16 months ago   88.9MB
 grokzen/redis-cluster         5.0.12           004cbba7d676   17 months ago   549MB
 
+# 登录和退出
+docker login
+docker logout
 # 搜索镜像
 docker search httpd
 # 拉去镜像
@@ -143,7 +146,122 @@ docker build -t keepthinker/centos:6.7 .
 
 # 为镜像添加一个标签，":"后面就是标签
 docker tag 860c279d2fec runoob/centos:dev
+
+
+# 用户登录后，可以通过 docker push 命令将自己的镜像推送到 Docker Hub。
+# 以下命令中的 username 请替换为你的 Docker 账号用户名。
+$ docker tag ubuntu:18.04 username/ubuntu:18.04
+$ docker image ls
+
+REPOSITORY      TAG        IMAGE ID            CREATED           ...  
+ubuntu          18.04      275d79972a86        6 days ago        ...  
+username/ubuntu 18.04      275d79972a86        6 days ago        ...  
+$ docker push username/ubuntu:18.04
+$ docker search username/ubuntu
 ```
+
+#### 构建镜像
+
+mkdir nginx-docker
+vim Dockerfile
+
+##### Dockerfile示例内容如下
+
+```dockerfile
+FROM nginx
+echo 'this is a nginx image made locally'
+```
+
+##### FROM指令
+
+定制的镜像都是基于 FROM 的镜像，这里的 nginx 就是定制需要的基础镜像。后续的操作都是基于 nginx。
+
+##### RUN指令
+
+RUN <命令行命令>
+
+> <命令行命令> 等同于，在终端操作的 shell 命令。
+
+RUN ["可执行文件", "参数1", "参数2"]
+
+> 例如：RUN ["./test.php", "dev", "offline"] 等价于 RUN ./test.php dev offline
+
+
+
+**注意**：Dockerfile 的指令每执行一次RUN都会在 docker 上新建一层。所以过多无意义的层，会造成镜像膨胀过大。以 && 符号连接命令，这样执行后，只会创建 1 层镜像。
+
+
+
+##### 构建镜像
+
+docker build -t nginx:v3 .
+
+###### 上下文路径
+
+最后的 . 代表本次执行的上下文路径，
+
+上下文路径，是指 docker 在构建镜像，有时候想要使用到本机的文件（比如复制），docker build 命令得知这个路径后，会将路径下的所有内容打包。
+
+
+
+##### COPY指令
+
+复制指令，从上下文目录中复制文件或者目录到容器里指定路径。
+
+```dockerfile
+COPY [--chown=<user>:<group>] <源路径1>...  <目标路径>
+COPY [--chown=<user>:<group>] ["<源路径1>",...  "<目标路径>"]
+```
+
+**[--chown=<user>:<group>]**：可选参数，用户改变复制到容器内文件的拥有者和属组。
+
+**<源路径>**：源文件或者源目录，这里可以是通配符表达式，其通配符规则要满足 Go 的 filepath.Match 规则。例如：
+
+```dockerfile
+COPY hom* /mydir/
+
+COPY hom?.txt /mydir/
+```
+
+**<目标路径>**：容器内的指定路径，该路径不用事先建好，路径不存在的话，会自动创建。
+
+
+
+
+
+##### ADD指令
+
+ADD 指令和 COPY 的使用格类似（同样需求下，官方推荐使用 COPY）。功能也类似，不同之处如下：
+
+- ADD 的优点：在执行 <源文件> 为 tar 压缩文件的话，压缩格式为 gzip, bzip2 以及 xz 的情况下，会自动复制并解压到 <目标路径>。
+- ADD 的缺点：在不解压的前提下，无法复制 tar 压缩文件。会令镜像构建缓存失效，从而可能会令镜像构建变得比较缓慢。具体是否使用，可以根据是否需要自动解压来决定。
+
+### CMD
+
+类似于 RUN 指令，用于运行程序，但二者运行的时间点不同:
+
+- CMD 在docker run 时运行。
+- RUN 是在 docker build。
+
+**作用**：为启动的容器指定默认要运行的程序，程序运行结束，容器也就结束。CMD 指令指定的程序可被 docker run 命令行参数中指定要运行的程序所覆盖。
+
+**注意**：如果 Dockerfile 中如果存在多个 CMD 指令，仅最后一个生效。
+
+格式：
+
+```dockerfile
+CMD <shell 命令> 
+CMD ["<可执行文件或命令>","<param1>","<param2>",...] 
+CMD ["<param1>","<param2>",...] # 该写法是为 ENTRYPOINT 指令指定的程序提供默认参数
+```
+
+推荐使用第二种格式，执行过程比较明确。第一种格式实际上在运行的过程中也会自动转换成第二种格式运行，并且默认可执行文件是 sh。
+
+
+
+
+
+参考：[Docker Dockerfile | 菜鸟教程](https://www.runoob.com/docker/docker-dockerfile.html)
 
 ### 网络管理
 
@@ -158,6 +276,17 @@ a2617bd43c3e   bridge    bridge    local
 b284a3bb9507   host      host      local
 57f6d07cc2d2   none      null      local
 e8d26617b103   test-net   bridge    local
+
+
+> docker run -itd --name test1 --network test-net ubuntu /bin/bash
+> docker run -itd --name test2 --network test-net ubuntu /bin/bash
+# 上述两个容器可以互相ping通，可以用apt install iputils-ping安装ping命令
+
+# --rm：容器退出时自动清理容器内部的文件系统。
+# -h HOSTNAME 或者 --hostname=HOSTNAME： 设定容器的主机名，它会被写到容器内的 /etc/hostname 和 /etc/hosts。
+# --dns=IP_ADDRESS： 添加 DNS 服务器到容器的 /etc/resolv.conf 中，让容器用这个服务器来解析所有不在 /etc/hosts 中的主机名。
+# --dns-search=DOMAIN： 设定容器的搜索域，当设定搜索域为 .example.com 时，在搜索一个名为 host 的主机时，DNS 不仅搜索 host，还会搜索 host.example.com。
+$ docker run -it --rm -h host_ubuntu  --dns=114.114.114.114 --dns-search=test.com ubuntu
 ```
 
 ### 其他
