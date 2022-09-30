@@ -112,7 +112,6 @@ db.createCollection("mycol",
 }
 # drop a collection
 db.mycollection.drop()
-
 ```
 
 # Create, Retrieve, Update, Delete
@@ -296,6 +295,13 @@ db.zipcodes.aggregate( { $group :
 db.country.aggregate([{$group: {_id:{continent: "$continent", name :"$name"}, population: {$sum:"$population"}}}])
 { "_id" : { "continent" : "Asia", "name" : "India" }, "population" : NumberLong("10010000000") }
 { "_id" : { "continent" : "Asia", "name" : "china" }, "population" : 1390000000 }
+
+
+# 统计数量
+db.area.count({continent: "Asia"})
+
+
+
 ```
 
 ## Monitor

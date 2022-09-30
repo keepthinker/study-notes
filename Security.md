@@ -27,7 +27,7 @@
 
 #### 自签名证书
 
-```shell
+```bash
 # 1. 生成服务器私钥
 
 openssl genrsa -des3 -out server.key 4096
@@ -60,7 +60,7 @@ openssl req -x509 -nodes -days 365 -newkey rsa:4096 -keyout server.key -out serv
 ```
 
 #### 私有CA证书
-```shell
+```bash
 # 1. 创建CA私钥
 
 openssl genrsa -des3 -out ca.key 4096
@@ -132,7 +132,7 @@ openssl x509 -req -days 365 -in server.csr -CA ca.crt -CAkey ca.key -set_serial 
 ```
 
 ### 查看证书等信息
-```shell
+```bash
 # 查看私钥信息
 
 openssl rsa -noout -text -in server.key
@@ -166,14 +166,14 @@ openssl x509 -in ca.crt -out ca.pem
 ```
 
 ### Windows证书导入
-```shell
+```bash
 >> certmgr
 ```
 
 ### SAN(Subject Alternative Name)
 Subject Alternative Name (SAN) is an extension to X.509 that lets you specify additional host names (values) to be protected by a single SSL certificate using a subjectAltName field. It allows more than one host to use the same copy of a single certificate. At the server-level, you can create multiple virtual hosts and add these hosts to the subjectAltName field of the certificate. You generate a certificate with SAN and the clients can connect to the server using subjectAltName. Whenever HTTPS request comes to any of the virtual host, the server uses the same certificate for SSL handshake.
 
-```shell
+```bash
 # Before you generate the digital certificate using the pkiutil utility, open the pscpki.cnf file in the %DLC%\keys\policy location and add the subjectAltName values as follows under the x509v3_extensions section:
   subjectAltName = @alt_names
 

@@ -90,6 +90,35 @@ docker rm -f 1e560fca3906
 $ docker container prune
 ```
 
+### 持久化数据
+
+#### volume和bind操作
+
+```bash
+# 创建volume
+docker volume create $name
+docker volume create --name **
+
+# 使用命名为todo-db的volume，映射到容器的路径为/etc/todos
+docker run -dp 3000:3000 -v todo-db:/etc/todos getting-started
+# 使用bind，将本地目录/path/to/data映射到容器的路径为/usr/local/data
+docker run -dp 3000:3000 -v /path/to/data:/usr/local/data getting-started
+
+# 查看当前volume列表
+docker volume ls
+
+# 可以获取这个volume在docker 虚拟机中的位置
+docker volume inspect $volumeName
+
+# 通过inspect可以看到volume和Bind的信息
+ docker inspect $containerName | grep Binds -A 2
+ docker inspect $containerName | grep -C 3 volume
+```
+
+#### 参考
+
+[docker volume](https://www.jianshu.com/p/8c22cdfc0ffd)
+
 ### 镜像管理
 
 ```bash
@@ -165,18 +194,34 @@ $ docker search username/ubuntu
 mkdir nginx-docker
 vim Dockerfile
 
+A Docker image consists of read-only layers each of which represents a Dockerfile instruction. The layers are stacked and each one is a delta of the changes from the previous layer. Consider this `Dockerfile`:
+
 ##### Dockerfile示例内容如下
 
 ```dockerfile
-FROM nginx
-echo 'this is a nginx image made locally'
+# syntax=docker/dockerfile:1
+FROM ubuntu:18.04
+COPY . /app
+RUN make /app
+CMD python /app/app.py
 ```
+
+Each instruction creates one layer:
+
+- `FROM` creates a layer from the `ubuntu:18.04` Docker image.
+- `COPY` adds files from your Docker client’s current directory.
+- `RUN` builds your application with `make`.
+- `CMD` specifies what command to run within the container.
+
+When you run an image and generate a container, you add a new *writable layer* (the “container layer”) on top of the underlying layers. All changes made to the running container, such as writing new files, modifying existing files, and deleting files, are written to this writable container layer.
 
 ##### FROM指令
 
 定制的镜像都是基于 FROM 的镜像，这里的 nginx 就是定制需要的基础镜像。后续的操作都是基于 nginx。
 
 ##### RUN指令
+
+在docker build时候运行。
 
 RUN <命令行命令>
 
@@ -188,25 +233,30 @@ RUN ["可执行文件", "参数1", "参数2"]
 
 **注意**：Dockerfile 的指令每执行一次RUN都会在 docker 上新建一层。所以过多无意义的层，会造成镜像膨胀过大。以 && 符号连接命令，这样执行后，只会创建 1 层镜像。
 
-
 例子：
 
 ```bash
-FROM centos
-RUN yum -y install wget \
-    && wget -O redis.tar.gz "http://download.redis.io/releases/redis-5.0.3.tar.gz" \
-    && tar -xvf redis.tar.gz
+# escape=\
+FROM nginx
+ENV WELCOME_MSG=hello\ world
+EXPOSE 80/tcp
+WORKDIR /app
+ADD . /app
+RUN echo "${WELCOME_MSG}, this is a nginx image made locally with some tools installed" \
+  && apt-get update \
+  && apt-get install -y procps \
+  && apt-get install -y iproute2
 ```
 
 ##### 构建镜像
 
+```bash
 docker build -t nginx:v3 .
+```
 
 ###### 上下文路径
 
-最后的 . 代表本次执行的上下文路径，
-
-上下文路径，是指 docker 在构建镜像，有时候想要使用到本机的文件（比如复制），docker build 命令得知这个路径后，会将路径下的所有内容打包。
+最后的 . 代表本次执行的上下文路径，上下文路径，是指 docker 在构建镜像，有时候想要使用到本机的文件（比如复制），docker build 命令得知这个路径后，会将路径下的所有内容打包。
 
 ##### COPY指令
 
@@ -340,8 +390,6 @@ VOLUME ["<路径1>", "<路径2>"...] VOLUME <路径>
 
 在启动容器 docker run 的时候，我们可以通过 -v 参数修改挂载点。
 
-
-
 ##### EXPOSE
 
 仅仅只是声明端口。
@@ -356,8 +404,6 @@ VOLUME ["<路径1>", "<路径2>"...] VOLUME <路径>
 ```bash
 EXPOSE <端口1> [<端口2>...]
 ```
-
-
 
 ##### WORKDIR
 
@@ -381,8 +427,6 @@ WORKDIR <工作目录路径>
 USER <用户名>[:<用户组>]
 ```
 
-
-
 ##### HEALTHCHECK
 
 用于指定某个程序或者指令来监控 docker 容器服务的运行状态。
@@ -402,12 +446,8 @@ HEALTHCHECK [选项] CMD <命令> : 这边 CMD 后面跟随的命令使用，可
 格式：
 
 ```bash
-
+ONBUILD <其它指令>
 ```
-
-
-
-
 
 ##### LABEL
 
@@ -421,13 +461,11 @@ LABEL <key>=<value> <key>=<value> <key>=<value> ...
 LABEL org.opencontainers.image.authors="runoob"
 ```
 
+#### 参考
 
+[Docker Dockerfile | 菜鸟教程](https://www.runoob.com/docker/docker-dockerfile.html)
 
-
-
-
-
-参考：[Docker Dockerfile | 菜鸟教程](https://www.runoob.com/docker/docker-dockerfile.html)
+[Dockerfile reference | Docker Documentation](https://docs.docker.com/engine/reference/builder/)
 
 ### 网络管理
 
@@ -519,7 +557,7 @@ systemctl restart docker
     "registry-mirrors": [
         "http://hub-mirror.c.163.com",
         "https://docker.mirrors.ustc.edu.cn",
-        "https://registry.docker-cn.com"
+        "https://mirror.ccs.tencentyun.com"
     ]
 }
 ```
@@ -530,7 +568,12 @@ service docker restart
 
 ### 查看是否成功
 
+```bash
+# 查看docker一些信息
 docker info
+```
+
+
 
 ### 参考
 
