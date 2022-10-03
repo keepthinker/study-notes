@@ -493,6 +493,85 @@ e8d26617b103   test-net   bridge    local
 $ docker run -it --rm -h host_ubuntu  --dns=114.114.114.114 --dns-search=test.com ubuntu
 ```
 
+## Docker Compose
+
+Compose is a tool for defining and running multi-container Docker applications. With Compose, you use a YAML file to configure your application’s services. Then, with a single command, you create and start all the services from your configuration.
+
+docker compose示例文件
+
+```bash
+version: "3.9"  # optional since v1.27.0
+services:
+  web:
+    build: .
+    ports:
+      - "8000:5000"
+    volumes:
+      - .:/code
+      - logvolume01:/var/log
+    depends_on:
+      - redis
+    environment:
+      FLASK_DEBUG: True
+    env_file:
+      - ./Docker/api/api.env
+  redis:
+    image: redis
+volumes:
+  logvolume01: {}
+```
+
+### 相关命令
+
+```bash
+# 在前台启动
+docker compose up
+# 在后台启动，(for “detached” mode) 
+docker compose up -d
+# stop your services once you’ve finished with them
+docker compose stop
+# start your services
+docker compose start
+# 查看进程
+docker compose ps
+# run one-off commands for your services.
+docker compose run web env
+docker compose run echo $PATH
+# see other available commands
+docker compose --help
+# You can bring everything down, removing the containers entirely, with the down command. 
+# Pass --volumes to also remove the data volume used by the Redis container:
+docker compose down
+# see docker compose version
+docker compose version 
+docker-compose version 
+# Execute a command in a running container.
+docker compose exec $containerId /bin/sh
+```
+
+### 添加环境变量
+
+It’s possible to **use environment variables in your shell** to populate values inside a Compose file.
+
+If you have multiple environment variables, you can substitute them by adding them to a default environment variable **file named `.env`** or by providing a path to your environment variables file using the **`--env-file` command line option**.
+
+
+
+#### Environment variables precedence
+
+The order of precedence is as follows:
+
+1. Passed from the command line `docker compose run --env <KEY[=[VAL]]>`
+2. Passed from/set in `compose.yaml` service’s configuration, from the [environment key](https://docs.docker.com/compose/compose-file/#environment).
+3. Passed from/set in `compose.yaml` service’s configuration, from the [env_file key](https://docs.docker.com/compose/compose-file/#env_file).
+4. Passed from/set in Container Image in the [ENV directive](https://docs.docker.com/engine/reference/builder/#env).
+
+
+
+#### 参考
+
+[Environment variables in Compose | Docker Documentation](https://docs.docker.com/compose/environment-variables/)
+
 ### 其他
 
 ```bash
@@ -572,8 +651,6 @@ service docker restart
 # 查看docker一些信息
 docker info
 ```
-
-
 
 ### 参考
 

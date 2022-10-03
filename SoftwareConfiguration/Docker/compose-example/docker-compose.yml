@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  web:
+    container_name: web-python
+    build: .
+    ports: 
+      - "${WEB_PORT:-8000}:5000"
+    volumes: 
+      - .:/code
+    environment:
+      FLASK_DEBUG: true
+  redis:
+    container_name: redis
+    image: "redis:alpine"

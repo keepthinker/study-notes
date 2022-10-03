@@ -215,7 +215,7 @@ lsof -i -U # 显示所有打开的端口和UNIX domain文件
 lsof -u username # 查看被用户username打开的文件
 lsof -n # 不将ip转换成hostname
 lsof -P #此参数禁止将port number转换为service name,预设为转换   
-
+lsof -i TCP -n -P  # 禁止转换域名和端口，查看tcp情况
 
 # 查看某进程网络端口例子
 lsof -i -n -P | grep mongod

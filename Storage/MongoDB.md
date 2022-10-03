@@ -51,6 +51,7 @@ sudo service mongodb restart
 # To use MongoDB run the following command.
 mongo
 mongo --host $hostName --port $portNumber -u $username -p $password
+mongosh -u $username -p $password --authentiationDatabase $databaseName $host:$port
 
 # 创建admin账户，该账户可以反问admin库
 use admin
