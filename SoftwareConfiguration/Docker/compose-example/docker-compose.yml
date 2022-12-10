@@ -12,3 +12,26 @@ services:
   redis:
     container_name: redis
     image: "redis:alpine"
+    ports:
+      - "6379:6379"
+  mysql:
+    container_name: mysql
+    image: "mysql:8.0.31"
+    ports:
+      - "3306:3306"
+      - "33060:33060"
+    volumes:
+      - /data/mysql:/var/lib/mysql
+  nacos:
+    container_name: nacos
+    image: "nacos/nacos-server:v2.1.2"
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    environment:
+      MODE: standalone
+  mongo:
+    container_name: mongo
+    image: "mongo:6.0.3"
+    ports:
+      - "27017:27017"
