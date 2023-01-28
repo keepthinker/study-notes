@@ -245,3 +245,13 @@ export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 all_pr
 # 设置代理下载时，不校验证书
 wget --no-check-certificate https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.30-linux-glibc2.12-x86_64.tar.gz
 ```
+
+## 切割文件
+
+```bash
+## 指定文件大小来切割，每个文件大小500m，生成的新文件的文件名是newfile后面加上按照aa，ab，ac……来排序的
+split -b 500m log.txt newfile
+
+## 切开的文件合起来
+cat newfile* > orifile
+```
