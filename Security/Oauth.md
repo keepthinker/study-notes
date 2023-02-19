@@ -122,8 +122,6 @@ A refresh token is a string representing the authorization granted to the client
                Figure 2: Refreshing an Expired Access Token
 ```
 
-
-
 ## Authorization Code Grant
 
 The authorization code grant type is used to obtain both access  tokens and refresh tokens and is optimized for confidential clients. Since this is a redirection-based flow, the client must be capable of interacting with the resource owner's user-agent typically a web browser) and capable of receiving incoming requests (via redirection)  from the authorization server.
@@ -171,8 +169,6 @@ Pragma: no-cache
 }
 ```
 
-
-
 ## Implicit Grant
 
 The implicit grant type is used to obtain access tokens (it does not support the issuance of refresh tokens) and is optimized for public clients known to operate a particular redirection URI. These clients are typically implemented in a browser using a scripting language such as JavaScript. 
@@ -182,8 +178,6 @@ Since this is a redirection-based flow, the client must be capable of interactin
 Unlike the authorization code grant type, in which the client makes separate requests for authorization and for an access token, the client receives the access token as the result of the authorization request. 
 
 The implicit grant type does not include client authentication, and relies on the presence of the resource owner and the registration of the redirection URI. Because the access token is encoded into the redirection URI, it may be exposed to the resource owner and other applications residing on the same device.
-
-
 
 **Authorization Request Example:**
 
@@ -196,8 +190,8 @@ Host: server.example.com
 
 # response
 HTTP/1.1 302 Found
-Location: https://client.example.com/cb?code=SplxlOBeZQQYbYS6WxSbIA
-        &state=xyz
+Location: http://example.com/cb#access_token=2YotnFZFEjr1zCsicMWpAA
+    &state=xyz&token_type=example&expires_in=3600
 ```
 
 ## Resource Owner Password Credentials Grant
@@ -231,16 +225,11 @@ Pragma: no-cache
  "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA",
  "example_parameter":"example_value"
  }
-
 ```
-
-
 
 ## Client Credentials Grant
 
 The client can request an access token using only its client credentials (or other supported means of authentication) when the client is requesting access to the protected resources under its control, or those of another resource owner that have been previously arranged with the authorization server (the method of which is beyond the scope of this specification).
-
-
 
 **Access Token Request**
 
