@@ -210,15 +210,11 @@ https://www.zhihu.com/question/37370216/answer/1914075935
 
 [Provide subjectAltName to openssl directly on the command line](https://security.stackexchange.com/questions/74345/provide-subjectaltname-to-openssl-directly-on-the-command-line)
 
-
-
 ## JWT(JSON Web Token)
 
 1. 单体应用建议用HMAC方式对JWT进行加密签名。
 
 2. 在多方系统或者授权服务与资源服务分离的分布式应用中，建议用公钥加密签名的方式。
-
-
 
 ## 参考
 
