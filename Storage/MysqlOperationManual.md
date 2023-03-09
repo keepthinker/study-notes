@@ -79,7 +79,11 @@ select * from vivopush_pz.client_info into outfile '/tmp/client_info.csv' fields
 #### 导入
 
 ```
+# bash命令
 mysql -u root -p password crm_pro < db.sql
+
+# 登录mysql，选择具体数据库后，执行外部sql
+source /home/test/user-data.sql
 ```
 
 ##### 例子
@@ -95,6 +99,28 @@ alter table tablename modify column id int not null primary key auto_increment
 ………………………..add id int not …………………………………………………
 
 ………………………..drop primary key
+
+## 索引修改
+
+```sql
+CREATE INDEX indexName ON table_name (column_name)
+
+ALTER table tableName ADD INDEX indexName(columnName)
+
+DROP INDEX [indexName] ON mytable; 
+
+CREATE TABLE mytable(  
+  ID INT NOT NULL,   
+  username VARCHAR(16) NOT NULL,  
+  INDEX [indexName] (username(length)),
+  UNIQUE [indexName] (username(length)));  
+  CREATE UNIQUE INDEX indexName ON mytable(username(length)
+) 
+
+ALTER table mytable ADD UNIQUE [indexName] (username(length))
+
+ALTER TABLE `tbl_feeds`ADD INDEX `IX_Feeds_username` (`username`) ,ADD INDEX `IX_Feeds_userid` (`userid`) ,ADD INDEX `IX_Feeds_content` (`content`);
+```
 
 # 设置参数
 

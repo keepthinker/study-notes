@@ -35,6 +35,10 @@ docker ps -a --no-trunc
 docker top wizardly_chandrasekhar
 # 使用 docker inspect 来查看 Docker 的底层信息，比如容器的配置和状态信息
 docker inspect bf08b7f2cd89
+# 从容器拷贝文件到宿主机
+docker cp mycontainer:/opt/testnew/file.txt /opt/test/
+# 从宿主机拷贝文件到容器
+docker cp /opt/test/file.txt mycontainer:/opt/testnew/
 ```
 
 ### 起停服务
@@ -729,8 +733,6 @@ docker run -p 8080:80 --name hello -d ubuntu:v2
 5. 最后启动容器docker start {containerId}
 
 参考：[关于docker容器启动后修改或添加端口 - 腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1833131)
-
-
 
 ## Windows
 

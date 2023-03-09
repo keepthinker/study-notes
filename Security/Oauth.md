@@ -122,7 +122,11 @@ A refresh token is a string representing the authorization granted to the client
                Figure 2: Refreshing an Expired Access Token
 ```
 
-## Authorization Code Grant
+## Obtaining Authorization
+
+To request an access token, the client obtains authorization from the resource owner. The authorization is expressed in the form of an authorization grant, which the client uses to request the access token. OAuth defines four grant types: authorization code, implicit, resource owner password credentials, and client credentials. It also provides an extension mechanism for defining additional grant types.
+
+### Authorization Code Grant
 
 The authorization code grant type is used to obtain both access  tokens and refresh tokens and is optimized for confidential clients. Since this is a redirection-based flow, the client must be capable of interacting with the resource owner's user-agent typically a web browser) and capable of receiving incoming requests (via redirection)  from the authorization server.
 
@@ -169,7 +173,7 @@ Pragma: no-cache
 }
 ```
 
-## Implicit Grant
+### Implicit Grant
 
 The implicit grant type is used to obtain access tokens (it does not support the issuance of refresh tokens) and is optimized for public clients known to operate a particular redirection URI. These clients are typically implemented in a browser using a scripting language such as JavaScript. 
 
@@ -194,7 +198,7 @@ Location: http://example.com/cb#access_token=2YotnFZFEjr1zCsicMWpAA
     &state=xyz&token_type=example&expires_in=3600
 ```
 
-## Resource Owner Password Credentials Grant
+### Resource Owner Password Credentials Grant
 
 The resource owner password credentials grant type is suitable in cases where the resource owner has a trust relationship with the client, such as the device operating system or a highly privileged application.  The authorization server should take special care when enabling this grant type and only allow it when other flows are not viable.
 
@@ -227,7 +231,7 @@ Pragma: no-cache
  }
 ```
 
-## Client Credentials Grant
+### Client Credentials Grant
 
 The client can request an access token using only its client credentials (or other supported means of authentication) when the client is requesting access to the protected resources under its control, or those of another resource owner that have been previously arranged with the authorization server (the method of which is beyond the scope of this specification).
 
@@ -256,6 +260,69 @@ Pragma: no-cache
   "example_parameter":"example_value"
 }
 ```
+
+### Extension Grants
+
+The client uses an extension grant type by specifying the grant type
+using an absolute URI (defined by the authorization server) as the
+value of the "grant_type" parameter of the token endpoint, and by
+adding any additional parameters necessary.
+
+
+
+## Refreshing an Access Token
+
+If the authorization server issued a refresh token to the client, the client makes a refresh request to the token endpoint by adding the following parameters using the "application/x-www-form-urlencoded" format per Appendix B with a character encoding of UTF-8 in the HTTP request entity-body:
+
+   grant_type
+         REQUIRED.  Value MUST be set to "refresh_token".
+
+   refresh_token
+         REQUIRED.  The refresh token issued to the client.
+
+   scope
+         OPTIONAL.  The scope of the access request as described by
+         Section 3.3.  The requested scope MUST NOT include any scope
+         not originally granted by the resource owner, and if omitted is
+         treated as equal to the scope originally granted by the
+         resource owner.
+
+Because refresh tokens are typically long-lasting credentials used to request additional access tokens, the refresh token is bound to the client to which it was issued.
+
+
+
+```bash
+#  request
+POST /token HTTP/1.1
+Host: server.example.com
+Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&refresh_token=tGzv3JOkF0XG5Qx2TlKWIA
+
+
+# response
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=UTF-8
+Cache-Control: no-store
+Pragma: no-cache
+
+{
+  "access_token":"2YotnFZFEjr1zCsicMWpAA",
+  "token_type":"example",
+  "expires_in":3600,
+  "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA",
+  "example_parameter":"example_value"
+}
+```
+
+
+
+
+
+
+
+
 
 ## 参考
 
