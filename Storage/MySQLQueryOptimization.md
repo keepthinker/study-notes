@@ -6,8 +6,6 @@ The EXPLAIN statement provides information about how MySQL executes statements. 
 
 EXPLAIN returns a row of information for each table used in the SELECT statement. It lists the tables in the output **in the order that MySQL would read them while processing the statement.** This means that MySQL reads a row from the first table, then finds a matching row in the second table, and then in the third table, and so on. When all tables are processed, MySQL outputs the selected columns and backtracks through the table list until a table is found for which there are more matching rows. The next row is read from this table and the process continues with the next table.
 
-
-
 ## EXPLAIN Output Columns
 
 **Table 8.1 EXPLAIN Output Columns**
@@ -27,15 +25,11 @@ EXPLAIN returns a row of information for each table used in the SELECT statement
 | [`filtered`](https://dev.mysql.com/doc/refman/8.0/en/explain-output.html#explain_filtered)           | `filtered`      | Percentage of rows filtered by table condition |
 | [`Extra`](https://dev.mysql.com/doc/refman/8.0/en/explain-output.html#explain_extra)                 | None            | Additional information                         |
 
-
-
 ### 各字段含义
 
 ### id (JSON name: select_id)
 
 This is the sequential number of the [`SELECT`](https://dev.mysql.com/doc/refman/8.0/en/select.html "13.2.13 SELECT Statement") within the query. The value can be `NULL` if the row refers to the union result of other rows. In this case, the `table` column shows a value like ``<union*`M`*,*`N`*>`` to indicate that the row refers to the union of the rows with `id` values of *`M`* and *`N`*.
-
-
 
 ### select_type (JSON name: none)
 
@@ -56,37 +50,25 @@ The type of SELECT, which can be any of those shown in the following table. A JS
 | `UNCACHEABLE SUBQUERY`                                                                                                         | `cacheable` (`false`)        | A subquery for which the result cannot be cached and must be re-evaluated for each row of the outer query                                                                                                                                |
 | `UNCACHEABLE UNION`                                                                                                            | `cacheable` (`false`)        | The second or later select in a [`UNION`](https://dev.mysql.com/doc/refman/8.0/en/union.html "13.2.18 UNION Clause") that belongs to an uncacheable subquery (see `UNCACHEABLE SUBQUERY`)                                                |
 
-
-
 ### table (JSON name: table_name)
 
 The name of the table to which the row of output refers.
-
-
 
 ### partitions (JSON name: partitions)
 
 The partitions from which records would be matched by the query. The value is NULL for nonpartitioned tables. See Section 24.3.5, “Obtaining Information About Partitions”.
 
-
-
 ### type (JSON name: access_type)
 
 The join type. For descriptions of the different types, see EXPLAIN Join Types.
-
-
 
 ### key_len (JSON name: key_length)
 
 The key_len column indicates the length of the key that MySQL decided to use. The value of key_len enables you to determine how many parts of a multiple-part key MySQL actually uses. If the key column says NULL, the key_len column also says NULL.
 
-
-
 ### ref (JSON name: ref)
 
 The `ref` column shows which columns or constants are compared to the index named in the key column to select rows from the table.
-
-
 
 ### rows (JSON name: rows)
 
@@ -94,21 +76,15 @@ The rows column indicates the number of rows MySQL believes it must examine to e
 
 For InnoDB tables, this number is an estimate, and may not always be exact.
 
-
-
 ### filtered (JSON name: filtered)
 
 The filtered column indicates an estimated percentage of table rows that are filtered by the table condition. The maximum value is 100, which means no filtering of rows occurred. Values decreasing from 100 indicate increasing amounts of filtering. rows shows the estimated number of rows examined and rows × filtered shows the number of rows that are joined with the following table. For example, if rows is 1000 and filtered is 50.00 (50%), the number of rows to be joined with the following table is 1000 × 50% = 500.
-
-
 
 ### Extra (JSON name: none)
 
 This column contains additional information about how MySQL resolves the query. For descriptions of the different values, see EXPLAIN Extra Information.
 
 There is no single JSON property corresponding to the Extra column; however, values that can occur in this column are exposed as JSON properties, or as the text of the message property.
-
-
 
 ## EXPLAIN Join Types
 
@@ -131,8 +107,6 @@ eq_ref can be used for indexed columns that are compared using the = operator. T
 All rows with matching index values are read from this table for each combination of rows from the previous tables. ref is used if the join uses only a leftmost prefix of the key or if the key is not a PRIMARY KEY or UNIQUE index (in other words, if the join cannot select a single row based on the key value). If the key that is used matches only a few rows, this is a good join type.
 
 ref can be used for indexed columns that are compared using the = or <=> operator. 
-
-
 
 ### index_merge
 
@@ -169,3 +143,27 @@ This join type is like ref, but with the addition that MySQL does an extra searc
 ## Reference
 
 [MySQL :: MySQL 8.0 Reference Manual :: 8.8.2 EXPLAIN Output Format](https://dev.mysql.com/doc/refman/8.0/en/explain-output.html)
+
+## EXISTS vs JOIN and use of EXISTS clause
+
+**`EXISTS` is used to return a boolean value, `JOIN` returns a whole other table**
+
+`EXISTS` is only used to test if a subquery returns results, and short circuits as soon as it does. `JOIN` is used to extend a result set by combining it with additional fields from another table to which there is a relation.
+
+In your example, the queries are semantically equivalent.
+
+In general, use `EXISTS` when:
+
+- You don't need to return data from the related table
+- You have dupes in the related table (`JOIN` can cause duplicate rows if values are repeated)（比如表A和表B是1对多的关系，假如我们我们需要用两张表的关系来取A的数据，那么此时用exist相比用join就不会出现重复取A表的数据）
+- You want to check existence (use instead of `LEFT OUTER JOIN...NULL` condition)
+
+If you have proper indexes, most of the time the `EXISTS` will perform identically to the `JOIN`. The exception is on very complicated subqueries, where it is normally quicker to use `EXISTS`.
+
+If your `JOIN` key is not indexed, it may be quicker to use `EXISTS` but you will need to test for your specific circumstance.
+
+`JOIN` syntax is easier to read and clearer normally as well.
+
+Reference：   [sql - EXISTS vs JOIN and use of EXISTS clause - Stack Overflow](https://stackoverflow.com/questions/7082449/exists-vs-join-and-use-of-exists-clause)
+
+[为什么 EXISTS(NOT EXIST) 与 JOIN(LEFT JOIN) 的性能会比 IN(NOT IN) 好_51CTO博客_exists和left join](https://blog.51cto.com/u_15060467/4528831)

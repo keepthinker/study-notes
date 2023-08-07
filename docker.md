@@ -191,6 +191,11 @@ ubuntu          18.04      275d79972a86        6 days ago        ...
 username/ubuntu 18.04      275d79972a86        6 days ago        ...  
 $ docker push username/ubuntu:18.04
 $ docker search username/ubuntu
+
+# 导出镜像
+docker save -o my_ubuntu_v3.tar runoob/ubuntu:v3
+# 导入镜像
+docker load -i my_ubuntu_v3.tar
 ```
 
 #### 构建镜像

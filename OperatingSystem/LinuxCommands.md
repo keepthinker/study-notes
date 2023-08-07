@@ -263,8 +263,6 @@ cat newfile* > orifile
 sed -i 's/原字符串/替换字符串/g' filename
 ```
 
- 
-
 ## 压缩文件命令
 
 ```bash
@@ -279,4 +277,15 @@ tar –cvf jpg.tar *.jpg # 将目录里所有jpg文件打包成tar.jpg
 tar –czf jpg.tar.gz *.jpg # 将目录里所有jpg文件打包成jpg.tar后，并且将其用gzip压缩，生成一个gzip压缩过的包，命名为jpg.tar.gz
 tar –cjf jpg.tar.bz2 *.jpg # 将目录里所有jpg文件打包成jpg.tar后，并且将其用bzip2压缩，生成一个bzip2压缩过的包，命名为jpg.tar.bz2
 tar –cZf jpg.tar.Z *.jpg # 将目录里所有jpg文件打包成jpg.tar后，并且将其用compress压缩，生成一个umcompress压缩过的包，命名为jpg.tar.Z
+```
+
+
+
+## grep的使用
+
+正则表达式的使用
+
+```bash
+# 找出以_id为结尾的非空字符串
+grep -o -E '\S+_id' file.txt
 ```
