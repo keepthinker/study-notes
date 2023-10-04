@@ -553,6 +553,11 @@ javap -p -c AbstractClient.class
 
 The JavaTM Debug Wire Protocol (JDWP) is the protocol used for communication between a debugger and the Java virtual machine (VM) which it debugs (hereafter called the target VM). JDWP is optional; it might not be available in some implementations of the Java(TM) 2 SDK. The existence of JDWP can allow the same debugger to work
 
+```bash
+java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8000,suspend=n \
+       -jar target/myapplication-0.0.1-SNAPSHOT.jar
+```
+
 # 引用类型
 
 ![image](https://img-blog.csdn.net/20140223152242562?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbWF6aGltYXpo/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center)

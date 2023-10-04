@@ -1,7 +1,5 @@
 # RocketMQ
 
-
-
 ## Domain Model
 
 Apache RocketMQ is a distributed middleware service that adopts an asynchronous communication model and a publish/subscribe message transmission model.
@@ -98,8 +96,6 @@ In Apache RocketMQ, a topic is a top-level storage container in which all messag
 
 A topic contains one or more queues. Message storage and scalability are implemented based on queues. All constraints and attribute settings for a topic are implemented based on the queues in the topic.
 
-
-
 ### Internal attributes[​](https://rocketmq.apache.org/docs/domainModel/02topic#internal-attributes "Direct link to heading")
 
 **Topic name**
@@ -134,20 +130,15 @@ A topic contains one or more queues. Message storage and scalability are impleme
 
 - Constraint: Starting from version 5.0, Apache RocketMQ supports enforcing the validation of message types, that is, each topic only allows messages of a single type to be sent. This can better facilitate operation and management of production systems and avoid confusion. However, to ensure backward compatibility with version 4.x, the validation feature is disabled by default. It is recommended to enable it manually through the server parameter "enableTopicMessageTypeCheck".
 
-
-
 ### Usage Example
 
 For creating topics in Apache RocketMQ 5.0, it is recommended to use the mqadmin tool. However, it is worth noting that message type needs to be added as a property parameter. The following is an example:
 
 ```bash
 sh mqadmin updateTopic -n <nameserver_address> -t <topic_name> -c <cluster_name> -a +message.type=<message_type>
-
 ```
 
 Among these, the message_type parameter can be set as Normal/FIFO/Delay/Transaction based on the message type. If it is not specified, it defaults to the Normal type.
-
-
 
 ## Message Queue
 
@@ -163,15 +154,11 @@ Queues provide the following benefits:
 
 - Streaming operation semantics. The queue-based storage in Apache RocketMQ allows consumers to read one or more messages from an offset. This helps implement features such as aggregate read and backtrack read. These features are not available in RabbitMQ or ActiveMQ.
 
-
-
 ### Model relationship
 
 By default, Apache RocketMQ provides reliable message storage. All messages that are successfully delivered are persistently stored in queues. Messages are sent by the producer and received by the consumer client. Each message can be successfully delivered at least once.
 
 The queue model of Apache RocketMQ is similar to the partition model of Kafka. In Apache RocketMQ, a queue is part of a topic. Messages are operated in queues even though they are managed by topic. For example, when a producer sends a message to a specific topic, the message is sent to a queue in the topic.
-
-
 
 ## Message
 
@@ -198,10 +185,6 @@ The following message delivery elements are defined on the producer side:
 - Transactional behavior: Apache RocketMQ supports transaction messages. Producers are involved in transaction checks to ensure eventual consistency of transactions.
 
 Producers and topics have an n-to-n relationship. A producer can send messages to multiple topics, and a topic can receive messages from multiple producers. This many-to-many relationship facilitates performance scaling and disaster recovery.
-
-
-
-
 
 ## Consumer Group
 
@@ -237,8 +220,6 @@ In a consumer group, consumers consume messages based on the consumption behavio
 
 - Values: The default delivery method is concurrent delivery.
 
-
-
 **Consumption retry policy**
 
 - Definition: the retry policy that is used when a consumer fails to consume a message. If a consumer fails to consume a message, the system re-delivers the failed message to the consumer for re-consumption based on the policy.
@@ -251,15 +232,11 @@ In a consumer group, consumers consume messages based on the consumption behavio
 
 - Constraint: Retry interval is available only for push consumers.
 
-
-
 **Subscription**
 
 - Definition: the set of subscription relationships that are associated with the current consumer group. A subscription includes the topics to which the consumers subscribe and the message filter rules that are used by consumers. 
 
 Consumers dynamically register subscriptions for consumer groups. The Apache RocketMQ broker persists subscriptions and matches the subscriptions to the consumption progress of messages.
-
-
 
 ## Consumer
 
@@ -277,8 +254,6 @@ The following items determine consumer behavior:
 
 - Local settings for consumers: These settings specify how consumer clients run based on the consumer type. For example, you can configure the number of threads and concurrency settings on consumers to achieve different transmission effects.
 
-
-
 ## Subscription
 
 ### Definition
@@ -293,21 +268,15 @@ By configuring subscriptions, you can control the following messaging behaviors:
 
 - Consumption status: By default, the Apache RocketMQ broker provides persistent subscriptions. In other words, after a consumer group subscribes to a broker, consumers in the group can continue consuming messages from where the consumers left off after they reconnect.
 
-
-
 ### Rules for determining a subscription
 
 One topic to many subscribers. The following figure shows two consumer groups (Group A and Group B) subscribed to Topic A. These two subscriptions are independent of each other and can be defined separately.
 
 ![img](rocketmq-subscription.png)
 
-
-
 One subscriber to multiple topics. The following figure shows a consumer group (Group A) subscribed to two topics: Topic A and Topic B. Consumers in Group A have two separate subscriptions to Topic A and Topic B. The two subscriptions are independent of each other and can be defined separately.
 
 ![img](rocketmq-subscription-one-subscriber-to-multiple-topics.png)
-
-
 
 ## Internal attributes[​](https://rocketmq.apache.org/docs/domainModel/09subscription#internal-attributes "Direct link to heading")
 
@@ -326,10 +295,6 @@ One subscriber to multiple topics. The following figure shows a consumer group (
 - Definition: the expression of a custom filter rule.
 
 - Values: For more information, see [Syntax for filter expressions](https://rocketmq.apache.org/docs/featureBehavior/07messagefilter).
-
-
-
-
 
 ## Producer Group和Consumer Group对比
 
@@ -350,10 +315,6 @@ One subscriber to multiple topics. The following figure shows a consumer group (
 以是多个进程，或者是一个进程的多个 Consumer 对象。一个 Consumer Group 下的多个 Consumer 以均摊
 方式消费消息，如果设置为广播方式，那么这个 Consumer Group 下的每个实例都消费全量数据。
 
-
-
-
-
 ### 消费方式push和pull的区别
 
 RocketMQ的是如何通过长轮询机制来实现压力和时实的平衡。
@@ -363,8 +324,6 @@ RocketMQ的是如何通过长轮询机制来实现压力和时实的平衡。
 [【Alibaba中间件技术系列】「RocketMQ技术专题」让我们一起探索一下DefaultMQPullConsumer的实现原理及源码分析_阿里巴巴_洛神灬殇_InfoQ写作社区](https://xie.infoq.cn/article/2218308572d35f0a80682629c)
 
 [精华推荐 | 【深入浅出 RocketMQ原理及实战】「底层源码挖掘系列」透彻剖析贯穿RocketMQ的消费者端的运行核心的流程（上篇）_RocketMQ_洛神灬殇_InfoQ写作社区](https://xie.infoq.cn/article/e3a0630707e4b7168aa13ea3c)
-
-
 
 ## 参考
 
