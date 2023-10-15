@@ -384,7 +384,369 @@ my.map.[/key2]=value2
 my.map./key3=value3
 ```
 
-|     | For YAML files, the brackets need to be surrounded by quotes for the keys to be parsed properly. |
-| --- | ------------------------------------------------------------------------------------------------ |
+| For YAML files, the brackets need to be surrounded by quotes for the keys to be parsed properly. |
+| ------------------------------------------------------------------------------------------------ |
 
 The properties above will bind to a `Map` with `/key1`, `/key2` and `key3` as the keys in the map. The slash has been removed from `key3` because it was not surrounded by square brackets.
+
+
+
+#### Merging Complex Types
+
+When lists are configured in more than one place, overriding works by replacing the entire list.
+
+For example, assume a `MyPojo` object with `name` and `description` attributes that are `null` by default. The following example exposes a list of `MyPojo` objects from `MyProperties`:
+
+```java
+@ConfigurationProperties("my")
+public class MyProperties {
+
+    private final List<MyPojo> list = new ArrayList<>();
+
+    public List<MyPojo> getList() {
+        return this.list;
+    }
+
+}
+```
+
+Consider the following configuration:
+
+```properties
+my.list[0].name=my name
+my.list[0].description=my description
+#---
+spring.config.activate.on-profile=dev
+my.list[0].name=my another name
+```
+
+If the `dev` profile is not active, `MyProperties.list` contains one `MyPojo` entry, as previously defined. If the `dev` profile is enabled, however, the `list` *still* contains only one entry (with a name of `my another name` and a description of `null`). This configuration *does not* add a second `MyPojo` instance to the list, and it does not merge the items.
+
+
+
+For `Map` properties, you can bind with property values drawn from multiple sources. However, for the same property in multiple sources, the one with the highest priority is used. The following example exposes a `Map<String, MyPojo>` from `MyProperties`:
+
+```java
+@ConfigurationProperties("my")
+public class MyProperties {
+
+    private final Map<String, MyPojo> map = new LinkedHashMap<>();
+
+    public Map<String, MyPojo> getMap() {
+        return this.map;
+    }
+
+}
+```
+
+
+
+Consider the following configuration:
+
+```properties
+my.map.key1.name=my name 1
+my.map.key1.description=my description 1
+#---
+spring.config.activate.on-profile=dev
+my.map.key1.name=dev name 1
+my.map.key2.name=dev name 2
+my.map.key2.description=dev description 2
+```
+
+If the `dev` profile is not active, `MyProperties.map` contains one entry with key `key1` (with a name of `my name 1` and a description of `my description 1`). If the `dev` profile is enabled, however, `map` contains two entries with keys `key1` (with a name of `dev name 1` and a description of `my description 1`) and `key2` (with a name of `dev name 2` and a description of `dev description 2`).
+
+
+
+#### Properties Conversion
+
+Spring Boot attempts to coerce the external application properties to the right type when it binds to the `@ConfigurationProperties` beans. If you need custom type conversion, you can provide a `ConversionService` bean (with a bean named `conversionService`) or custom property editors (through a `CustomEditorConfigurer` bean) or custom `Converters` (with bean definitions annotated as `@ConfigurationPropertiesBinding`).
+
+
+
+##### Converting Durations
+
+Spring Boot has dedicated support for expressing durations. If you expose a `java.time.Duration` property, the following formats in application properties are available:
+
+- A regular `long` representation (using milliseconds as the default unit unless a `@DurationUnit` has been specified)
+
+- The standard ISO-8601 format [used by `java.time.Duration`](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence))
+
+- A more readable format where the value and the unit are coupled (`10s` means 10 seconds)
+
+Consider the following example:
+
+
+
+
+
+
+
+#### @ConfigurationProperties Validation
+
+Spring Boot attempts to validate `@ConfigurationProperties` classes whenever they are annotated with Spring’s `@Validated` annotation. You can use JSR-303 `jakarta.validation` constraint annotations directly on your configuration class. To do so, ensure that a compliant JSR-303 implementation is on your classpath and then add constraint annotations to your fields, as shown in the following example:
+
+```java
+@ConfigurationProperties("my.service")
+@Validated
+public class MyProperties {
+
+    @NotNull
+    private InetAddress remoteAddress;
+
+    // getters/setters...
+
+}
+```
+
+
+
+#### @ConfigurationProperties vs. @Value
+
+The `@Value` annotation is a core container feature, and it does not provide the same features as type-safe configuration properties. The following table summarizes the features that are supported by `@ConfigurationProperties` and `@Value`:
+
+| Feature                                                                                                                                                                    | `@ConfigurationProperties` | `@Value`                                                                                                                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Relaxed binding](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config.typesafe-configuration-properties.relaxed-binding) | Yes                        | Limited (see [note below](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config.typesafe-configuration-properties.vs-value-annotation.note)) |
+| [Meta-data support](https://docs.spring.io/spring-boot/docs/current/reference/html/configuration-metadata.html#appendix.configuration-metadata)                            | Yes                        | No                                                                                                                                                                                           |
+| `SpEL` evaluation                                                                                                                                                          | No                         | Yes                                                                                                                                                                                          |
+
+
+
+
+
+## Profiles
+
+Spring Profiles provide a way to segregate parts of your application configuration and make it be available only in certain environments. Any `@Component`, `@Configuration` or `@ConfigurationProperties` can be marked with `@Profile` to limit when it is loaded, as shown in the following example:
+
+```java
+@Configuration(proxyBeanMethods = false)
+@Profile("production")
+public class ProductionConfiguration {    // ...
+
+}
+```
+
+
+
+You can use a `spring.profiles.active` `Environment` property to specify which profiles are active. You can specify the property in any of the ways described earlier in this chapter. For example, you could include it in your `application.properties`, as shown in the following example:
+
+
+
+```properties
+spring.profiles.active=dev,hsqldb
+```
+
+You could also specify it on the command line by using the following switch: `--spring.profiles.active=dev,hsqldb`.
+
+If no profile is active, a default profile is enabled. The name of the default profile is `default` and it can be tuned using the `spring.profiles.default` `Environment` property, as shown in the following example:
+
+
+
+```properties
+spring.profiles.default=none
+```
+
+`spring.profiles.active` and `spring.profiles.default` can only be used in non-profile specific documents. This means they cannot be included in [profile specific files](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config.files.profile-specific) or [documents activated](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config.files.activation-properties) by `spring.config.activate.on-profile`.
+
+For example, the second document configuration is invalid:
+
+
+
+```properties
+# this document is valid
+spring.profiles.active=prod
+#---
+# this document is invalid
+spring.config.activate.on-profile=prod
+spring.profiles.active=metrics
+```
+
+
+
+## Logging
+
+Spring Boot uses [Commons Logging](https://commons.apache.org/logging) for all internal logging but leaves the underlying log implementation open. Default configurations are provided for [Java Util Logging](https://docs.oracle.com/en/java/javase/17/docs/api/java.logging/java/util/logging/package-summary.html), [Log4j2](https://logging.apache.org/log4j/2.x/), and [Logback](https://logback.qos.ch/). In each case, loggers are pre-configured to use console output with optional file output also available.
+
+By default, if you use the “Starters”, Logback is used for logging. Appropriate Logback routing is also included to ensure that dependent libraries that use Java Util Logging, Commons Logging, Log4J, or SLF4J all work correctly.
+
+
+
+### Console Output
+
+The default log configuration echoes messages to the console as they are written. By default, `ERROR`-level, `WARN`-level, and `INFO`-level messages are logged. You can also enable a “debug” mode by starting your application with a `--debug` flag.
+
+```shell
+$ java -jar myapp.jar --debug
+```
+
+|     | You can also specify `debug=true` in your `application.properties`. |
+| --- | ------------------------------------------------------------------- |
+
+## Internationalization
+Spring Boot supports localized messages so that your application can cater to users of different language preferences. By default, Spring Boot looks for the presence of a messages resource bundle at the root of the classpath.
+
+
+## JSON
+Spring Boot provides integration with three JSON mapping libraries:
+
+- Gson
+
+- Jackson
+
+- JSON-B
+
+Jackson is the preferred and default library.
+
+### Jackson
+Auto-configuration for Jackson is provided and Jackson is part of spring-boot-starter-json. When Jackson is on the classpath an ObjectMapper bean is automatically configured. Several configuration properties are provided for customizing the configuration of the ObjectMapper.
+
+## Task Execution and Scheduling
+In the absence of an Executor bean in the context, Spring Boot auto-configures a ThreadPoolTaskExecutor with sensible defaults that can be automatically associated to asynchronous task execution (@EnableAsync) and Spring MVC asynchronous request processing.
+
+The thread pool uses 8 core threads that can grow and shrink according to the load. Those default settings can be fine-tuned using the spring.task.execution namespace, as shown in the following example:
+
+```yaml
+spring.task.execution.pool.max-size=16
+spring.task.execution.pool.queue-capacity=100
+spring.task.execution.pool.keep-alive=10s
+```
+
+## Testing
+Spring Boot provides a number of utilities and annotations to help when testing your application. Test support is provided by two modules: spring-boot-test contains core items, and spring-boot-test-autoconfigure supports auto-configuration for tests.
+
+Most developers use the spring-boot-starter-test “Starter”, which imports both Spring Boot test modules as well as JUnit Jupiter, AssertJ, Hamcrest, and a number of other useful libraries.
+
+### Test Scope Dependencies
+The spring-boot-starter-test “Starter” (in the test scope) contains the following provided libraries:
+
+- JUnit 5: The de-facto standard for unit testing Java applications.
+
+- Spring Test & Spring Boot Test: Utilities and integration test support for Spring Boot applications.
+
+- AssertJ: A fluent assertion library.
+
+- Hamcrest: A library of matcher objects (also known as constraints or predicates).
+
+- Mockito: A Java mocking framework.
+
+- JSONassert: An assertion library for JSON.
+
+- JsonPath: XPath for JSON.
+
+We generally find these common libraries to be useful when writing tests. If these libraries do not suit your needs, you can add additional test dependencies of your own.
+
+### Testing Spring Applications
+One of the major advantages of dependency injection is that it should make your code easier to unit test. You can instantiate objects by using the new operator without even involving Spring. You can also use mock objects instead of real dependencies.
+
+Often, you need to move beyond unit testing and start integration testing (with a Spring ApplicationContext). It is useful to be able to perform integration testing without requiring deployment of your application or needing to connect to other infrastructure.
+
+The Spring Framework includes a dedicated test module for such integration testing. You can declare a dependency directly to org.springframework:spring-test or use the spring-boot-starter-test “Starter” to pull it in transitively.
+
+If you have not used the spring-test module before, you should start by reading the relevant section of the Spring Framework reference documentation.
+
+### Testing Spring Boot Applications
+A Spring Boot application is a Spring ApplicationContext, so nothing very special has to be done to test it beyond what you would normally do with a vanilla Spring context.
+
+## Using the Test Configuration Main Method
+Typically the test configuration discovered by @SpringBootTest will be your main @SpringBootApplication. 
+
+Since customizations in the main method can affect the resulting ApplicationContext, it’s possible that you might also want to use the main method to create the ApplicationContext used in your tests. By default, @SpringBootTest will not call your main method, and instead the class itself is used directly to create the ApplicationContext
+
+If you want to change this behavior, you can change the useMainMethod attribute of @SpringBootTest to UseMainMethod.ALWAYS or UseMainMethod.WHEN_AVAILABLE. When set to ALWAYS, the test will fail if no main method can be found. When set to WHEN_AVAILABLE the main method will be used if it is available, otherwise the standard loading mechanism will be used.
+
+For example, the following test will invoke the main method of MyApplication in order to create the ApplicationContext. If the main method sets additional profiles then those will be active when the ApplicationContext starts.
+
+```java
+@SpringBootTest(useMainMethod = UseMainMethod.ALWAYS)
+class MyApplicationTests {
+
+    @Test
+    void exampleTest() {
+        // ...
+    }
+}
+```
+
+## sing Application Arguments
+If your application expects arguments, you can have @SpringBootTest inject them using the args attribute.
+
+```java
+@SpringBootTest(args = "--app.test=one")
+class MyApplicationArgumentTests {
+
+    @Test
+    void applicationArgumentsPopulated(@Autowired ApplicationArguments args) {
+        assertThat(args.getOptionNames()).containsOnly("app.test");
+        assertThat(args.getOptionValues("app.test")).containsOnly("one");
+    }
+
+}
+```
+
+## Auto-configured Tests
+Spring Boot’s auto-configuration system works well for applications but can sometimes be a little too much for tests. It often helps to load only the parts of the configuration that are required to test a “slice” of your application. For example, you might want to test that Spring MVC controllers are mapping URLs correctly, and you do not want to involve database calls in those tests, or you might want to test JPA entities, and you are not interested in the web layer when those tests run.
+
+The spring-boot-test-autoconfigure module includes a number of annotations that can be used to automatically configure such “slices”. Each of them works in a similar way, providing a @…​Test annotation that loads the ApplicationContext and one or more @AutoConfigure…​ annotations that can be used to customize auto-configuration settings.
+
+### Auto-configured JSON Tests
+To test that object JSON serialization and deserialization is working as expected, you can use the @JsonTest annotation. @JsonTest auto-configures the available supported JSON mapper, which can be one of the following libraries:
+
+Jackson ObjectMapper, any @JsonComponent beans and any Jackson Modules
+
+- Gson
+- Jsonb
+
+## Creating Your Own Auto-configuration
+If you work in a company that develops shared libraries, or if you work on an open-source or commercial library, you might want to develop your own auto-configuration. Auto-configuration classes can be bundled in external jars and still be picked up by Spring Boot.
+
+Auto-configuration can be associated to a “starter” that provides the auto-configuration code as well as the typical libraries that you would use with it. We first cover what you need to know to build your own auto-configuration and then we move on to the typical steps required to create a custom starter.
+
+### Understanding Auto-configured Beans
+Classes that implement auto-configuration are annotated with @AutoConfiguration. This annotation itself is meta-annotated with @Configuration, making auto-configurations standard @Configuration classes. Additional @Conditional annotations are used to constrain when the auto-configuration should apply. Usually, auto-configuration classes use @ConditionalOnClass and @ConditionalOnMissingBean annotations. This ensures that auto-configuration applies only when relevant classes are found and when you have not declared your own @Configuration.
+
+You can browse the source code of spring-boot-autoconfigure to see the @AutoConfiguration classes that Spring provides (see the META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports file).
+
+### Locating Auto-configuration Candidates
+Spring Boot checks for the presence of a META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports file within your published jar. The file should list your configuration classes, with one class name per line, as shown in the following example:
+
+com.mycorp.libx.autoconfigure.LibXAutoConfiguration
+com.mycorp.libx.autoconfigure.LibXWebAutoConfiguration
+
+
+### Locating Auto-configuration Candidates
+Spring Boot checks for the presence of a META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports file within your published jar. The file should list your configuration classes, with one class name per line, as shown in the following example:
+
+```java
+com.mycorp.libx.autoconfigure.LibXAutoConfiguration
+com.mycorp.libx.autoconfigure.LibXWebAutoConfiguration
+```
+
+> Auto-configurations must be loaded only by being named in the imports file. Make sure that they are defined in a specific package space and that they are never the target of component scanning. Furthermore, auto-configuration classes should not enable component scanning to find additional components. Specific @Import annotations should be used instead.
+
+### Condition Annotations
+You almost always want to include one or more @Conditional annotations on your auto-configuration class. The @ConditionalOnMissingBean annotation is one common example that is used to allow developers to override auto-configuration if they are not happy with your defaults.
+
+Spring Boot includes a number of @Conditional annotations that you can reuse in your own code by annotating @Configuration classes or individual @Bean methods. These annotations include:
+
+- Class Conditions
+- Bean Condition
+- Property Conditions
+- Resource Conditions
+- Web Application Conditions
+- SpEL Expression Conditions
+
+## Creating Your Own Starter
+A typical Spring Boot starter contains code to auto-configure and customize the infrastructure of a given technology, let’s call that "acme". To make it easily extensible, a number of configuration keys in a dedicated namespace can be exposed to the environment. Finally, a single "starter" dependency is provided to help users get started as easily as possible.
+
+Concretely, a custom starter can contain the following:
+
+The autoconfigure module that contains the auto-configuration code for "acme".
+
+The starter module that provides a dependency to the autoconfigure module as well as "acme" and any additional dependencies that are typically useful. In a nutshell, adding the starter should provide everything needed to start using that library.
+
+This separation in two modules is in no way necessary. If "acme" has several flavors, options or optional features, then it is better to separate the auto-configuration as you can clearly express the fact some features are optional. Besides, you have the ability to craft a starter that provides an opinion about those optional dependencies. At the same time, others can rely only on the autoconfigure module and craft their own starter with different opinions.
+
+If the auto-configuration is relatively straightforward and does not have optional features, merging the two modules in the starter is definitely an option.
+
+### Starter Module
+The starter is really an empty jar. Its only purpose is to provide the necessary dependencies to work with the library. You can think of it as an opinionated view of what is required to get started.
