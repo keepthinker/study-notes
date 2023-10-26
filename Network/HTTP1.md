@@ -266,7 +266,7 @@ curl -x 10.44.54.111:80 http://www.test.com/test.php
 //Https指定Host与IP访问
 curl --resolve www.vivo.com.cn:443:183.61.27.136 https://www.vivo.com.cn
 
-curl --resolve www.vivo.com.cn:183.61.27.136 https://www.vivo.com.cn
+curl --resolve www.vivo.com.cn:443:183.61.27.136 https://www.vivo.com.cn
 
 //http使用代理访问，-x或者--proxy后是代理服务器地址
 curl -x http://localhost:33210 'https://www.google.com.hk'
