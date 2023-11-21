@@ -1,6 +1,7 @@
 # 安全
 
 ## CA证书
+
 ### CA证书验证原理
 
 ![img](https-certificate.jpg)
@@ -56,10 +57,10 @@ mv server.key.insecure server.key
 # 简单的方法一步生成私钥及自签名证书
 
 openssl req -x509 -nodes -days 365 -newkey rsa:4096 -keyout server.key -out server.crt
-
 ```
 
 #### 私有CA证书
+
 ```bash
 # 1. 创建CA私钥
 
@@ -117,21 +118,20 @@ openssl ca -in server-keepthinker-springboot-example.csr \
 
 ## 使用cnf文件
 openssl ca -in server-keepthinker-springboot-example.csr \
-	-md sha256 \
-	-extensions SAN \
-	-config openssl-keepthinker-springboot-example.cnf \
-	-keyfile  ca-keepthinker-with-password.key \
-	-cert ca-keepthinker.crt \
-	-out server-keepthinker-springboot-example.crt
+    -md sha256 \
+    -extensions SAN \
+    -config openssl-keepthinker-springboot-example.cnf \
+    -keyfile  ca-keepthinker-with-password.key \
+    -cert ca-keepthinker.crt \
+    -out server-keepthinker-springboot-example.crt
 ## 如果提示ERROR:There is already a certificate，如果需要再次生成证书，可以直接>demoCA/index.txt来清空文件，使可以再次生成证书。
 
 # 一般生成证书crt的方式
 openssl x509 -req -days 365 -in server.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out server.crt
-
-
 ```
 
 ### 查看证书等信息
+
 ```bash
 # 查看私钥信息
 
@@ -162,15 +162,16 @@ curl --cacert ca-keepthinker.pem https://www.springboot-example.keepthinker.com
 
 # 转换crt成pem
 openssl x509 -in ca.crt -out ca.pem
-
 ```
 
 ### Windows证书导入
+
 ```bash
 >> certmgr
 ```
 
 ### SAN(Subject Alternative Name)
+
 Subject Alternative Name (SAN) is an extension to X.509 that lets you specify additional host names (values) to be protected by a single SSL certificate using a subjectAltName field. It allows more than one host to use the same copy of a single certificate. At the server-level, you can create multiple virtual hosts and add these hosts to the subjectAltName field of the certificate. You generate a certificate with SAN and the clients can connect to the server using subjectAltName. Whenever HTTPS request comes to any of the virtual host, the server uses the same certificate for SSL handshake.
 
 ```bash
@@ -185,11 +186,11 @@ Subject Alternative Name (SAN) is an extension to X.509 that lets you specify ad
 # 如果是ubuntu，openssl req如果参数添加-reqexts SAN，那么打开/etc/ssl/openssl.conf文件(也可以指定用-config文件位置)，添加上述alt_names等配置，格式和上面一致。 并且需要在subjectAltName前补充[ SAN ]。具体命令，参考上文。
 ```
 
-
 ### 问题分析
-#### 阿里云
-如果域名没有备案，发起https中SSL的Client Hello请求会被阿里云直接拒绝直接返回RST
 
+#### 阿里云
+
+如果域名没有备案，发起https中SSL的Client Hello请求会被阿里云直接拒绝直接返回RST
 
 ### 参考
 
@@ -208,3 +209,13 @@ https://www.zhihu.com/question/37370216/answer/1914075935
 [openssl官网](https://www.openssl.org/)
 
 [Provide subjectAltName to openssl directly on the command line](https://security.stackexchange.com/questions/74345/provide-subjectaltname-to-openssl-directly-on-the-command-line)
+
+## JWT(JSON Web Token)
+
+1. 单体应用建议用HMAC方式对JWT进行加密签名。
+
+2. 在多方系统或者授权服务与资源服务分离的分布式应用中，建议用公钥加密签名的方式。
+
+## 参考
+
+[凭证 | 凤凰架构](https://icyfenix.cn/architect-perspective/general-architecture/system-security/credentials.html#jwt)

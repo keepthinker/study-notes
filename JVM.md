@@ -505,6 +505,21 @@ public class SPIMain {
 
 查看JVM启动参数：jinfo -flags ${jvmPid}
 
+### JDK 8 配置默认值
+
+-Xmx 的默认值为你当前机器最大内存的 1/4
+-Xms 的默认值为你当前机器最大内存的 1/64 （这个值要反复测试并通过监控调整一个合适的值，是因为当Heap不够用时，会发生内存抖动，影响程序运行稳定性）
+-Xss 的默认值好像和平台有关（不同平台默认值不同），我们最常用的Linux64位服务器默认值好像是1024k（这个我不确定）。在相同物理内存下，减小这个值能生成更多的线程，这个参数在高并发的情况下对性能影响比较明显，需要花比较长的时间进行严格的测试来定义一个合适的值（如果栈不深128k够用的，大的应用建议使用256k）。
+
+堆的初始值和最大值，使用如下命令查看
+
+```bash
+在Windows里：
+java -XX:+PrintFlagsFinal -version | findstr /i "HeapSize PermSize ThreadStackSize"
+在Linux里：
+java -XX:+PrintFlagsFinal -version | grep -iE 'HeapSize|PermSize|ThreadStackSize'
+```
+
 ## 解析class文件
 
 javap -p -c AbstractClient.class
@@ -537,6 +552,11 @@ javap -p -c AbstractClient.class
 ## JDWP
 
 The JavaTM Debug Wire Protocol (JDWP) is the protocol used for communication between a debugger and the Java virtual machine (VM) which it debugs (hereafter called the target VM). JDWP is optional; it might not be available in some implementations of the Java(TM) 2 SDK. The existence of JDWP can allow the same debugger to work
+
+```bash
+java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8000,suspend=n \
+       -jar target/myapplication-0.0.1-SNAPSHOT.jar
+```
 
 # 引用类型
 

@@ -35,6 +35,10 @@ docker ps -a --no-trunc
 docker top wizardly_chandrasekhar
 # 使用 docker inspect 来查看 Docker 的底层信息，比如容器的配置和状态信息
 docker inspect bf08b7f2cd89
+# 从容器拷贝文件到宿主机
+docker cp mycontainer:/opt/testnew/file.txt /opt/test/
+# 从宿主机拷贝文件到容器
+docker cp /opt/test/file.txt mycontainer:/opt/testnew/
 ```
 
 ### 起停服务
@@ -187,6 +191,11 @@ ubuntu          18.04      275d79972a86        6 days ago        ...
 username/ubuntu 18.04      275d79972a86        6 days ago        ...  
 $ docker push username/ubuntu:18.04
 $ docker search username/ubuntu
+
+# 导出镜像
+docker save -o my_ubuntu_v3.tar runoob/ubuntu:v3
+# 导入镜像
+docker load -i my_ubuntu_v3.tar
 ```
 
 #### 构建镜像
@@ -555,8 +564,6 @@ It’s possible to **use environment variables in your shell** to populate value
 
 If you have multiple environment variables, you can substitute them by adding them to a default environment variable **file named `.env`** or by providing a path to your environment variables file using the **`--env-file` command line option**.
 
-
-
 #### Environment variables precedence
 
 The order of precedence is as follows:
@@ -565,8 +572,6 @@ The order of precedence is as follows:
 2. Passed from/set in `compose.yaml` service’s configuration, from the [environment key](https://docs.docker.com/compose/compose-file/#environment).
 3. Passed from/set in `compose.yaml` service’s configuration, from the [env_file key](https://docs.docker.com/compose/compose-file/#env_file).
 4. Passed from/set in Container Image in the [ENV directive](https://docs.docker.com/engine/reference/builder/#env).
-
-
 
 #### 参考
 
@@ -733,3 +738,10 @@ docker run -p 8080:80 --name hello -d ubuntu:v2
 5. 最后启动容器docker start {containerId}
 
 参考：[关于docker容器启动后修改或添加端口 - 腾讯云开发者社区-腾讯云](https://cloud.tencent.com/developer/article/1833131)
+
+## Windows
+
+```powershell
+# 查看docker相关信息的路径
+cd \\wsl$\Ubuntu\mnt\wsl\docker-desktop-data\data\docker
+```

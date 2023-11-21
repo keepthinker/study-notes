@@ -245,3 +245,91 @@ export https_proxy=http://127.0.0.1:7890 http_proxy=http://127.0.0.1:7890 all_pr
 # 设置代理下载时，不校验证书
 wget --no-check-certificate https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.30-linux-glibc2.12-x86_64.tar.gz
 ```
+
+## 切割文件
+
+```bash
+## 指定文件大小来切割，每个文件大小500m，生成的新文件的文件名是newfile后面加上按照aa，ab，ac……来排序的
+split -b 500m log.txt newfile
+
+## 切开的文件合起来
+cat newfile* > orifile
+```
+
+## 字符串修改
+
+```bash
+# 替换文件中的所有匹配项
+sed -i 's/原字符串/替换字符串/g' filename
+```
+
+## 压缩文件命令
+
+```bash
+tar -cf all.tar *.jpg # 这条命令是将所有.jpg的文件打成一个名为all.tar的包。-c是表示产生新的包，-f指定包的文件名。
+tar -rf all.tar *.gif # 这条命令是将所有.gif的文件增加到all.tar的包里面去。-r是表示增加文件的意思。 
+tar -uf all.tar logo.gif # 这条命令是更新原来tar包all.tar中logo.gif文件，-u是表示更新文件的意思。 
+tar -tf all.tar # 这条命令是列出all.tar包中所有文件，-t是列出文件的意思 
+tar -xf all.tar # 这条命令是解出all.tar包中所有文件，-x是解开的意思
+
+
+tar –cvf jpg.tar *.jpg # 将目录里所有jpg文件打包成tar.jpg
+tar –czf jpg.tar.gz *.jpg # 将目录里所有jpg文件打包成jpg.tar后，并且将其用gzip压缩，生成一个gzip压缩过的包，命名为jpg.tar.gz
+tar –cjf jpg.tar.bz2 *.jpg # 将目录里所有jpg文件打包成jpg.tar后，并且将其用bzip2压缩，生成一个bzip2压缩过的包，命名为jpg.tar.bz2
+tar –cZf jpg.tar.Z *.jpg # 将目录里所有jpg文件打包成jpg.tar后，并且将其用compress压缩，生成一个umcompress压缩过的包，命名为jpg.tar.Z
+```
+
+
+
+## grep的使用
+
+正则表达式的使用
+
+```bash
+# 找出以_id为结尾的非空字符串
+grep -o -E '\S+_id' file.txt
+```
+
+
+## Redhat/Centos安装package
+```bash
+# 查询系统已安装的rpm包
+rpm -qa
+
+# 查询系统中一个已知的文件属于哪个rpm包
+rpm -qf /${absolutePath}/file_name
+
+# 查询已安装的软件包的相关文件的安装路径
+rpm -ql ${packageName}
+
+# 查询一个已安装软件包的信息
+rpm -qi ${packageName}
+
+# 查看已安装软件的配置文件
+rpm -qc ${packageName}
+
+# 查看已安装软件的文档的安装位置
+rpm -qd ${packageName}
+
+# 查看已安装软件所依赖的软件包及文件
+rpm -qR ${packageName}
+
+# 安装包
+rpm -i ${packageName}.rpm
+# 安装包并在安装过程中显示正在安装的文件信息(-v)及安装进度(-h)；
+rpm -ivh ${packageName}.rpm
+
+# 卸载软件
+rpm -e --nodeps ${packageName}.rpm
+
+
+# 查看系统未安装软件相关命令，也就是在-q后面加p
+## 查看软件包的详细信息
+rpm -qpi ${rpm-package}
+## 查看软件包的文档所在的位置
+rpm -qpd ${rpm-package}
+
+```
+
+### 参考
+https://c.biancheng.net/view/817.html
