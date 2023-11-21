@@ -35,3 +35,25 @@ services:
     image: "mongo:6.0.3"
     ports:
       - "27017:27017"
+  minio:
+    container_name: minio
+    image: "quay.io/minio/minio"
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    volumes:
+      - "/home/keepthinker/minio/data:/data" 
+    environment:
+      MINIO_ROOT_USER: "username"
+      MINIO_ROOT_PASSWORD: "password"
+    command:
+      server /data  --console-address ":9090"
+  sftp:
+    container_name: sftp
+    image: atmoz/sftp:alpine
+    volumes:
+        - /home/keepthinker/transfer:/home/sftp/transfer
+        - /home/keepthinker/temp:/home/sftp/temp
+    ports:
+        - "2222:22"
+    command: sftp:sftp:1001

@@ -1,0 +1,62 @@
+version: "3.9"
+services:
+  redis-0:
+    container_name: redis-cluster-0
+    image: redis:6.2.14
+    ports: 
+      - 7000:7000
+      - 17000:17000
+    volumes:
+      - ./redis-0:/data
+    command: redis-server /data/redis.conf
+
+  redis-1:
+    container_name: redis-cluster-1
+    image: redis:6.2.14
+    ports: 
+      - 7001:7001
+      - 17001:17001
+    volumes:
+      - ./redis-1:/data
+    command: redis-server /data/redis.conf
+  
+  redis-2:
+    container_name: redis-cluster-2
+    image: redis:6.2.14
+    ports: 
+      - 7002:7002
+      - 17002:17002
+    volumes:
+      - ./redis-2:/data
+    command: redis-server /data/redis.conf
+  
+  redis-3:
+    container_name: redis-cluster-3
+    image: redis:6.2.14
+    ports: 
+      - 7003:7003
+      - 17003:17003
+    volumes:
+      - ./redis-3:/data
+    command: redis-server /data/redis.conf
+  
+  redis-4:
+    container_name: redis-cluster-4
+    image: redis:6.2.14
+    ports: 
+       - 7004:7004
+       - 17004:17004
+    volumes:
+      - ./redis-4:/data
+    command: redis-server /data/redis.conf
+
+  redis-5:
+    container_name: redis-cluster-5
+    image: redis:6.2.14
+    ports: 
+      - 7005:7005
+      - 17005:17005
+    volumes:
+      - ./redis-5:/data
+    command: redis-server /data/redis.conf
+

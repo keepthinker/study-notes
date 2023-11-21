@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  sentinel:
+    container_name: sentinel
+    image: "bladex/sentinel-dashboard"
+    ports: 
+      - "8858:8858"
