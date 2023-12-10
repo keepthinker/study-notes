@@ -81,3 +81,4 @@ total_cluster_links_buffer_limit_exceeded:0
 ## 参考
 
 [Scaling with Redis Cluster | Redis](https://redis.io/docs/manual/scaling/#creating-and-using-a-redis-cluster)
+[Docker 搭建 Redis Cluster 集群环境](https://xie.infoq.cn/article/a5536b928edd12beb32fcabf9)

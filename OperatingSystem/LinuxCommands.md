@@ -277,6 +277,10 @@ tar –cvf jpg.tar *.jpg # 将目录里所有jpg文件打包成tar.jpg
 tar –czf jpg.tar.gz *.jpg # 将目录里所有jpg文件打包成jpg.tar后，并且将其用gzip压缩，生成一个gzip压缩过的包，命名为jpg.tar.gz
 tar –cjf jpg.tar.bz2 *.jpg # 将目录里所有jpg文件打包成jpg.tar后，并且将其用bzip2压缩，生成一个bzip2压缩过的包，命名为jpg.tar.bz2
 tar –cZf jpg.tar.Z *.jpg # 将目录里所有jpg文件打包成jpg.tar后，并且将其用compress压缩，生成一个umcompress压缩过的包，命名为jpg.tar.Z
+
+# 将 /home/html/ 这个目录下所有文件和文件夹打包为当前目录下的 html.zip
+zip -q -r html.zip /home/html
+
 ```
 
 
@@ -333,3 +337,15 @@ rpm -qpd ${rpm-package}
 
 ### 参考
 https://c.biancheng.net/view/817.html
+
+## 查看ip
+```
+ifconfig
+
+ip addr | grep inet
+
+# 显示本机IP地址，不包括本地回环地址
+hostname -I 
+
+
+```

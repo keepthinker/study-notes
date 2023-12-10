@@ -48,6 +48,16 @@ docker cp /opt/test/file.txt mycontainer:/opt/testnew/
 systemctl stop docker
 # 开启docker服务
 systemctl start docker
+systemctl enable docker
+
+# 启动docker
+service docker start
+# 停止docker 
+service docker stop
+# 重启docker
+service docker restart
+# 或者是
+systemctl restart docker
 
 
 # The docker stop commands issue the SIGTERM signal，其中非run启动命令，重启会消失。
@@ -493,14 +503,27 @@ e8d26617b103   test-net   bridge    local
 
 > docker run -itd --name test1 --network test-net ubuntu /bin/bash
 > docker run -itd --name test2 --network test-net ubuntu /bin/bash
-# 上述两个容器可以互相ping通，可以用apt install iputils-ping安装ping命令
+# 上述两个容器可以互相ping通，可以用apt-get update && apt-get install iputils-ping安装ping命令
 
 # --rm：容器退出时自动清理容器内部的文件系统。
 # -h HOSTNAME 或者 --hostname=HOSTNAME： 设定容器的主机名，它会被写到容器内的 /etc/hostname 和 /etc/hosts。
 # --dns=IP_ADDRESS： 添加 DNS 服务器到容器的 /etc/resolv.conf 中，让容器用这个服务器来解析所有不在 /etc/hosts 中的主机名。
 # --dns-search=DOMAIN： 设定容器的搜索域，当设定搜索域为 .example.com 时，在搜索一个名为 host 的主机时，DNS 不仅搜索 host，还会搜索 host.example.com。
 $ docker run -it --rm -h host_ubuntu  --dns=114.114.114.114 --dns-search=test.com ubuntu
+
+# 查看网络信息
+docker network inspect custom_network
+
+# 将某个容器加入某网络
+docker network connect custom_network my_container
+
+# 断开网络
+docker network disconnect custom_network my_container
+
 ```
+
+### 参考
+[Docker 网络模式详解及容器间网络通信](https://xie.infoq.cn/article/97355a6e7ac01bce8532d5ff5)
 
 ## Docker Compose
 
@@ -745,3 +768,17 @@ docker run -p 8080:80 --name hello -d ubuntu:v2
 # 查看docker相关信息的路径
 cd \\wsl$\Ubuntu\mnt\wsl\docker-desktop-data\data\docker
 ```
+
+## docker swarm
+Docker Engine 1.12 引入了 Swarm 模式，一个 Swarm 由多个 Docker 主机组成，它们以 Swarm 集群模式运行。Swarm 集群由 Manager 节点（管理者角色，管理成员和委托任务）和 Worker 节点（工作者角色，运行 Swarm 服务）组成。这些 Docker 主机有些是 Manager 节点，有些是 Worker 节点，或者同时扮演这两种角色。
+
+Swarm 创建服务时，需要指定要使用的镜像、在运行的容器中执行的命令、定义其副本的数量、可用的网络和数据卷、将服务公开给外部的端口等等。与独立容器相比，群集服务的主要优势之一是，你可以修改服务的配置，包括它所连接的网络和数据卷等，而不需要手动重启服务。还有就是，如果一个 Worker Node 不可用了，Docker 会调度不可用 Node 的 Task 任务到其他 Nodes 上。
+
+### 参考
+[Docker Swarm 集群管理利器核心概念扫盲
+](https://www.cnblogs.com/mrhelloworld/p/docker15.html)
+
+
+
+
+

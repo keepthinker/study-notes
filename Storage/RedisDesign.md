@@ -403,3 +403,15 @@ redis server的事件模型其实就是经典的NIO模型，底层通过select/e
 [redis数据淘汰原理](https://www.jianshu.com/p/60cc093d6c36)
 
 [Redis两种持久化机制RDB和AOF详解（面试常问，工作常用）](https://database.51cto.com/art/202002/610603.htm)
+
+
+## 集群命令
+```bash
+# 查看有多少个database
+config get databases
+
+# 列出定义了某些键的数据库
+INFO keyspace
+
+
+```
