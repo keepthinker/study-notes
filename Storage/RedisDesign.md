@@ -410,8 +410,14 @@ redis server的事件模型其实就是经典的NIO模型，底层通过select/e
 # 查看有多少个database
 config get databases
 
+config set protected-mode no
+config set protected-mode yes
+
 # 列出定义了某些键的数据库
 INFO keyspace
+
+# 列出连接的客户端情况
+INFO clients
 
 
 ```

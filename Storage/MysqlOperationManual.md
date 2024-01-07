@@ -100,6 +100,43 @@ alter table tablename modify column id int not null primary key auto_increment
 
 ………………………..drop primary key
 
+## 新增字段最佳实践
+- MySQL 5.6 以上版本支持并行索引创建，在执行新增索引操作时，在 ALTER TABLE 语句中添加 ALGORITHM=INPLACE, LOCK=NONE, ONLINE=ON 选项，指定使用 INPLACE 算法、禁用锁定、使用在线模式等选项，让 MySQL 引擎使用并行操作方式来创建索引，从而减少锁定表的时间
+
+- Mysql 8.0 的ALGORITHM=INSTANT 性能更好，可以达到秒级
+
+ALTER TABLE tbl_name DROP INDEX i1, ADD INDEX i1(key_part,...)
+USING BTREE, ALGORITHM=INPLACE, LOCK=NONE;
+• ALGORITHM可选: INPLACE / COPY
+• LOCK可选: NONE SHARED 等加锁情况 -> 在 ALTER TABLE 语句上指定一个子句，如 LOCK = NONE (许可读和写)或 LOCK = SHARED (许可读)。如果请求的并发级别不可用，操作将立即停止。
+
+ALGORITHM=INPLACE
+更优秀的解决方案，在当前表加索引，步骤：
+1.创建索引(二级索引)数据字典
+2. 加共享表锁，禁止DML，允许查询
+3. 读取聚簇索引，构造新的索引项，排序并插
+入新索引
+4. 等待打开当前表的所有只读事务提交
+5. 创建索引结束
+
+ALGORITHM=COPY
+通过临时表创建索引，需要多一倍存储，还有更多的IO，步骤：
+1. 新建带索引（主键索引）的临时表
+2. 锁原表，禁止DML，允许查询
+3. 将原表数据拷贝到临时表
+4. 禁止读写,进行rename，升级字典锁
+5. 完成创建索引操作
+ 
+LOCK=DEFAULT：默认方式，MySQL自行判断使用哪种LOCK模式，尽量不锁表
+LOCK=NONE：无锁：允许Online DDL期间进行并发读写操作。如果Online DDL操
+作不支持对表的继续写入，则DDL操作失败，对表修改无效
+LOCK=SHARED：共享锁：Online DDL操作期间堵塞写入，不影响读取
+LOCK=EXCLUSIVE：排它锁：Online DDL操作期间不允许对锁表进行任何操作
+
+### 参考
+https://developer.aliyun.com/article/1111994
+
+
 ## 索引修改
 
 ```sql
@@ -123,15 +160,26 @@ ALTER TABLE `tbl_feeds`ADD INDEX `IX_Feeds_username` (`username`) ,ADD INDEX `IX
 ```
 
 # 设置参数
+```bash
+# 查看最大连接数
+show variables like '%max_connection%';
 
-set global max_connection=5000
+# 在/etc/my.cnf里面设置数据库的最大连接数
+[mysqld]
+max_connections = 1000
 
+# 或则mysql命令行
+set global max_connections=5000
+```
 # 查看状态
 
 #### 查看数据库连接状态
+```bash
 
+show global status like 'Thread%';
 select substring_index(host, ":", 1) ip, count(*) num from information_schema.processlist group by ip order by num desc
 
+```
 # Query 诊断分析工具
 
 ```shell

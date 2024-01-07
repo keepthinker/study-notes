@@ -349,3 +349,35 @@ hostname -I
 
 
 ```
+
+## IP工具使用
+
+### curl
+
+```shell
+//http post请求设置Host与Content-Type两个报头
+curl -d '{"key": "value"}' -H 'Host: www.vivo.com.cn' -H 'Content-Type:application/json'  http://110.23.2.323
+
+//用curl设置cookies
+curl 'http://man.linuxde.net' --cookie 'user=root;pass=123456'
+
+//只打印头部信息
+curl -I 'http://www.vivo.com.cn'
+
+//打印详细信息
+curl -v 'http://www.taobao.com'
+
+//Http指定Host IP访问
+curl -H 'Host:www.test.com' http://10.44.54.111/test.php
+或
+curl -x 10.44.54.111:80 http://www.test.com/test.php
+
+//Https指定Host与IP访问
+curl --resolve www.vivo.com.cn:443:183.61.27.136 https://www.vivo.com.cn
+
+curl --resolve www.vivo.com.cn:443:183.61.27.136 https://www.vivo.com.cn
+
+//http使用代理访问，-x或者--proxy后是代理服务器地址
+curl -x http://localhost:33210 'https://www.google.com.hk'
+```
+

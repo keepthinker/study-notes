@@ -741,3 +741,32 @@ lockf是在fcntl基础上构造的函数，它提供了一个简化的接口。�
 ## 参考
 
 [件锁的使用浅析](https://blog.csdn.net/guotianqing/article/details/80044087)
+
+
+# linux uid gid 作用,Linux uid和gid
+Linux 系统中，每个用户的 ID 可以分为两种，分别是用户 ID(User ID，简称 UID)和组 ID(Group ID，简称 GID)，这与文件有拥有者和拥有群组两种属性相对应。
+
+
+```bash
+cat /etc/passwd
+
+# 例子内容如下
+# root:x:0:0:root:/root:/bin/bash
+# daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+# sftpuser:x:1003:1004::/home/sftpuser:/bin/sh
+# 
+# 含义解释：
+# 用户名:口令:用户标识号:组标识号:注释性描述:主目录:登录Shell
+
+cat /etc/group
+# root:x:0:root
+# bin:x:1:root,bin,daemon
+# daemon:x:2:root,bin,daemon
+
+# 含义解释：
+# 组名:口令:组标识号:组内用户列表
+
+```
+
+## 参考
+[Linux 用户和用户组管理](https://www.cnblogs.com/klb561/p/10344409.html)

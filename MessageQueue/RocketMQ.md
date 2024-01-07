@@ -325,6 +325,14 @@ RocketMQ的是如何通过长轮询机制来实现压力和时实的平衡。
 
 [精华推荐 | 【深入浅出 RocketMQ原理及实战】「底层源码挖掘系列」透彻剖析贯穿RocketMQ的消费者端的运行核心的流程（上篇）_RocketMQ_洛神灬殇_InfoQ写作社区](https://xie.infoq.cn/article/e3a0630707e4b7168aa13ea3c)
 
+## 消息重试
+云消息队列 RocketMQ 版支持消息重试功能，即Consumer消费某条消息失败或消费超时，云消息队列 RocketMQ 版会根据消息重试机制重新投递消息。
+
+### 注意事项
+一条消息无论重试多少次，这些重试消息的Message ID都不会改变。
+消息重试只针对集群消费模式生效；广播消费模式不提供失败重试特性，即消费失败后，失败消息不再重试，继续消费新的消息。
+
+
 ## 参考
 
 https://rocketmq.apache.org/
@@ -334,3 +342,5 @@ https://rocketmq.apache.org/
 ](https://github.com/apache/rocketmq-spring)
 
 [后端程序员必备：RocketMQ相关流程图/原理图 - 掘金](https://juejin.cn/post/6844903941839437838)
+
+[消息重试](https://help.aliyun.com/zh/apsaramq-for-rocketmq/cloud-message-queue-rocketmq-4-x-series/developer-reference/message-retry)

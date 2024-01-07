@@ -27,8 +27,20 @@ mkdir 7000 7001 7002 7003 7004 7005
 ### 将redis.conf复制到各个目录，并修改port为各目录数字对应的值
 
 ```shell
+
 cd 7000
-redis-server ./redis.conf
+nohup redis-server ./redis.conf > redis-server-7000.log &
+cd ../7001
+nohup redis-server ./redis.conf > redis-server-7001.log &
+cd ../7002
+nohup redis-server ./redis.conf > redis-server-7002.log &
+cd ../7003
+nohup redis-server ./redis.conf > redis-server-7003.log &
+cd ../7004
+nohup redis-server ./redis.conf > redis-server-7004.log &
+cd ../7005
+nohup redis-server ./redis.conf > redis-server-7005.log &
+cd ..
 ```
 
 ### 初始化集群
