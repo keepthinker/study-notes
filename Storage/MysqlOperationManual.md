@@ -100,10 +100,10 @@ alter table tablename modify column id int not null primary key auto_increment
 
 ………………………..drop primary key
 
-## 新增字段最佳实践
-- MySQL 5.6 以上版本支持并行索引创建，在执行新增索引操作时，在 ALTER TABLE 语句中添加 ALGORITHM=INPLACE, LOCK=NONE, ONLINE=ON 选项，指定使用 INPLACE 算法、禁用锁定、使用在线模式等选项，让 MySQL 引擎使用并行操作方式来创建索引，从而减少锁定表的时间
+## 新增索引最佳实践
+- MySQL 5.6 以上大部分alter操作，不需要加锁，默认算法是并行索引创建，在执行新增索引操作时，在 ALTER TABLE 语句中添加 ALGORITHM=INPLACE, LOCK=NONE, ONLINE=ON 选项，指定使用 INPLACE 算法、禁用锁定、使用在线模式等选项，让 MySQL 引擎使用并行操作方式来创建索引，从而减少锁定表的时间。
 
-- Mysql 8.0 的ALGORITHM=INSTANT 性能更好，可以达到秒级
+- 从 MySQL 8.0.12 开始，引入了 instant 算法并且默认使用。目前 instant 算法只支持增加列等少量 DDL 类型的操作，其他类型仍然会默认使用 inplace。
 
 ALTER TABLE tbl_name DROP INDEX i1, ADD INDEX i1(key_part,...)
 USING BTREE, ALGORITHM=INPLACE, LOCK=NONE;
@@ -113,11 +113,11 @@ USING BTREE, ALGORITHM=INPLACE, LOCK=NONE;
 ALGORITHM=INPLACE
 更优秀的解决方案，在当前表加索引，步骤：
 1.创建索引(二级索引)数据字典
-2. 加共享表锁，禁止DML，允许查询
-3. 读取聚簇索引，构造新的索引项，排序并插
+1. 加共享表锁，禁止DML，允许查询
+2. 读取聚簇索引，构造新的索引项，排序并插
 入新索引
-4. 等待打开当前表的所有只读事务提交
-5. 创建索引结束
+1. 等待打开当前表的所有只读事务提交
+2. 创建索引结束
 
 ALGORITHM=COPY
 通过临时表创建索引，需要多一倍存储，还有更多的IO，步骤：
@@ -136,6 +136,11 @@ LOCK=EXCLUSIVE：排它锁：Online DDL操作期间不允许对锁表进行任�
 ### 参考
 https://developer.aliyun.com/article/1111994
 
+https://cloud.tencent.com/developer/article/1801049
+
+https://dev.mysql.com/doc/refman/8.0/en/innodb-online-ddl-operations.html
+
+https://stackoverflow.com/questions/35424543/alter-table-without-locking-the-entire-table
 
 ## 索引修改
 

@@ -667,7 +667,7 @@ class MyApplicationTests {
 }
 ```
 
-## sing Application Arguments
+## Using Application Arguments
 If your application expects arguments, you can have @SpringBootTest inject them using the args attribute.
 
 ```java
@@ -744,6 +744,7 @@ Spring Boot includes a number of @Conditional annotations that you can reuse in 
 > 如果只是类上加了@Conditional注解，整个类的所有方法都会加入容器中。
 
 #### Condition类相关注解介绍
+```java
 @ConditionalOnBean：当容器中有指定Bean的条件下进行实例化。
 @ConditionalOnMissingBean：当容器里没有指定Bean的条件下进行实例化。
 @ConditionalOnClass：当classpath类路径下有指定类的条件下进行实例化。
@@ -753,16 +754,16 @@ Spring Boot includes a number of @Conditional annotations that you can reuse in 
 @ConditionalOnNotWebApplication：当项目不是一个Web项目时进行实例化。
 @ConditionalOnProperty：当指定的属性有指定的值时进行实例化。
 @ConditionalOnExpression：基于SpEL表达式的条件判断。
-例子：
-```java
+
+// 例子：
     @ConditionalOnExpression("true")    
     @ConditionalOnExpression("${my.controller.enabled:false}")
-```
 @ConditionalOnJava：当JVM版本为指定的版本范围时触发实例化。
 @ConditionalOnResource：当类路径下有指定的资源时触发实例化。
 @ConditionalOnJndi：在JNDI存在的条件下触发实例化。
 @ConditionalOnSingleCandidate：当指定的Bean在容器中只有一个，或者有多个但是指定了首选的Bean时，才会触发实例化。
 
+```
 
 参考： 
 [这类注解都不知道，还好意思说用过Spring Boot？](https://zhuanlan.zhihu.com/p/524196524)
