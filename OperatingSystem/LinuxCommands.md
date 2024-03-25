@@ -381,3 +381,51 @@ curl --resolve www.vivo.com.cn:443:183.61.27.136 https://www.vivo.com.cn
 curl -x http://localhost:33210 'https://www.google.com.hk'
 ```
 
+# sftp command
+```bash
+// 将本机的.ssh中的id_rsa.pub的复制到远程机器的authorized_keys中, 或者用ssh-copy-id，那么就可以做到sftp自动登录，直接命令行执行命令等操作
+// 登录
+sftp username@192.168.1.21
+
+// 执行命令 idRsaPath 私钥的路径，<<后面的是执行的命令
+sftp -i ${idRsaPath} username@192.168.1.21 <<EOF
+
+put file /data
+exit
+
+EOF
+```
+
+# minio 命令行操作，mc命令
+
+## 参考
+https://min.io/docs/minio/linux/reference/minio-mc.html
+
+## Create an Alias for the S3-Compatible Service
+```bash
+# 添加配置， ALIAS名称，HOSTNAME目标minio地址包含端口，
+mc alias set ALIAS HOSTNAME ACCESS_KEY SECRET_KEY
+
+# 例子
+mc alias set my-minio 192.168.1.21 9300 asfagoaoji joiqehqjroqjew
+
+
+```
+
+## Test Connection
+```bash
+mc admin info myminio
+```
+
+
+## More commands
+```bash
+# The mc cp command copies objects to or from a MinIO deployment, where the source can MinIO or a local filesystem.
+# myminio is alias
+mc cp --recursive ~/mydata/ myminio/mydata/
+
+
+
+```
+
+

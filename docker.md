@@ -23,6 +23,10 @@ docker run -d -P training/webapp python app.py
 docker run -d -p 127.0.0.1:20080:80 centos-nginx-01 /sbin/nginx -c /etc/nginx.conf
 # 默认都是绑定 tcp 端口，如果要绑定 UDP 端口，可以在端口后面加上 /udp。
 docker run -d -p 127.0.0.1:5000:5000/udp centos-nginx-01 python app.py
+# 设置环境变量https://docs.docker.com/reference/cli/docker/container/run/#env
+docker run -e MYVAR1 --env MYVAR2=foo --env-file ./env.list ubuntu bash
+# 尝试测试dockerfile，可以参考如下名
+docker run --rm -i -t --entrypoint /bin/sh --name test-dockerfile-1 --env-file config.properties test-image-name
 # 查看进程映射的端口
 docker port bf08b7f2cd89
 # 查看进程日志，-f: 让 docker logs 像使用 tail -f 一样来输出容器内部的标准输出。
@@ -216,6 +220,8 @@ vim Dockerfile
 A Docker image consists of read-only layers each of which represents a Dockerfile instruction. The layers are stacked and each one is a delta of the changes from the previous layer. Consider this `Dockerfile`:
 
 ##### Dockerfile示例内容如下
+
+一定注明syntax让Dockfile使用最新语法。
 
 ```dockerfile
 # syntax=docker/dockerfile:1
