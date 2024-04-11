@@ -87,6 +87,12 @@ services:
         aliases:
           - rmqbroker
 
+  simple-project:
+    container_name: simple-project
+    image: "simple-project:latest"
+    ports:
+      - "8080:8080"
+
 networks:
   rmq:
     name: rmq
