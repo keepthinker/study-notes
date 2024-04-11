@@ -407,7 +407,7 @@ https://min.io/docs/minio/linux/reference/minio-mc.html
 mc alias set ALIAS HOSTNAME ACCESS_KEY SECRET_KEY
 
 # 例子
-mc alias set my-minio 192.168.1.21 9300 asfagoaoji joiqehqjroqjew
+mc alias set my-minio http://192.168.1.21:9300 asfagoaoji joiqehqjroqjew
 
 
 ```
@@ -423,8 +423,6 @@ mc admin info myminio
 # The mc cp command copies objects to or from a MinIO deployment, where the source can MinIO or a local filesystem.
 # myminio is alias
 mc cp --recursive ~/mydata/ myminio/mydata/
-
-
 
 ```
 
