@@ -756,8 +756,8 @@ Spring Boot includes a number of @Conditional annotations that you can reuse in 
 @ConditionalOnExpression：基于SpEL表达式的条件判断。
 
 // 例子：
-    @ConditionalOnExpression("true")    
-    @ConditionalOnExpression("${my.controller.enabled:false}")
+@ConditionalOnExpression("true")    
+@ConditionalOnExpression("${my.controller.enabled:false}")
 @ConditionalOnJava：当JVM版本为指定的版本范围时触发实例化。
 @ConditionalOnResource：当类路径下有指定的资源时触发实例化。
 @ConditionalOnJndi：在JNDI存在的条件下触发实例化。

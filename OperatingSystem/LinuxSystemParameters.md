@@ -5,7 +5,7 @@
 
 
 
-# sysctl \-a
+# sysctl -a
 The parameters available are those listed under /proc/sys/
 
 website: 
