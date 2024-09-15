@@ -191,7 +191,7 @@ vim Dockerfile
 # . ：Dockerfile 文件所在目录，可以指定Dockerfile 的绝对路径
 docker build -t keepthinker/centos:6.7 .
 
-# 为镜像添加一个标签，":"后面就是标签
+# 为镜像添加一个标签，":"后面就是标签，其中第一个英文时自己的用户名
 docker tag 860c279d2fec runoob/centos:dev
 
 
@@ -206,10 +206,20 @@ username/ubuntu 18.04      275d79972a86        6 days ago        ...
 $ docker push username/ubuntu:18.04
 $ docker search username/ubuntu
 
+# 查看当前登录用户名等信息
+cat ~/.docker/config.json
+
+# 查看docker用户密码
+echo "XXXXXXXXXXXXXXX" | base64 -d -
+
 # 导出镜像
 docker save -o my_ubuntu_v3.tar runoob/ubuntu:v3
 # 导入镜像
 docker load -i my_ubuntu_v3.tar
+
+# The docker system prune command is used to remove unused Docker objects.
+docker system prune -af
+
 ```
 
 #### 构建镜像
