@@ -1032,3 +1032,23 @@ public class ProxyFilter implements CallbackFilter {
 ### AspectJ
 
 [原生AspectJ用法分析以及Spring-AOP原理分析](https://blog.mythsman.com/post/5d301cf2976abc05b34546be/)
+
+## 泛型
+
+| 术语  |	中文含义 | 	举例  |	反射接口  |	备注 |
+| --- | --- | --- | --- | --- | 
+Generic type  |	泛型  |	List<E>	  |ParameterizedType	
+Parameterized type  |	参数化类型  |	List<String>  |	ParameterizedType	
+Raw type  |	原始类型  |	List  |	ParameterizedType#getRawType  |	该方法虽然返回 Type 类型，但实际类型是 Class，可以强转使用：(Class<?>) type。
+Unbounded wildcard type  |	无限制通配符类型  |		List<?>	  |	ParameterizedType	
+Bounded wildcard type   |		有限制通配符类型（上限）  |		List<? extends Number>  |		ParameterizedType	
+Bounded wildcard type  |		有限制通配符类型（下限）  |		List<? super Number>	  |	ParameterizedType	
+wildcard type  |	通配符类型	  |	?  |		WildcardType	
+Formal type parameter  |	形式类型参数  |		E  |		TypeVariable	
+Actual type parameter  |	实际类型参数  |		String  |		ParameterizedType#getActualTypeArguments  |	该方法虽然返回 Type[] 类型，但各元素实际类型是 Class，可以强转使用：(Class<?>) type。
+Bounded type parameter  |	有限制类型参数  |		<E extends Number>	  |		
+Recursive type bound  |	递归类型限制  |		<T extends Comparable<T>>  |			
+Generic method  |	泛型方法  |		static <E> List<E> asList(E[] a)	  |		
+Type token  |	类型令牌  |		String.class	  |	
+
+参考： https://qidawu.github.io/posts/java-reflection-generic-type/
